@@ -48,7 +48,7 @@ namespace Application.Services
             return _mapper.Map<VehicleCheckInResponseDto>(vehicleRecord);
         }
 
-        public async Task<VehicleCheckOutResponseDto?> CheckOutAsync(Guid vehicleId, VehicleCheckOutDto vehicleDto, IFormFile checkOutImage)
+        public async Task<VehicleCheckOutResponseDto?> CheckOutAsync(Guid vehicleId, VehicleCheckOutDto vehicleDto, IFormFile? checkOutImage)
         {
             var vehicleRecord = await _context.VehicleCheckInCheckOut.FindAsync(vehicleId);
             if (vehicleRecord == null || vehicleRecord.CheckOutDate != null)

@@ -10,6 +10,7 @@ namespace Application.ResponseDto
     {
         public Guid Id { get; set; }
         public string VehicleNo { get; set; }
+        public string? CheckOutImage { get; set; }
         public string? CheckOutRemark { get; set; }
         public Guid? CheckOutBy { get; set; }
         public DateTime? CheckOutDate { get; set; }

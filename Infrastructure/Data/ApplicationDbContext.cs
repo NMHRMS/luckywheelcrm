@@ -307,7 +307,7 @@ public partial class ApplicationDbContext : DbContext
 
             entity.Property(e => e.VehicleNo).HasMaxLength(10).IsRequired().HasMaxLength(10);
 
-            entity.Property(e => e.CheckInImage).IsRequired().HasColumnType("varbinary(MAX)");
+            entity.Property(e => e.CheckInImage).HasColumnType("varbinary(MAX)");
 
             entity.Property(e => e.CheckInReason).IsRequired().HasMaxLength(100);
 

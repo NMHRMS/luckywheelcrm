@@ -12,7 +12,7 @@ namespace Application.Interfaces
     public interface IVehicleInOutService
     {
         Task<VehicleCheckInResponseDto> CheckInAsync(VehicleCheckInDto vehicleDto, IFormFile checkInImage);
-        Task<VehicleCheckOutResponseDto?> CheckOutAsync(Guid vehicleId, VehicleCheckOutDto vehicleDto, IFormFile checkOutImage);
+        Task<VehicleCheckOutResponseDto?> CheckOutAsync(Guid vehicleId, VehicleCheckOutDto vehicleDto, IFormFile? checkOutImage);
         Task<VehicleCheckInResponseDto?> GetRecordByVehicleNoAsync(string vehicleNo); // to Check Check-in vehicles
         Task<IEnumerable<VehicleInOutRecord>> GetAllRecordsAsync();
         Task<IEnumerable<VehicleCheckInResponseDto>> GetAllInRecordsAsync();

@@ -12,6 +12,7 @@ namespace Application.ResponseDto
         public Guid BranchId { get; set; }
         public Guid CompanyId { get; set; }
         public string VehicleNo { get; set; }
+        public string? CheckInImage { get; set; }
         public string CheckInReason { get; set; }
         public Guid CheckInBy { get; set; }
         public DateTime? CheckInDate { get; set; }

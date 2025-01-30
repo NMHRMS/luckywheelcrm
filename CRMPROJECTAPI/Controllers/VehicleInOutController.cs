@@ -19,9 +19,9 @@ namespace CRMPROJECTAPI.Controllers
         }
 
         [HttpPost("check-in")]
-        public async Task<IActionResult> CheckIn([FromForm] VehicleCheckInDto checkInDto, IFormFile checkInImage)
+        public async Task<IActionResult> CheckIn([FromForm] VehicleCheckInDto checkInDto, IFormFile? checkInImage)
         {
-            if (checkInDto == null || checkInImage == null)
+            if (checkInDto == null )
             {
                 return BadRequest("Invalid data.");
             }
@@ -36,7 +36,7 @@ namespace CRMPROJECTAPI.Controllers
         }
 
         [HttpPost("check-out/{vehicleNo}")]
-        public async Task<IActionResult> CheckOut(string vehicleNo, [FromForm] VehicleCheckOutDto checkOutDto, IFormFile checkOutImage)
+        public async Task<IActionResult> CheckOut(string vehicleNo, [FromForm] VehicleCheckOutDto checkOutDto, IFormFile? checkOutImage)
         {
             var existingRecord = await _vehicleInOutService.GetRecordByVehicleNoAsync(vehicleNo);
 

@@ -17,7 +17,7 @@ public class VehicleInOutRecord
     
     public string VehicleNo { get; set; }
 
-    public string CheckInImage { get; set; } // Stores the binary data for the Check-in image
+    public string? CheckInImage { get; set; } // Stores the binary data for the Check-in image
 
     public string CheckInReason { get; set; }
 
