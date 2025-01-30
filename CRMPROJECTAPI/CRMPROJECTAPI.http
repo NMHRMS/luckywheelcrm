@@ -1,0 +1,6 @@
+@CRMPROJECTAPI_HostAddress = http://localhost:5238
+
+GET {{CRMPROJECTAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
