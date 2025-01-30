@@ -10,7 +10,7 @@ namespace Domain.Models;
 public partial class Lead
 {
     public Guid LeadId { get; set; }
-    public Guid CompanyId { get; set; }
+    public Guid? CompanyId { get; set; }
     public string? LeadSource { get; set; }
     public string? ExcelName { get; set; }
     public string OwnerName { get; set; } = null!;
@@ -26,7 +26,7 @@ public partial class Lead
     public int? LadenWeight { get; set; }
     public string? ModelName { get; set; }
     public string? DealerName { get; set; }
-    public Guid ProductId { get; set; }
+    public Guid? ProductId { get; set; }
     public string LeadType { get; set; } = null!;
     public Guid? AssignedTo { get; set; }
     public DateTime? AssignedDate { get; set; }
