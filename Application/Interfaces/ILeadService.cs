@@ -16,5 +16,6 @@ namespace Application.Interfaces
         Task<IEnumerable<LeadResponseDto>> SearchLeadsAsync(string? name, string? state, string? district, string? modelName, string? dealerName);
         Task<IEnumerable<LeadResponseDto>> GetTodaysAssignedLeadsAsync(Guid userId);
         Task<bool> DeleteLeadAsync(Guid id);
+        Task<DashboardLeadResponseDto> GetDashboardLeads();
     }
 }

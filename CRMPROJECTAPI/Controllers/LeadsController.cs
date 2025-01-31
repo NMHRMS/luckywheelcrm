@@ -108,16 +108,6 @@ namespace CRMPROJECTAPI.Controllers
         }
 
 
-        //[HttpPost("upload-leads")]
-        //public async Task<IActionResult> UploadLeads([FromForm] IFormFile file)
-        //{
-        //    if (file == null || file.Length == 0)
-        //        return BadRequest("Invalid file");
-
-        //    var result = await _leadService.UploadLeadsFromExcelAsync(file);
-        //    return result ? Ok("Leads uploaded successfully") : BadRequest("Failed to upload leads");
-        //}
-
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteLead(Guid id)
         {
@@ -125,6 +115,13 @@ namespace CRMPROJECTAPI.Controllers
             if (!result)
                 return NotFound();
             return NoContent();
+        }
+
+        [HttpGet("dashboard_leads")]
+        public async Task<IActionResult> GetDashboardLeads()
+        {
+            var leads = await _leadService.GetDashboardLeads();
+            return Ok(leads);
         }
     }
 }
