@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Application.Dtos;
-using Application.ResponseDto;
+﻿using Application.Dtos;
 
 namespace Application.Interfaces
 {
@@ -14,7 +8,3 @@ namespace Application.Interfaces
     }
 
 }
-
-        //Task<bool> AssignLeadAsync(LeadAssignmentDto assignmentDto);
-        //Task<List<LeadTrackingDto>> GetLeadHistoryAsync(int leadId);
-        //Task<List<LeadDto>> GetUserAssignedLeadsAsync(int userId);

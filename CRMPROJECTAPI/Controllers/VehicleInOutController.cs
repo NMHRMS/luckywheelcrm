@@ -33,8 +33,7 @@ namespace CRMPROJECTAPI.Controllers
                 return BadRequest("Failed to check-in vehicle.");
             }
             return Ok(result);
-        }
-
+        }      
         [HttpPost("check-out/{vehicleNo}")]
         public async Task<IActionResult> CheckOut(string vehicleNo, [FromForm] VehicleCheckOutDto checkOutDto, IFormFile? checkOutImage)
         {
@@ -46,6 +45,41 @@ namespace CRMPROJECTAPI.Controllers
             }
             var result = await _vehicleInOutService.CheckOutAsync(existingRecord.Id, checkOutDto, checkOutImage);
             return Ok(result);
+        }
+
+        [HttpGet("by-vehicle/{vehicleNo}")]
+        public async Task<IActionResult> GetByVehicleNo(string vehicleNo)
+        {
+            var record = await _vehicleInOutService.GetRecordByVehicleNoAsync(vehicleNo);
+            return Ok(record);
+        }
+
+        [HttpGet("checkin-by-date/{date}")]
+        public async Task<IActionResult> GetCheckInByDate(DateTime date)
+        {
+            var records = await _vehicleInOutService.GetCheckInByDateAsync(date);
+            return Ok(records);
+        }
+
+        [HttpGet("checkout-by-date/{date}")]
+        public async Task<IActionResult> GetCheckOutByDate(DateTime date)
+        {
+            var records = await _vehicleInOutService.GetCheckOutByDateAsync(date);
+            return Ok(records);
+        }
+
+        [HttpGet("checkin-by-user/{userId}")]
+        public async Task<IActionResult> GetCheckInByUser(Guid userId)
+        {
+            var records = await _vehicleInOutService.GetCheckInByUserAsync(userId);
+            return Ok(records);
+        }
+
+        [HttpGet("checkout-by-user/{userId}")]
+        public async Task<IActionResult> GetCheckOutByUser(Guid userId)
+        {
+            var records = await _vehicleInOutService.GetCheckOutByUserAsync(userId);
+            return Ok(records);
         }
 
         [HttpGet("all")]

@@ -33,16 +33,12 @@ namespace Application.Mappers
             CreateMap<VehicleInOutRecord, VehicleCheckInDto>().ReverseMap();
             CreateMap<VehicleInOutRecord, VehicleCheckOutDto>().ReverseMap();
             CreateMap<VehicleInOutRecord, VehicleCheckInResponseDto>();
-            CreateMap<VehicleInOutRecord, VehicleCheckOutResponseDto>(); // Add this line
+            CreateMap<VehicleInOutRecord, VehicleCheckOutResponseDto>(); 
             CreateMap<LeadTracking, LeadTrackingDto>().ReverseMap();
+            CreateMap<LeadTracking, LeadResponseDto>();
             CreateMap<LeadTracking, LeadTrackingResponseDto>();
             CreateMap<LeadAssignmentDto, LeadTracking>()
                 .ForMember(dest => dest.AssignedDate, opt => opt.MapFrom(src => DateTime.UtcNow));
         }
     }
     }
-
-
-        //CreateMap<LeadTracking, LeadTrackingDto>()
-        //    .ForMember(dest => dest.AssignedToUser, opt => opt.MapFrom(src => src.AssignedToUser.UserName))
-        //    .ForMember(dest => dest.AssignedByUser, opt => opt.MapFrom(src => src.AssignedByUser.UserName));

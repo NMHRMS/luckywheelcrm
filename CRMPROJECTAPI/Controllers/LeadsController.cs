@@ -1,10 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
-
-using Application.Dtos;
+﻿using Application.Dtos;
 using Application.Interfaces;
-using Domain.Models;
 using Microsoft.AspNetCore.Mvc;
-using Application.Services;
 
 namespace CRMPROJECTAPI.Controllers
 {
@@ -19,7 +15,6 @@ namespace CRMPROJECTAPI.Controllers
             _leadService = leadService;
         }
 
-        // GET: api/Lead
         [HttpGet]
         public async Task<IActionResult> GetAllLeads()
         {
@@ -27,17 +22,15 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(leads);
         }
 
-        // GET: api/Lead/{id}
         [HttpGet("{id}")]
         public async Task<IActionResult> GetLeadById(Guid id)
         {
             var lead = await _leadService.GetLeadByIdAsync(id);
             if (lead == null)
                 return NotFound();
-            return Ok(lead); // LeadDto
+            return Ok(lead); 
         }
 
-        // POST: api/Lead
         [HttpPost]
         public async Task<IActionResult> AddLead([FromBody] LeadDto leadDto)
         {
@@ -49,7 +42,6 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(addedLead);
         }
 
-        // PUT: api/Lead/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateLead(Guid id, [FromBody] LeadDto leadDto)
         {
@@ -61,8 +53,8 @@ namespace CRMPROJECTAPI.Controllers
                 return NotFound();
             return Ok(updatedLead);
         }
-        [HttpPost("upload-excel")]
 
+        [HttpPost("upload-excel")]
         public async Task<IActionResult> UploadLeads(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -122,10 +114,6 @@ namespace CRMPROJECTAPI.Controllers
         //    var result = await _leadService.UploadLeadsFromExcelAsync(file);
         //    return result ? Ok("Leads uploaded successfully") : BadRequest("Failed to upload leads");
         //}
-
-
-        // DELETE: api/Lead/{id}
-
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteLead(Guid id)
