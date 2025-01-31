@@ -86,7 +86,7 @@ namespace Application.Services
 
         public async Task<IEnumerable<LeadResponseDto>> GetAssignedLeadsAsync(Guid userId)
         {
-            var leads = await _context.LeadsTracking
+            var leads = await _context.Leads
                 .Where(lt => lt.AssignedTo == userId)
                 .ToListAsync();
 
@@ -167,7 +167,6 @@ namespace Application.Services
                 throw new Exception("Error uploading leads: An error occurred while saving the entity changes.", ex);
             }
         }
-
 
         //public async Task<bool> UploadLeadsFromExcelAsync(IFormFile file)
         //{

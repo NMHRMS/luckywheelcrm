@@ -13,7 +13,11 @@ namespace Application.Interfaces
     {
         Task<VehicleCheckInResponseDto> CheckInAsync(VehicleCheckInDto vehicleDto, IFormFile checkInImage);
         Task<VehicleCheckOutResponseDto?> CheckOutAsync(Guid vehicleId, VehicleCheckOutDto vehicleDto, IFormFile? checkOutImage);
-        Task<VehicleCheckInResponseDto?> GetRecordByVehicleNoAsync(string vehicleNo); // to Check Check-in vehicles
+        Task<VehicleInOutRecord> GetRecordByVehicleNoAsync(string vehicleNo);
+        Task<IEnumerable<VehicleCheckInResponseDto>> GetCheckInByDateAsync(DateTime date);
+        Task<IEnumerable<VehicleCheckOutResponseDto>> GetCheckOutByDateAsync(DateTime date);
+        Task<IEnumerable<VehicleCheckInResponseDto>> GetCheckInByUserAsync(Guid userId);
+        Task<IEnumerable<VehicleCheckOutResponseDto>> GetCheckOutByUserAsync(Guid userId);
         Task<IEnumerable<VehicleInOutRecord>> GetAllRecordsAsync();
         Task<IEnumerable<VehicleCheckInResponseDto>> GetAllInRecordsAsync();
         Task<IEnumerable<VehicleCheckOutResponseDto>> GetAllOutRecordsAsync();

@@ -70,12 +70,51 @@ namespace Application.Services
             return _mapper.Map<VehicleCheckOutResponseDto>(vehicleRecord);
         }
 
-        public async Task<VehicleCheckInResponseDto?> GetRecordByVehicleNoAsync(string vehicleNo)
+        public async Task<VehicleInOutRecord> GetRecordByVehicleNoAsync(string vehicleNo)
         {
-            var vehicleRecord = await _context.VehicleCheckInCheckOut
+            var record = await _context.VehicleCheckInCheckOut
                 .FirstOrDefaultAsync(v => v.VehicleNo == vehicleNo);
-            return vehicleRecord != null ? _mapper.Map<VehicleCheckInResponseDto>(vehicleRecord) : null;
+
+            return _mapper.Map<VehicleInOutRecord>(record);
         }
+
+        public async Task<IEnumerable<VehicleCheckInResponseDto>> GetCheckInByDateAsync(DateTime date)
+        {
+            var records = await _context.VehicleCheckInCheckOut
+                .Where(v => v.CheckInDate.Date == date.Date)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<VehicleCheckInResponseDto>>(records);
+        }
+
+        public async Task<IEnumerable<VehicleCheckOutResponseDto>> GetCheckOutByDateAsync(DateTime date)
+        {
+            var records = await _context.VehicleCheckInCheckOut
+                .Where(v => v.CheckOutDate.HasValue && v.CheckOutDate.Value.Date == date.Date)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<VehicleCheckOutResponseDto>>(records);
+        }
+
+        public async Task<IEnumerable<VehicleCheckInResponseDto>> GetCheckInByUserAsync(Guid userId)
+        {
+            var records = await _context.VehicleCheckInCheckOut
+                .Where(v => v.CheckInBy == userId)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<VehicleCheckInResponseDto>>(records);
+        }
+
+
+        public async Task<IEnumerable<VehicleCheckOutResponseDto>> GetCheckOutByUserAsync(Guid userId)
+        {
+            var records = await _context.VehicleCheckInCheckOut
+                .Where(v => v.CheckOutBy == userId)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<VehicleCheckOutResponseDto>>(records);
+        }
+
 
         public async Task<IEnumerable<VehicleInOutRecord>> GetAllRecordsAsync()
         {
@@ -86,23 +125,21 @@ namespace Application.Services
         public async Task<IEnumerable<VehicleCheckInResponseDto>> GetAllInRecordsAsync()
         {
             var records = await _context.VehicleCheckInCheckOut
-               .Where(v => v.Status == "Checked In") // Only fetch vehicles that are still checked in
+               .Where(v => v.Status == "Checked In")
                .ToListAsync();
 
             return _mapper.Map<IEnumerable<VehicleCheckInResponseDto>>(records);
-            //var records = await _context.VehicleCheckInCheckOut.ToListAsync();
-            //return _mapper.Map<IEnumerable<VehicleCheckInResponseDto>>(records);
+       
         }
         
         public async Task<IEnumerable<VehicleCheckOutResponseDto>> GetAllOutRecordsAsync()
         {
             var records = await _context.VehicleCheckInCheckOut
-                .Where(v => v.Status == "Checked Out") // Only fetch vehicles that have been checked out
+                .Where(v => v.Status == "Checked Out") 
                 .ToListAsync();
 
             return _mapper.Map<IEnumerable<VehicleCheckOutResponseDto>>(records);
-            //var records = await _context.VehicleCheckInCheckOut.ToListAsync();
-            //return _mapper.Map<IEnumerable<VehicleCheckOutResponseDto>>(records);
+           
         }
 
         private async Task<string> SaveImageAsync(IFormFile file)
