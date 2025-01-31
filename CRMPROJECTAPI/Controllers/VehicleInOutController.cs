@@ -2,12 +2,14 @@
 using Application.Interfaces;
 using Application.Services;
 using Domain.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 
 namespace CRMPROJECTAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class VehicleInOutController : ControllerBase
@@ -67,6 +69,13 @@ namespace CRMPROJECTAPI.Controllers
         {
             var records = await _vehicleInOutService.GetAllOutRecordsAsync();
             return Ok(records);
+        }
+
+        [HttpGet("get-checkInOutDetails_by_id")]
+        public async Task<IActionResult> GetCheckInOutDetailsById(Guid branchId)
+        {
+            var response = await _vehicleInOutService.GetCheckInOutDetailsById(branchId);
+            return Ok(response);
         }
     }
 }

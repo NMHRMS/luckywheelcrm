@@ -122,5 +122,22 @@ namespace Application.Services
 
             return Path.Combine("uploads", uniqueFileName);
         }
+
+        public async Task<VehicleInOutResponse> GetCheckInOutDetailsById(Guid branchId)
+        {
+            var records = await _context.VehicleCheckInCheckOut
+                                        .Where(x => x.BranchId == branchId)
+                                        .ToListAsync();
+
+            var mappedRecords = _mapper.Map<IEnumerable<VehicleInOutRecord>>(records);
+            int vehicleInOutCount = mappedRecords.Count();
+
+            return new VehicleInOutResponse
+            {
+                Records = mappedRecords,
+                Count = vehicleInOutCount
+            };
+        }
+
     }
 }

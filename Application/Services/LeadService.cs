@@ -14,11 +14,13 @@ namespace Application.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IJwtTokenService _jwtTokenService;
 
-        public LeadService(ApplicationDbContext context, IMapper mapper)
+        public LeadService(ApplicationDbContext context, IMapper mapper, IJwtTokenService jwtTokenService)
         {
             _context = context;
             _mapper = mapper;
+            _jwtTokenService = jwtTokenService;  
         }
 
         public async Task<IEnumerable<LeadResponseDto>> GetAllLeadsAsync()
@@ -112,9 +114,9 @@ namespace Application.Services
             var leads = new List<Lead>();
             for (int row = 1; row <= rowCount; row++) 
             {
-                Guid? assignedToUser = null; 
-                Guid? companyId = null; 
-                Guid? productId = null; 
+                Guid? assignedToUser = null; ; 
+                Guid? productId = null;
+                var companyId = _jwtTokenService.GetCompanyIdFromToken();  
                 var lead = new Lead
                 {
                     LeadSource = null, 

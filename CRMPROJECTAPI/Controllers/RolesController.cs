@@ -4,9 +4,11 @@ using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Application.Services;
 using Domain.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Presentation.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class RolesController : ControllerBase

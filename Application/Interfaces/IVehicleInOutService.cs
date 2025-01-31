@@ -17,6 +17,7 @@ namespace Application.Interfaces
         Task<IEnumerable<VehicleInOutRecord>> GetAllRecordsAsync();
         Task<IEnumerable<VehicleCheckInResponseDto>> GetAllInRecordsAsync();
         Task<IEnumerable<VehicleCheckOutResponseDto>> GetAllOutRecordsAsync();
+        Task<VehicleInOutResponse> GetCheckInOutDetailsById(Guid branchId);
     }
 }
 

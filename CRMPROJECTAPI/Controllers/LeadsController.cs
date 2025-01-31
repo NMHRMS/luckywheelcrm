@@ -5,9 +5,11 @@ using Application.Interfaces;
 using Domain.Models;
 using Microsoft.AspNetCore.Mvc;
 using Application.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CRMPROJECTAPI.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class LeadsController : ControllerBase
