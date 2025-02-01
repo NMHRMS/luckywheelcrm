@@ -39,7 +39,7 @@ namespace Application.Services
         public async Task<CompanyResponseDto> AddCompanyAsync(AddCompanyDto companyDto)
         {
             var company = _mapper.Map<Company>(companyDto);
-            company.CompanyId = Guid.NewGuid();     // Generate a GUID for the primary key
+            company.CompanyId = Guid.NewGuid();    
             _context.Companies.Add(company);
             await _context.SaveChangesAsync();
             return _mapper.Map<CompanyResponseDto>(company);

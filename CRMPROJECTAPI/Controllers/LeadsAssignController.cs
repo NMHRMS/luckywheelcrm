@@ -25,10 +25,6 @@ namespace CRMPROJECTAPI.Controllers
             if (requestDto == null || requestDto.LeadID == Guid.Empty || requestDto.AssignedTo == Guid.Empty || requestDto.AssignedBy == Guid.Empty)
                 return BadRequest("Invalid data");
 
-            // Assume logged-in user ID is retrieved dynamically, e.g., from JWT token claims
-
-            // Set the correct assignedBy value in the request DTO
-
             await _leadAssignService.AssignLeadAsync(requestDto);
 
             return Ok(new { message = "Lead assigned successfully" });

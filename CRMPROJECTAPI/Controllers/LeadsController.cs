@@ -123,94 +123,13 @@ namespace CRMPROJECTAPI.Controllers
             var leads = await _leadService.GetDashboardLeads();
             return Ok(leads);
         }
+
+        [HttpGet("get_leads_by_excelname")]
+        public async Task<IActionResult> GetLeadsByExcelName(string excelName)
+        {
+            var leads = await _leadService.GetLeadsByExcelName(excelName);
+            return Ok(leads);
+        }
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//using Application.Interfaces;
-//using Domain.Models;
-//using Microsoft.AspNetCore.Mvc;
-
-//namespace CRMPROJECTAPI.Controllers
-//{
-//    [ApiController]
-//    [Route("api/[controller]")]
-//    public class LeadController : ControllerBase
-//    {
-//        private readonly ILeadService _leadService;
-
-//        public LeadController(ILeadService leadService)
-//        {
-//            _leadService = leadService;
-//        }
-
-//        // GET: api/Lead
-//        [HttpGet]
-//        public async Task<IActionResult> GetAllLeads()
-//        {
-//            var leads = await _leadService.GetAllLeadsAsync();
-//            return Ok(leads);
-//        }
-
-//        // GET: api/Lead/{id}
-//        [HttpGet("{id}")]
-//        public async Task<IActionResult> GetLeadById(int id)
-//        {
-//            var lead = await _leadService.GetLeadByIdAsync(id);
-//            if (lead == null)
-//                return NotFound();
-//            return Ok(lead);
-//        }
-
-//        // POST: api/Lead
-//        [HttpPost]
-//        public async Task<IActionResult> AddLead([FromBody] Lead lead)
-//        {
-//            if (lead == null)
-//                return BadRequest("Lead is null");
-
-//            var result = await _leadService.AddLeadAsync(lead);
-//            return CreatedAtAction(nameof(GetLeadById), new { id = result.Id }, result);
-//        }
-
-//        // PUT: api/Lead/{id}
-//        [HttpPut("{id}")]
-//        public async Task<IActionResult> UpdateLead(int id, [FromBody] Lead lead)
-//        {
-//            if (lead == null || id != lead.Id)
-//                return BadRequest("Invalid request");
-
-//            var updatedLead = await _leadService.UpdateLeadAsync(lead);
-//            if (updatedLead == null)
-//                return NotFound();
-//            return Ok(updatedLead);
-//        }
-
-//        // DELETE: api/Lead/{id}
-//        [HttpDelete("{id}")]
-//        public async Task<IActionResult> DeleteLead(int id)
-//        {
-//            var result = await _leadService.DeleteLeadAsync(id);
-//            if (!result)
-//                return NotFound();
-//            return NoContent();
-//        }
-//    }
-//}

@@ -188,6 +188,23 @@ namespace Application.Services
                 totalLeadsCount = totalLeads
             };
         }
+
+        public async Task<LeadsByExcelNameResponseDto> GetLeadsByExcelName(string excelName)
+        {
+            var leadList = _context.Leads.Where(x=>x.ExcelName==excelName).ToList();
+            int totalLeads = leadList.Count;
+            var assignedList = leadList.Where(x=>x.AssignedTo!=null).ToList();
+            int assignedCount = assignedList.Count;
+            var notAssignedList = leadList.Where(x=>x.AssignedTo==null).ToList();
+            int notAssignedCount = notAssignedList.Count;
+            return new LeadsByExcelNameResponseDto
+            {
+                Leads = leadList,
+                TotalLeadsCount = totalLeads,
+                AssignedLeadsCount=assignedCount,
+                NotAssignedLeadsCount=notAssignedCount,
+            };
+        }
     }
 }
 
