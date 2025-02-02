@@ -236,6 +236,32 @@ namespace Application.Services
 
             return responseList;
         }
+
+        public async Task<IEnumerable<LeadResponseDto>> GetTodaysFollowUpLeadsAsync(Guid userId)
+        {
+            var today = DateTime.UtcNow.Date;
+            var leads = await _context.Leads
+                .Where(l => l.AssignedTo == userId && l.FollowUpDate.HasValue && l.FollowUpDate.Value.Date == today)
+                .ToListAsync();
+            return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
+        }
+
+        public async Task<GetDashboardStatusRespDto> GetDashboardListByUserId(Guid userID,DateTime date)
+        {
+            var leadList = _context.Leads.Where(x => x.AssignedTo == userID && x.AssignedDate.HasValue && x.AssignedDate.Value.Date == date.Date).ToList();
+            int assignedLeadsCount = leadList.Count;
+            int positiveLeadsCount = leadList.Where(x=>x.Status=="Positive").ToList().Count;
+            int negativeLeadsCount = leadList.Where(x=>x.Status=="Negative").ToList().Count;
+            int closedLeadsCount = leadList.Where(x=>x.Status=="Closed").ToList().Count;
+            return new GetDashboardStatusRespDto
+            {
+                Leads = leadList,
+                AssignedLeadsCount = assignedLeadsCount,
+                PositiveLeadsCount = positiveLeadsCount,
+                NegativeLeadsCount = negativeLeadsCount,
+                ClosedLeadsCount = closedLeadsCount,
+            };
+        }
     }
 }
 

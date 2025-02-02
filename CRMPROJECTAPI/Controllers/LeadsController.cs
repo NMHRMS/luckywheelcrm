@@ -81,6 +81,14 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(assignedLeads);
         }
 
+        [HttpGet("assigned_by_followUpDate/{userId}")]
+        public async Task<IActionResult> GetAssignedLeadsByFollowUpDate(Guid userId)
+        {
+            var assignedLeads = await _leadService.GetTodaysFollowUpLeadsAsync(userId);
+            return Ok(assignedLeads);
+        }
+
+
         [HttpGet("filter")]
         public async Task<IActionResult> GetLeadsByAssignment([FromQuery] bool assigned)
         {
@@ -138,6 +146,12 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(leads);
         }
 
+        [HttpGet("get_dashboardlist_by_userId")]
+        public async Task<IActionResult> GetDashboardListByUserId(Guid userId, DateTime date)
+        {
+            var leads = await _leadService.GetDashboardListByUserId(userId,date);
+            return Ok(leads);
+        }
     }
 }
 

@@ -21,5 +21,7 @@ namespace Application.Dtos
         public Guid ProductId { get; set; }
         public string LeadType { get; set; }
         public string Status { get; set; }
+        public DateTime? FollowUpDate { get; set; }
+        public Guid? AssignedTo { get; set; }
     }
 }

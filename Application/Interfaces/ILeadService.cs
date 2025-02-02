@@ -19,5 +19,7 @@ namespace Application.Interfaces
         Task<DashboardLeadResponseDto> GetDashboardLeads();
         Task<LeadsByExcelNameResponseDto> GetLeadsByExcelName(string excelName);
         Task<List<LeadListResponseDto>> GetLeadsDataList();
+        Task<GetDashboardStatusRespDto> GetDashboardListByUserId(Guid userId, DateTime date);
+        Task<IEnumerable<LeadResponseDto>> GetTodaysFollowUpLeadsAsync(Guid userId);
     }
 }
