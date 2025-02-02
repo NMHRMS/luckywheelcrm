@@ -205,6 +205,37 @@ namespace Application.Services
                 NotAssignedLeadsCount=notAssignedCount,
             };
         }
+
+        public async Task<List<LeadListResponseDto>> GetLeadsDataList()
+        {
+            var excelNames = _context.Leads.Where(x => x.ExcelName != null).Select(x => x.ExcelName).Distinct().ToList();                        
+            var responseList = new List<LeadListResponseDto>();
+
+            foreach (var excelName in excelNames)
+            {
+                var leadList = _context.Leads.Where(x => x.ExcelName == excelName).ToList();
+                int totalLeads = leadList.Count;
+                var assignedList = leadList.Where(x => x.AssignedTo != null).ToList();
+                int assignedCount = assignedList.Count;
+                var notAssignedList = leadList.Where(x => x.AssignedTo == null).ToList();
+                int notAssignedCount = notAssignedList.Count;
+
+                DateTime? createdDate = leadList.OrderBy(x => x.CreateDate).FirstOrDefault()?.CreateDate;
+
+                var responseDto = new LeadListResponseDto
+                {
+                    ExcelName = excelName,
+                    TotalCount = totalLeads,
+                    AssignedCount = assignedCount,
+                    NotAssignedCount = notAssignedCount,
+                    CreatedDate = createdDate
+                };
+
+                responseList.Add(responseDto);
+            }
+
+            return responseList;
+        }
     }
 }
 

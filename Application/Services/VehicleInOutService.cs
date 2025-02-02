@@ -176,5 +176,37 @@ namespace Application.Services
             };
         }
 
+        public async Task<VehicleInOutResponse> GetCheckInListByBranchId(Guid branchId)
+        {
+            var records = await _context.VehicleCheckInCheckOut
+                                        .Where(x => x.BranchId == branchId && x.Status== "Checked In")
+                                        .ToListAsync();
+
+            var mappedRecords = _mapper.Map<IEnumerable<VehicleInOutRecord>>(records);
+            int vehicleInOutCount = mappedRecords.Count();
+
+            return new VehicleInOutResponse
+            {
+                Records = mappedRecords,
+                Count = vehicleInOutCount
+            };
+        }
+
+        public async Task<VehicleInOutResponse> GetCheckOutListByBranchId(Guid branchId)
+        {
+            var records = await _context.VehicleCheckInCheckOut
+                                        .Where(x => x.BranchId == branchId && x.Status== "Checked Out")
+                                        .ToListAsync();
+
+            var mappedRecords = _mapper.Map<IEnumerable<VehicleInOutRecord>>(records);
+            int vehicleInOutCount = mappedRecords.Count();
+
+            return new VehicleInOutResponse
+            {
+                Records = mappedRecords,
+                Count = vehicleInOutCount
+            };
+        }
+
     }
 }
