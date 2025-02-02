@@ -130,6 +130,14 @@ namespace CRMPROJECTAPI.Controllers
             var leads = await _leadService.GetLeadsByExcelName(excelName);
             return Ok(leads);
         }
+
+        [HttpGet("get_leads_dataList")]
+        public async Task<IActionResult> GetLeadsDataList()
+        {
+            var leads = await _leadService.GetLeadsDataList();
+            return Ok(leads);
+        }
+
     }
 }
 

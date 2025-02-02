@@ -18,5 +18,6 @@ namespace Application.Interfaces
         Task<bool> DeleteLeadAsync(Guid id);
         Task<DashboardLeadResponseDto> GetDashboardLeads();
         Task<LeadsByExcelNameResponseDto> GetLeadsByExcelName(string excelName);
+        Task<List<LeadListResponseDto>> GetLeadsDataList();
     }
 }
