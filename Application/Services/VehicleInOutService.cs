@@ -81,7 +81,7 @@ namespace Application.Services
         public async Task<IEnumerable<VehicleCheckInResponseDto>> GetCheckInByDateAsync(DateTime date)
         {
             var records = await _context.VehicleCheckInCheckOut
-                .Where(v => v.CheckInDate.Date == date.Date)
+                .Where(v => v.CheckInDate.Date == date.Date)    
                 .ToListAsync();
 
             return _mapper.Map<IEnumerable<VehicleCheckInResponseDto>>(records);
