@@ -43,7 +43,6 @@ namespace CRMPROJECTAPI.Controllers
                 return BadRequest("Error creating company.");
 
             return Ok(company);
-            //return CreatedAtAction(nameof(GetCompanyById), new { id = addedCompany.CompanyId }, addedCompany);
         }
 
         [HttpPut("{id}")]

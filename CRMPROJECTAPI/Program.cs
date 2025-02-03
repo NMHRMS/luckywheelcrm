@@ -28,6 +28,7 @@ builder.Services.AddScoped<ICallRecordService, CallRecordService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IVehicleInOutService, VehicleInOutService>();
 builder.Services.AddScoped<ILeadAssignService, LeadsAssignService>();
+builder.Services.AddScoped<IUserAssignmentMappingService, UserAssignmentMappingService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddHttpContextAccessor();  
 builder.Services.AddDbContext<ApplicationDbContext>(options =>

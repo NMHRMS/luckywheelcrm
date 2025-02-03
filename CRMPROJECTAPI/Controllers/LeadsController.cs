@@ -3,6 +3,7 @@ using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Application.Services;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace CRMPROJECTAPI.Controllers
 {
@@ -57,6 +58,18 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(updatedLead);
         }
 
+        [HttpPut("update-call/{id}")]
+        public async Task<IActionResult> UpdateLeadOnCalls(Guid id, [FromBody] LeadCallUpdateDto leadCallUpdate)
+        {
+            if(leadCallUpdate == null)
+                return BadRequest("Invalid lead data");
+
+            var updatedLead = await _leadService.UpdateLeadCallsAsync(id, leadCallUpdate);
+            if(updatedLead == null)
+                return NotFound("Lead not found.");
+            return Ok(updatedLead);
+        }
+       
         [HttpPost("upload-excel")]
         public async Task<IActionResult> UploadLeads(IFormFile file)
         {
@@ -107,7 +120,6 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(leads);
         }
 
-
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteLead(Guid id)
         {
@@ -125,92 +137,3 @@ namespace CRMPROJECTAPI.Controllers
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//using Application.Interfaces;
-//using Domain.Models;
-//using Microsoft.AspNetCore.Mvc;
-
-//namespace CRMPROJECTAPI.Controllers
-//{
-//    [ApiController]
-//    [Route("api/[controller]")]
-//    public class LeadController : ControllerBase
-//    {
-//        private readonly ILeadService _leadService;
-
-//        public LeadController(ILeadService leadService)
-//        {
-//            _leadService = leadService;
-//        }
-
-//        // GET: api/Lead
-//        [HttpGet]
-//        public async Task<IActionResult> GetAllLeads()
-//        {
-//            var leads = await _leadService.GetAllLeadsAsync();
-//            return Ok(leads);
-//        }
-
-//        // GET: api/Lead/{id}
-//        [HttpGet("{id}")]
-//        public async Task<IActionResult> GetLeadById(int id)
-//        {
-//            var lead = await _leadService.GetLeadByIdAsync(id);
-//            if (lead == null)
-//                return NotFound();
-//            return Ok(lead);
-//        }
-
-//        // POST: api/Lead
-//        [HttpPost]
-//        public async Task<IActionResult> AddLead([FromBody] Lead lead)
-//        {
-//            if (lead == null)
-//                return BadRequest("Lead is null");
-
-//            var result = await _leadService.AddLeadAsync(lead);
-//            return CreatedAtAction(nameof(GetLeadById), new { id = result.Id }, result);
-//        }
-
-//        // PUT: api/Lead/{id}
-//        [HttpPut("{id}")]
-//        public async Task<IActionResult> UpdateLead(int id, [FromBody] Lead lead)
-//        {
-//            if (lead == null || id != lead.Id)
-//                return BadRequest("Invalid request");
-
-//            var updatedLead = await _leadService.UpdateLeadAsync(lead);
-//            if (updatedLead == null)
-//                return NotFound();
-//            return Ok(updatedLead);
-//        }
-
-//        // DELETE: api/Lead/{id}
-//        [HttpDelete("{id}")]
-//        public async Task<IActionResult> DeleteLead(int id)
-//        {
-//            var result = await _leadService.DeleteLeadAsync(id);
-//            if (!result)
-//                return NotFound();
-//            return NoContent();
-//        }
-//    }
-//}
