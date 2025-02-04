@@ -31,6 +31,7 @@ public partial class ApplicationDbContext : DbContext
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<VehicleInOutRecord> VehicleCheckInCheckOut {  get; set; }
+    public virtual DbSet<UserAssignmentMapping> UserAssignmentMappings { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -346,6 +347,23 @@ public partial class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_VehicleCheckInCheckOut_Users1");
         });
+
+        modelBuilder.Entity<UserAssignmentMapping>()
+           .HasKey(ua => ua.Id);
+
+        modelBuilder.Entity<UserAssignmentMapping>()
+            .HasOne<User>(ua => ua.Assigner)
+            .WithMany(u => u.AssignedUsers)
+            .HasForeignKey(ua => ua.AssignerUserId)
+            .OnDelete(DeleteBehavior.ClientSetNull)
+            .HasConstraintName("FK_UserAssignmentMappings_Users");
+
+        modelBuilder.Entity<UserAssignmentMapping>()
+            .HasOne<User>(ua => ua.Assignee)
+            .WithMany(u => u.AssigneeUsers)
+            .HasForeignKey(ua => ua.AssigneeUserId)
+            .OnDelete(DeleteBehavior.ClientSetNull)
+            .HasConstraintName("FK_UserAssignmentMappings_Users1");
 
         OnModelCreatingPartial(modelBuilder);
     }
