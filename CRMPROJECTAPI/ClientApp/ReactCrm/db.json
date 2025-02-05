@@ -1,0 +1,191 @@
+{
+  "leads": [
+    {
+      "id": "e274",
+      "leads": [
+        {
+          "id": 1,
+          "Owner Name": "YASHARAJ GHOLAP",
+          "Mobile No.": 9822569513,
+          "Vehicle Class": "Goods Carrier",
+          "Registration No.": "MH11DD5684",
+          "status": "Not Assigned",
+          "assignedTo": null,
+          "remark": ""
+        },
+        {
+          "id": 2,
+          "Owner Name": "DP JAIN  CO INFRASTRUCTURE PVT LTD",
+          "Mobile No.": 8380047640,
+          "Vehicle Class": "Goods Carrier",
+          "Registration No.": "MH14LB5124",
+          "status": "Not Assigned",
+          "assignedTo": null,
+          "remark": ""
+        },
+        {
+          "id": 3,
+          "Owner Name": "DP JAIN  CO INFRASTRUCTURE PVT LTD",
+          "Mobile No.": 8380047640,
+          "Vehicle Class": "Goods Carrier",
+          "Registration No.": "MH14LB5126",
+          "status": "Not Assigned",
+          "assignedTo": null,
+          "remark": ""
+        },
+        {
+          "id": 4,
+          "Owner Name": "DP JAIN  CO INFRASTRUCTURE PVT LTD",
+          "Mobile No.": 8380047640,
+          "Vehicle Class": "Goods Carrier",
+          "Registration No.": "MH14LB5127",
+          "status": "Not Assigned",
+          "assignedTo": null,
+          "remark": ""
+        },
+        {
+          "id": 5,
+          "Owner Name": "SHUBHAM BHAGVAN ARJUGADE",
+          "Mobile No.": 9284750449,
+          "Vehicle Class": "Goods Carrier",
+          "Registration No.": "MH50M2209",
+          "status": "Not Assigned",
+          "assignedTo": null,
+          "remark": ""
+        }
+      ]
+    }
+  ],
+  "assignedLeads": [
+    {
+      "id": "372f",
+      "leads": [
+        {
+          "id": 1,
+          "Owner Name": "YASHARAJ GHOLAP",
+          "Mobile No.": 9822569513,
+          "Vehicle Class": "Goods Carrier",
+          "Registration No.": "MH11DD5684",
+          "status": "Assigned",
+          "assignedTo": "4",
+          "remark": ""
+        }
+      ]
+    },
+    {
+      "id": "f519",
+      "leads": [
+        {
+          "id": 1,
+          "Owner Name": "YASHARAJ GHOLAP",
+          "Mobile No.": 9822569513,
+          "Vehicle Class": "Goods Carrier",
+          "Registration No.": "MH11DD5684",
+          "status": "Assigned",
+          "assignedTo": "8",
+          "remark": ""
+        }
+      ]
+    },
+    {
+      "id": "a336",
+      "leads": [
+        {
+          "id": 1,
+          "Owner Name": "YASHARAJ GHOLAP",
+          "Mobile No.": 9822569513,
+          "Vehicle Class": "Goods Carrier",
+          "Registration No.": "MH11DD5684",
+          "status": "Assigned",
+          "assignedTo": "10",
+          "remark": ""
+        },
+        {
+          "id": 2,
+          "Owner Name": "DP JAIN  CO INFRASTRUCTURE PVT LTD",
+          "Mobile No.": 8380047640,
+          "Vehicle Class": "Goods Carrier",
+          "Registration No.": "MH14LB5124",
+          "status": "Assigned",
+          "assignedTo": "10",
+          "remark": ""
+        }
+      ]
+    },
+    {
+      "id": "00bf",
+      "leads": [
+        {
+          "id": 2,
+          "Owner Name": "DP JAIN  CO INFRASTRUCTURE PVT LTD",
+          "Mobile No.": 8380047640,
+          "Vehicle Class": "Goods Carrier",
+          "Registration No.": "MH14LB5124",
+          "status": "Assigned",
+          "assignedTo": "8",
+          "remark": ""
+        },
+        {
+          "id": 3,
+          "Owner Name": "DP JAIN  CO INFRASTRUCTURE PVT LTD",
+          "Mobile No.": 8380047640,
+          "Vehicle Class": "Goods Carrier",
+          "Registration No.": "MH14LB5126",
+          "status": "Assigned",
+          "assignedTo": "8",
+          "remark": ""
+        }
+      ]
+    },
+    {
+      "id": "8275",
+      "leads": [
+        {
+          "id": 3,
+          "Owner Name": "DP JAIN  CO INFRASTRUCTURE PVT LTD",
+          "Mobile No.": 8380047640,
+          "Vehicle Class": "Goods Carrier",
+          "Registration No.": "MH14LB5126",
+          "status": "Assigned",
+          "assignedTo": "4",
+          "remark": ""
+        },
+        {
+          "id": 4,
+          "Owner Name": "DP JAIN  CO INFRASTRUCTURE PVT LTD",
+          "Mobile No.": 8380047640,
+          "Vehicle Class": "Goods Carrier",
+          "Registration No.": "MH14LB5127",
+          "status": "Assigned",
+          "assignedTo": "4",
+          "remark": ""
+        }
+      ]
+    },
+    {
+      "id": "4b04",
+      "leads": [
+        {
+          "id": 3,
+          "Owner Name": "DP JAIN  CO INFRASTRUCTURE PVT LTD",
+          "Mobile No.": 8380047640,
+          "Vehicle Class": "Goods Carrier",
+          "Registration No.": "MH14LB5126",
+          "status": "Assigned",
+          "assignedTo": "4",
+          "remark": ""
+        },
+        {
+          "id": 4,
+          "Owner Name": "DP JAIN  CO INFRASTRUCTURE PVT LTD",
+          "Mobile No.": 8380047640,
+          "Vehicle Class": "Goods Carrier",
+          "Registration No.": "MH14LB5127",
+          "status": "Assigned",
+          "assignedTo": "4",
+          "remark": ""
+        }
+      ]
+    }
+  ]
+}
