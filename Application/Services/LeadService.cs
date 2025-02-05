@@ -14,12 +14,14 @@ namespace Application.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly ILeadAssignService _leadAssignService;
         private readonly IJwtTokenService _jwtTokenService;
 
-        public LeadService(ApplicationDbContext context, IMapper mapper, IJwtTokenService jwtTokenService)
+        public LeadService(ApplicationDbContext context, IMapper mapper, ILeadAssignService leadAssignService, IJwtTokenService jwtTokenService)
         {
             _context = context;
             _mapper = mapper;
+            _leadAssignService = leadAssignService;
             _jwtTokenService = jwtTokenService;  
         }
 
@@ -43,6 +45,7 @@ namespace Application.Services
             await _context.SaveChangesAsync();
             return _mapper.Map<LeadResponseDto>(lead);
         }
+
         public async Task<LeadResponseDto?> UpdateLeadAsync(Guid id, LeadDto leadDto)
         {
             var existingLead = await _context.Leads.FindAsync(id);
@@ -54,6 +57,35 @@ namespace Application.Services
             return _mapper.Map<LeadResponseDto>(existingLead);
         }
 
+        public async Task<LeadResponseDto> UpdateLeadCallsAsync(Guid leadId, LeadCallUpdateDto updateDto)
+        {
+            var lead = await _context.Leads.FindAsync(leadId);
+            if (lead == null)
+                return null; 
+
+            lead.Status = updateDto.Status;
+            lead.FollowUpDate = updateDto.FollowUpDate;
+            lead.Remark = updateDto.Remark;
+            lead.LeadType = updateDto.LeadType;
+
+            var currentUserId = _jwtTokenService.GetUserIdFromToken();
+            if (currentUserId == null)
+                throw new Exception("User not authenticated");
+
+            if (updateDto.AssignedTo != Guid.Empty && lead.AssignedTo != updateDto.AssignedTo)
+            {
+                var assignmentDto = _mapper.Map<LeadAssignmentDto>(updateDto);
+                assignmentDto.LeadID = leadId;
+                assignmentDto.AssignedBy = currentUserId.Value; 
+                assignmentDto.AssignedDate = DateTime.UtcNow;
+
+                await _leadAssignService.AssignLeadAsync(assignmentDto);
+            }
+            
+            await _context.SaveChangesAsync();
+            return _mapper.Map<LeadResponseDto>(lead);
+        }
+
         public async Task<IEnumerable<LeadResponseDto>> GetLeadsByAssignmentAsync(bool assigned)
         {
             var leads = await _context.Leads
@@ -61,6 +93,7 @@ namespace Application.Services
                 .ToListAsync();
             return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
         }
+
         public async Task<IEnumerable<LeadResponseDto>> SearchLeadsAsync(string? name, string? state, string? district, string? modelName, string? dealerName)
         {
             var query = _context.Leads.AsQueryable();
@@ -93,7 +126,6 @@ namespace Application.Services
             return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
         }
     
-
         public async Task<IEnumerable<LeadResponseDto>> GetTodaysAssignedLeadsAsync(Guid userId)
         {
             var today = DateTime.UtcNow.Date;
@@ -102,6 +134,7 @@ namespace Application.Services
                 .ToListAsync();
             return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
         }
+
         public async Task UploadLeadsFromExcelAsync(IFormFile file)
         {
             using var stream = new MemoryStream();
@@ -264,4 +297,3 @@ namespace Application.Services
         }
     }
 }
-

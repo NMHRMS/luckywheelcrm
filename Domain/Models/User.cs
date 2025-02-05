@@ -22,12 +22,14 @@ public partial class User
     public virtual Company Company { get; set; } = null!;
     public virtual Branch? Branch { get; set; } 
     public virtual Role Role { get; set; } = null!;
+
     // Navigation Properties
     public virtual ICollection<Lead> Leads { get; set; } = new List<Lead>();
     public virtual ICollection<LeadTracking> AssignedToLeadTrackings { get; set; }
     public virtual ICollection<LeadTracking> AssignedByLeadTrackings { get; set; }
     public virtual ICollection<CallRecord> CallRecords { get; set; } = new List<CallRecord>();
     public virtual ICollection<VehicleInOutRecord> VehicleCheckInCheckOut  { get; set; } = new List<VehicleInOutRecord>();
-
+    public virtual ICollection<UserAssignmentMapping> AssignedUsers { get; set; }  
+    public virtual ICollection<UserAssignmentMapping> AssigneeUsers { get; set; } 
 
 }

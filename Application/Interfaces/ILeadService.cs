@@ -10,11 +10,13 @@ namespace Application.Interfaces
         Task<LeadResponseDto?> GetLeadByIdAsync(Guid id);
         Task<LeadResponseDto> AddLeadAsync(LeadDto leadDto);
         Task<LeadResponseDto?> UpdateLeadAsync(Guid id, LeadDto leadDto);
+        Task<LeadResponseDto?> UpdateLeadCallsAsync(Guid id, LeadCallUpdateDto updateDto);
         Task UploadLeadsFromExcelAsync(IFormFile file);
         Task<IEnumerable<LeadResponseDto>> GetAssignedLeadsAsync(Guid userId);
         Task<IEnumerable<LeadResponseDto>> GetLeadsByAssignmentAsync(bool assigned);
         Task<IEnumerable<LeadResponseDto>> SearchLeadsAsync(string? name, string? state, string? district, string? modelName, string? dealerName);
         Task<IEnumerable<LeadResponseDto>> GetTodaysAssignedLeadsAsync(Guid userId);
+        Task<DashboardLeadResponseDto> GetDashboardLeads();
         Task<bool> DeleteLeadAsync(Guid id);
         Task<DashboardLeadResponseDto> GetDashboardLeads();
         Task<LeadsByExcelNameResponseDto> GetLeadsByExcelName(string excelName);

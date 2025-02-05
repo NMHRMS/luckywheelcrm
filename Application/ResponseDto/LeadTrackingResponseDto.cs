@@ -13,5 +13,6 @@ namespace Application.ResponseDto
         public Guid AssignedTo { get; set; }
         public Guid AssignedBy { get; set; }
         public DateTime AssignedDate { get; set; }
+
     }
 }

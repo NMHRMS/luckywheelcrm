@@ -25,11 +25,19 @@ namespace CRMPROJECTAPI.Controllers
             if (requestDto == null || requestDto.LeadID == Guid.Empty || requestDto.AssignedTo == Guid.Empty || requestDto.AssignedBy == Guid.Empty)
                 return BadRequest("Invalid data");
 
-            await _leadAssignService.AssignLeadAsync(requestDto);
-
-            return Ok(new { message = "Lead assigned successfully" });
+            try
+            {
+                await _leadAssignService.AssignLeadAsync(requestDto);
+                return Ok(new { message = "Lead assigned successfully" });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Forbid(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
-
-      
     }
 }
