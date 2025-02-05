@@ -17,11 +17,13 @@ namespace Application.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IJwtTokenService _jwtTokenService;
 
-        public LeadsAssignService(ApplicationDbContext context, IMapper mapper)
+        public LeadsAssignService(ApplicationDbContext context, IMapper mapper, IJwtTokenService jwtTokenService)
         {
             _context = context;
             _mapper = mapper;
+            _jwtTokenService = jwtTokenService;
         }
 
         public async Task AssignLeadAsync(LeadAssignmentDto requestDto)
@@ -32,25 +34,23 @@ namespace Application.Services
                 throw new Exception("Lead not found");
             }
 
-            // Update the lead's assigned user
+            var assignedByUserId = _jwtTokenService.GetUserIdFromToken();
+
+            bool hasPermission = await _context.UserAssignmentMappings
+                .AnyAsync(mapping => mapping.AssignerUserId == requestDto.AssignedBy && mapping.AssigneeUserId == requestDto.AssignedTo);
+
+            if (!hasPermission)
+            {
+                throw new UnauthorizedAccessException("You do not have permission to assign this lead.");
+            }
+
             lead.AssignedTo = requestDto.AssignedTo;
             lead.AssignedDate = requestDto.AssignedDate;
             _context.Leads.Update(lead);
 
-            // Create a tracking entry
-            var leadTracking = new LeadTracking
-            {
-                LeadID = requestDto.LeadID,
-                AssignedTo = requestDto.AssignedTo,
-                AssignedBy = requestDto.AssignedBy, 
-                AssignedDate = DateTime.UtcNow
-            };
-
+            var leadTracking = _mapper.Map<LeadTracking>(requestDto);
             await _context.LeadsTracking.AddAsync(leadTracking);
             await _context.SaveChangesAsync();
         }
-
-        
     }
-
 }

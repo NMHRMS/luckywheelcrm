@@ -11,7 +11,7 @@ namespace Application.Interfaces
 {
     public interface IVehicleInOutService
     {
-        Task<VehicleCheckInResponseDto> CheckInAsync(VehicleCheckInDto vehicleDto, IFormFile checkInImage);
+        Task<VehicleCheckInResponseDto?> CheckInAsync(VehicleCheckInDto vehicleDto, IFormFile? checkInImage);
         Task<VehicleCheckOutResponseDto?> CheckOutAsync(Guid vehicleId, VehicleCheckOutDto vehicleDto, IFormFile? checkOutImage);
         Task<VehicleInOutRecord> GetRecordByVehicleNoAsync(string vehicleNo);
         Task<IEnumerable<VehicleCheckInResponseDto>> GetCheckInByDateAsync(DateTime date);

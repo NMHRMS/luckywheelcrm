@@ -17,9 +17,9 @@ public partial class LeadReview
 
     public string? Review {  get; set; }
 
-    public DateOnly? ReviewDate { get; set; }
+    public DateTime? ReviewDate { get; set; }
 
-    public DateOnly FollowUpDate { get; set; } 
+    public DateTime FollowUpDate { get; set; } 
 
     public DateTime CreateDate { get; set; }
 

@@ -26,7 +26,7 @@ namespace Application.Services
             _mapper = mapper;
         }
 
-        public async Task<VehicleCheckInResponseDto> CheckInAsync(VehicleCheckInDto vehicleDto, IFormFile checkInImage)
+        public async Task<VehicleCheckInResponseDto?> CheckInAsync(VehicleCheckInDto vehicleDto, IFormFile? checkInImage)
         {
             if (await _context.VehicleCheckInCheckOut.AnyAsync(v => v.VehicleNo == vehicleDto.VehicleNo && v.CheckOutDate == null))
             {
