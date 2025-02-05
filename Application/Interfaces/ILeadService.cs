@@ -18,7 +18,6 @@ namespace Application.Interfaces
         Task<IEnumerable<LeadResponseDto>> GetTodaysAssignedLeadsAsync(Guid userId);
         Task<DashboardLeadResponseDto> GetDashboardLeads();
         Task<bool> DeleteLeadAsync(Guid id);
-        Task<DashboardLeadResponseDto> GetDashboardLeads();
         Task<LeadsByExcelNameResponseDto> GetLeadsByExcelName(string excelName);
         Task<List<LeadListResponseDto>> GetLeadsDataList();
         Task<GetDashboardStatusRespDto> GetDashboardListByUserId(Guid userId, DateTime date);
