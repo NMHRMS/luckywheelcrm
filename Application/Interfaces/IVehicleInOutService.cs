@@ -22,6 +22,9 @@ namespace Application.Interfaces
         Task<IEnumerable<VehicleCheckInResponseDto>> GetAllInRecordsAsync();
         Task<IEnumerable<VehicleCheckOutResponseDto>> GetAllOutRecordsAsync();
         Task<VehicleInOutResponse> GetCheckInOutDetailsById(Guid branchId);
+        Task<VehicleInOutResponse> GetCheckInListByBranchId(Guid branchId);
+        Task<VehicleInOutResponse> GetCheckOutListByBranchId(Guid branchId);
+
     }
 }
 

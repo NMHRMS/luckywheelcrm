@@ -53,9 +53,6 @@ namespace Application.Services
           new Claim("companyId", user.CompanyId.ToString()),
           new Claim("roleId", user.RoleId.ToString())
          };
-
-
-
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

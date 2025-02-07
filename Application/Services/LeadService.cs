@@ -222,5 +222,79 @@ namespace Application.Services
                 totalLeadsCount = totalLeads
             };
         }
+
+        public async Task<LeadsByExcelNameResponseDto> GetLeadsByExcelName(string excelName)
+        {
+            var leadList = _context.Leads.Where(x=>x.ExcelName==excelName).ToList();
+            int totalLeads = leadList.Count;
+            var assignedList = leadList.Where(x=>x.AssignedTo!=null).ToList();
+            int assignedCount = assignedList.Count;
+            var notAssignedList = leadList.Where(x=>x.AssignedTo==null).ToList();
+            int notAssignedCount = notAssignedList.Count;
+            return new LeadsByExcelNameResponseDto
+            {
+                Leads = leadList,
+                TotalLeadsCount = totalLeads,
+                AssignedLeadsCount=assignedCount,
+                NotAssignedLeadsCount=notAssignedCount,
+            };
+        }
+
+        public async Task<List<LeadListResponseDto>> GetLeadsDataList()
+        {
+            var excelNames = _context.Leads.Where(x => x.ExcelName != null).Select(x => x.ExcelName).Distinct().ToList();                        
+            var responseList = new List<LeadListResponseDto>();
+
+            foreach (var excelName in excelNames)
+            {
+                var leadList = _context.Leads.Where(x => x.ExcelName == excelName).ToList();
+                int totalLeads = leadList.Count;
+                var assignedList = leadList.Where(x => x.AssignedTo != null).ToList();
+                int assignedCount = assignedList.Count;
+                var notAssignedList = leadList.Where(x => x.AssignedTo == null).ToList();
+                int notAssignedCount = notAssignedList.Count;
+
+                DateTime? createdDate = leadList.OrderBy(x => x.CreateDate).FirstOrDefault()?.CreateDate;
+
+                var responseDto = new LeadListResponseDto
+                {
+                    ExcelName = excelName,
+                    TotalCount = totalLeads,
+                    AssignedCount = assignedCount,
+                    NotAssignedCount = notAssignedCount,
+                    CreatedDate = createdDate
+                };
+
+                responseList.Add(responseDto);
+            }
+
+            return responseList;
+        }
+
+        public async Task<IEnumerable<LeadResponseDto>> GetTodaysFollowUpLeadsAsync(Guid userId)
+        {
+            var today = DateTime.UtcNow.Date;
+            var leads = await _context.Leads
+                .Where(l => l.AssignedTo == userId && l.FollowUpDate.HasValue && l.FollowUpDate.Value.Date == today)
+                .ToListAsync();
+            return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
+        }
+
+        public async Task<GetDashboardStatusRespDto> GetDashboardListByUserId(Guid userID,DateTime date)
+        {
+            var leadList = _context.Leads.Where(x => x.AssignedTo == userID && x.AssignedDate.HasValue && x.AssignedDate.Value.Date == date.Date).ToList();
+            int assignedLeadsCount = leadList.Count;
+            int positiveLeadsCount = leadList.Where(x=>x.Status=="Positive").ToList().Count;
+            int negativeLeadsCount = leadList.Where(x=>x.Status=="Negative").ToList().Count;
+            int closedLeadsCount = leadList.Where(x=>x.Status=="Closed").ToList().Count;
+            return new GetDashboardStatusRespDto
+            {
+                Leads = leadList,
+                AssignedLeadsCount = assignedLeadsCount,
+                PositiveLeadsCount = positiveLeadsCount,
+                NegativeLeadsCount = negativeLeadsCount,
+                ClosedLeadsCount = closedLeadsCount,
+            };
+        }
     }
 }

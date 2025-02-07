@@ -81,7 +81,7 @@ namespace Application.Services
         public async Task<IEnumerable<VehicleCheckInResponseDto>> GetCheckInByDateAsync(DateTime date)
         {
             var records = await _context.VehicleCheckInCheckOut
-                .Where(v => v.CheckInDate.Date == date.Date)
+                .Where(v => v.CheckInDate.Date == date.Date)    
                 .ToListAsync();
 
             return _mapper.Map<IEnumerable<VehicleCheckInResponseDto>>(records);
@@ -164,6 +164,38 @@ namespace Application.Services
         {
             var records = await _context.VehicleCheckInCheckOut
                                         .Where(x => x.BranchId == branchId)
+                                        .ToListAsync();
+
+            var mappedRecords = _mapper.Map<IEnumerable<VehicleInOutRecord>>(records);
+            int vehicleInOutCount = mappedRecords.Count();
+
+            return new VehicleInOutResponse
+            {
+                Records = mappedRecords,
+                Count = vehicleInOutCount
+            };
+        }
+
+        public async Task<VehicleInOutResponse> GetCheckInListByBranchId(Guid branchId)
+        {
+            var records = await _context.VehicleCheckInCheckOut
+                                        .Where(x => x.BranchId == branchId && x.Status== "Checked In")
+                                        .ToListAsync();
+
+            var mappedRecords = _mapper.Map<IEnumerable<VehicleInOutRecord>>(records);
+            int vehicleInOutCount = mappedRecords.Count();
+
+            return new VehicleInOutResponse
+            {
+                Records = mappedRecords,
+                Count = vehicleInOutCount
+            };
+        }
+
+        public async Task<VehicleInOutResponse> GetCheckOutListByBranchId(Guid branchId)
+        {
+            var records = await _context.VehicleCheckInCheckOut
+                                        .Where(x => x.BranchId == branchId && x.Status== "Checked Out")
                                         .ToListAsync();
 
             var mappedRecords = _mapper.Map<IEnumerable<VehicleInOutRecord>>(records);

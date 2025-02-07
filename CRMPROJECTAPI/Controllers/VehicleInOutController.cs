@@ -111,5 +111,21 @@ namespace CRMPROJECTAPI.Controllers
             var response = await _vehicleInOutService.GetCheckInOutDetailsById(branchId);
             return Ok(response);
         }
+
+        [HttpGet("get_checkIn_by_branchId")]
+        public async Task<IActionResult> GetCheckInListByBranchId(Guid branchId)
+        {
+            var records = await _vehicleInOutService.GetCheckInListByBranchId(branchId);
+            return Ok(records);
+        }
+
+        [HttpGet("get_checkOut_by_branchId")]
+        public async Task<IActionResult> GetCheckOutListByBranchId(Guid branchId)
+        {
+            var records = await _vehicleInOutService.GetCheckOutListByBranchId(branchId);
+            return Ok(records);
+        }
+
+
     }
 }
