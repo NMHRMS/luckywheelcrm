@@ -1,8 +1,6 @@
 ﻿using Application.Dtos;
 using Application.Interfaces;
-using Application.Services;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CRMPROJECTAPI.Controllers
@@ -38,6 +36,17 @@ namespace CRMPROJECTAPI.Controllers
             {
                 return BadRequest(new { error = ex.Message });
             }
+        }
+
+        [HttpGet("lead-history/{leadId}")]
+        public async Task<IActionResult> GetLeadHistory(Guid leadId)
+        {
+            var history = await _leadAssignService.GetLeadHistoryAsync(leadId);
+            if (history == null || !history.Any())
+            {
+                return NotFound("No tracking history found for this lead.");
+            }
+            return Ok(history);
         }
     }
 }

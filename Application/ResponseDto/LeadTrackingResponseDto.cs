@@ -8,11 +8,14 @@ namespace Application.ResponseDto
 {
     public class LeadTrackingResponseDto
     {
-        public Guid TrackID { get; set; }
-        public Guid LeadID { get; set; }
+        public Guid TrackId { get; set; }
+        public Guid LeadId { get; set; }
         public Guid AssignedTo { get; set; }
+        public string AssignedToName { get; set; }
         public Guid AssignedBy { get; set; }
+        public string AssignedByName { get; set; }
         public DateTime AssignedDate { get; set; }
-
+        public string LeadDuration { get; set; } // Duration in minutes
+        public string LeadDurationFormatted { get; set; } // Duration in "X days Y hours" format
     }
 }

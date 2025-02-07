@@ -9,7 +9,7 @@ namespace Application.Dtos
 {
     public class LeadDto
     {
-        public Guid CompanyId { get; set; }
+        public Guid? CompanyId { get; set; }
         public string? LeadSource { get; set; }
         public string OwnerName { get; set; }
         public string MobileNo { get; set; }
@@ -18,8 +18,9 @@ namespace Application.Dtos
         public string StateName { get; set; }
         public string? ModelName { get; set; }
         public string? DealerName { get; set; }
-        public Guid ProductId { get; set; }
+        public Guid? ProductId { get; set; }
         public string LeadType { get; set; }
         public string Status { get; set; }
+        public Guid? AsssignedTo { get; set; }
     }
 }

@@ -9,7 +9,6 @@ namespace Application.Dtos
     public class UserAssignmentMappingDto
     {
         public Guid AssignerUserId { get; set; }
-        public Guid AssigneeUserId { get; set; } 
+        public List<Guid> AssigneeUserIds { get; set; }
     }
-
 }

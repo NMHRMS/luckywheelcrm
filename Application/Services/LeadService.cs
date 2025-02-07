@@ -1,6 +1,7 @@
 ﻿using Application.Dtos;
 using Application.Interfaces;
 using Application.ResponseDto;
+using Application.Services;
 using AutoMapper;
 using Domain.Models;
 using Infrastructure.Data;
@@ -57,6 +58,72 @@ namespace Application.Services
             return _mapper.Map<LeadResponseDto>(existingLead);
         }
 
+        public async Task UploadLeadsFromExcelAsync(IFormFile file)
+        {
+            using var stream = new MemoryStream();
+            await file.CopyToAsync(stream);
+            using var package = new ExcelPackage(stream);
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            var worksheet = package.Workbook.Worksheets[0];
+            var rowCount = worksheet.Dimension.Rows;
+
+            var leads = new List<Lead>();
+            for (int row = 1; row <= rowCount; row++)
+            {
+                Guid? assignedToUser = null; ;
+                Guid? product = null;
+                var companyId = _jwtTokenService.GetCompanyIdFromToken();
+                var lead = new Lead
+                {
+                    LeadSource = null,
+                    ExcelName = file.FileName,
+                    OwnerName = worksheet.Cells[row, 7].Value?.ToString() ?? "Unknown",
+                    FatherName = worksheet.Cells[row, 8].Value?.ToString(),
+                    MobileNo = worksheet.Cells[row, 14].Value?.ToString() ?? "N/A",
+                    OfficeName = worksheet.Cells[row, 3].Value?.ToString(),
+                    DistrictName = worksheet.Cells[row, 4].Value?.ToString() ?? "Unknown",
+                    CurrentAddress = worksheet.Cells[row, 9].Value?.ToString() ?? "N/A",
+                    RegistrationNo = worksheet.Cells[row, 5].Value?.ToString(),
+                    RegistrationDate = DateTime.TryParse(worksheet.Cells[row, 6].Value?.ToString(), out DateTime regDate) ? regDate : (DateTime?)null,
+                    VehicleClass = worksheet.Cells[row, 10].Value?.ToString(),
+                    StateName = worksheet.Cells[row, 2].Value?.ToString() ?? "Unknown",
+                    LadenWeight = null,
+                    ModelName = worksheet.Cells[row, 13].Value?.ToString(),
+                    DealerName = worksheet.Cells[row, 15].Value?.ToString(),
+                    ProductId = product,
+                    LeadType = "General",
+                    Status = "Not Called",
+                    CreateDate = DateTime.UtcNow,
+                    UpdateDate = DateTime.UtcNow,
+                    AssignedTo = assignedToUser,
+                    AssignedDate = null,
+                    FollowUpDate = null,
+                    Remark = null,
+                    LeadId = Guid.NewGuid(),
+                    CompanyId = companyId,
+                };
+
+                leads.Add(lead);
+            }
+
+            try
+            {
+                await _context.Leads.AddRangeAsync(leads);
+
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
+                }
+
+                throw new Exception("Error uploading leads: An error occurred while saving the entity changes.", ex);
+            }
+        }
+
         public async Task<LeadResponseDto> UpdateLeadCallsAsync(Guid leadId, LeadCallUpdateDto updateDto)
         {
             var lead = await _context.Leads.FindAsync(leadId);
@@ -103,7 +170,7 @@ namespace Application.Services
 
             if (!string.IsNullOrEmpty(state))
                 query = query.Where(l => l.StateName.Contains(state));
-            
+
             if (!string.IsNullOrEmpty(district))
                 query = query.Where(l => l.DistrictName.Contains(district));
 
@@ -133,72 +200,6 @@ namespace Application.Services
                 .Where(l => l.AssignedTo == userId && l.AssignedDate.HasValue && l.AssignedDate.Value.Date == today)
                 .ToListAsync();
             return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
-        }
-
-        public async Task UploadLeadsFromExcelAsync(IFormFile file)
-        {
-            using var stream = new MemoryStream();
-            await file.CopyToAsync(stream);
-            using var package = new ExcelPackage(stream);
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-            var worksheet = package.Workbook.Worksheets[0];
-            var rowCount = worksheet.Dimension.Rows;
-
-            var leads = new List<Lead>();
-            for (int row = 1; row <= rowCount; row++) 
-            {
-                Guid? assignedToUser = null; ; 
-                Guid? productId = null;
-                var companyId = _jwtTokenService.GetCompanyIdFromToken();  
-                var lead = new Lead
-                {
-                    LeadSource = null, 
-                    ExcelName = file.FileName,
-                    OwnerName = worksheet.Cells[row, 7].Value?.ToString() ?? "Unknown",
-                    FatherName = worksheet.Cells[row, 8].Value?.ToString(),
-                    MobileNo = worksheet.Cells[row, 14].Value?.ToString() ?? "N/A",
-                    OfficeName = worksheet.Cells[row, 3].Value?.ToString(),
-                    DistrictName = worksheet.Cells[row, 4].Value?.ToString() ?? "Unknown",
-                    CurrentAddress = worksheet.Cells[row, 9].Value?.ToString() ?? "N/A",
-                    RegistrationNo = worksheet.Cells[row, 5].Value?.ToString(),
-                    RegistrationDate = DateTime.TryParse(worksheet.Cells[row, 6].Value?.ToString(), out DateTime regDate) ? regDate : (DateTime?)null,
-                    VehicleClass = worksheet.Cells[row, 10].Value?.ToString(),
-                    StateName = worksheet.Cells[row, 2].Value?.ToString() ?? "Unknown",
-                    LadenWeight = null, 
-                    ModelName = worksheet.Cells[row, 13].Value?.ToString(),
-                    DealerName = worksheet.Cells[row, 15].Value?.ToString(),
-                    ProductId = productId, 
-                    LeadType = "General",
-                    Status = "Not Called",
-                    CreateDate = DateTime.UtcNow,
-                    UpdateDate = DateTime.UtcNow,
-                    AssignedTo = assignedToUser, 
-                    AssignedDate = null,
-                    FollowUpDate = null, 
-                    Remark = null, 
-                    LeadId = Guid.NewGuid(),
-                    CompanyId = companyId, 
-                };
-
-                leads.Add(lead);
-            }
-
-            try
-            {
-                await _context.Leads.AddRangeAsync(leads);
-
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
-                if (ex.InnerException != null)
-                {
-                    Console.WriteLine($"Inner Exception: {ex.InnerException.Message}");
-                }
-
-                throw new Exception("Error uploading leads: An error occurred while saving the entity changes.", ex);
-            }
         }
 
         public async Task<bool> DeleteLeadAsync(Guid id)

@@ -12,8 +12,8 @@ namespace Application.Interfaces
     {
         Task<IEnumerable<UserResponseDto>> GetAllUsersAsync();
         Task<UserResponseDto?> GetUserByIdAsync(Guid id);
-        Task<UserResponseDto> AddUserAsync(AddUserDto userDto);
-        Task<UserResponseDto> UpdateUserAsync(Guid id, AddUserDto userDto);
+        Task<UserResponseDto> AddUserAsync(UserDto userDto);
+        Task<UserResponseDto> UpdateUserAsync(Guid id, UserDto userDto);
         Task<bool> DeleteUserAsync(Guid id);
     }
 }

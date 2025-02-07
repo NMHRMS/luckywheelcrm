@@ -38,7 +38,7 @@ namespace CRMPROJECTAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateUser([FromBody] AddUserDto userDto)
+        public async Task<IActionResult> CreateUser([FromBody] UserDto userDto)
         {
             var user = await _userService.AddUserAsync(userDto);
 
@@ -49,7 +49,7 @@ namespace CRMPROJECTAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateUser(Guid id, [FromBody] AddUserDto userDto)
+        public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UserDto userDto)
         {
             var updatedUser = await _userService.UpdateUserAsync(id, userDto);
             if (updatedUser == null) return NotFound();

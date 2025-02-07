@@ -14,7 +14,5 @@ namespace Application.Dtos
         public string CheckInReason { get; set; }
         public Guid CheckInBy { get; set; }
         public DateTime? CheckInDate { get; set; }
-        //public string Status { get; set; }
-
     }
 }

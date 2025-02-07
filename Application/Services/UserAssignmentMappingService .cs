@@ -1,72 +1,58 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Application.Dtos;
+﻿using Application.Dtos;
 using Application.Interfaces;
 using Application.ResponseDto;
-using AutoMapper;
-using Domain.Models;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace Application.Services
+public class UserAssignmentMappingService : IUserAssignmentMappingService
 {
-    public class UserAssignmentMappingService : IUserAssignmentMappingService
+    private readonly ApplicationDbContext _context;
+
+    public UserAssignmentMappingService(ApplicationDbContext context)
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IMapper _mapper;
+        _context = context;
+    }
 
-        public UserAssignmentMappingService(ApplicationDbContext context, IMapper mapper)
+
+    public async Task SetUserAssignmentMappingAsync(UserAssignmentMappingDto mappingDto)
+    {
+        var assigner = await _context.Users
+            .Include(u => u.AssignedUsers)
+            .FirstOrDefaultAsync(u => u.UserId == mappingDto.AssignerUserId);
+
+        if (assigner == null)
         {
-            _context = context;
-            _mapper = mapper;
+            throw new Exception("Assigner not found.");
         }
 
-        public async Task SetUserAssignmentMappingAsync(UserAssignmentMappingDto mappingDto)
+        // Filter out already assigned users
+        var newAssignees = await _context.Users
+            .Where(u => mappingDto.AssigneeUserIds.Contains(u.UserId) && !assigner.AssignedUsers.Contains(u))
+            .ToListAsync();
+
+        if (newAssignees.Any())
         {
-            var existingMappings = await _context.UserAssignmentMappings
-                .Where(m => m.AssignerUserId == mappingDto.AssignerUserId)
-                .ToListAsync();
-
-            bool isAlreadyAssigned = existingMappings
-                .Any(m => m.AssigneeUserId == mappingDto.AssigneeUserId);
-
-            if (!isAlreadyAssigned)
-            {
-                var newMapping = new UserAssignmentMapping
-                {
-                    Id = Guid.NewGuid(),
-                    AssignerUserId = mappingDto.AssignerUserId,
-                    AssigneeUserId = mappingDto.AssigneeUserId
-                };
-
-                await _context.UserAssignmentMappings.AddAsync(newMapping);
-                await _context.SaveChangesAsync();
-            }
-        }
-
-        public async Task<IEnumerable<UserAssignmentMappingResponseDto>> GetUserAssignmentMappingsAsync()
-        {
-            var mappings = await _context.UserAssignmentMappings.ToListAsync();
-
-            var grouped = mappings
-                .GroupBy(m => m.AssignerUserId)
-                .Select(g => new UserAssignmentMappingResponseDto
-                {
-                    AssignerUserId = g.Key,
-                    AssigneeUserIds = g.Select(x => x.AssigneeUserId).ToList()
-                });
-
-            return grouped;
-        }
-
-        public async Task<bool> CanAssignAsync(Guid assignerUserId, Guid assigneeUserId)
-        {
-            return await _context.UserAssignmentMappings
-                .AnyAsync(m => m.AssignerUserId == assignerUserId && m.AssigneeUserId == assigneeUserId);
+            assigner.AssignedUsers.AddRange(newAssignees);
+            await _context.SaveChangesAsync();
         }
     }
 
+    public async Task<IEnumerable<UserAssignmentMappingResponseDto>> GetUserAssignmentMappingsAsync()
+    {
+        return await _context.Users
+            .Where(u => u.AssignedUsers.Any())
+            .Select(u => new UserAssignmentMappingResponseDto
+            {
+                AssignerUserId = u.UserId,
+                AssigneeUserIds = u.AssignedUsers.Select(a => a.UserId).ToList()
+            })
+            .ToListAsync();
+    }
+
+    public async Task<bool> CanAssignAsync(Guid assignerUserId, Guid assigneeUserId)
+    {
+        return await _context.Users
+            .Where(u => u.UserId == assignerUserId)
+            .AnyAsync(u => u.AssignedUsers.Any(a => a.UserId == assigneeUserId));
+    }
 }

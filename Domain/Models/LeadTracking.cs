@@ -8,8 +8,8 @@ namespace Domain.Models
 {
     public class LeadTracking
     {
-        public Guid TrackID { get; set; }
-        public Guid LeadID { get; set; }  
+        public Guid TrackId { get; set; }
+        public Guid LeadId { get; set; }  
         public Guid AssignedTo { get; set; } 
         public Guid AssignedBy { get; set; } 
         public DateTime AssignedDate { get; set; } 

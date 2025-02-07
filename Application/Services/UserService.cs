@@ -36,7 +36,7 @@ namespace Application.Services
             return user == null ? null : _mapper.Map<UserResponseDto>(user);
         }
 
-        public async Task<UserResponseDto> AddUserAsync(AddUserDto userDto)
+        public async Task<UserResponseDto> AddUserAsync(UserDto userDto)
         {
             var user = _mapper.Map<User>(userDto);
             user.UserId = Guid.NewGuid();   
@@ -45,7 +45,7 @@ namespace Application.Services
             return _mapper.Map<UserResponseDto>(user);
         }
 
-        public async Task<UserResponseDto?> UpdateUserAsync(Guid id, AddUserDto userDto)
+        public async Task<UserResponseDto?> UpdateUserAsync(Guid id, UserDto userDto)
         {
             var existingUser = await _context.Users.FindAsync(id);
             if (existingUser == null) return null;
