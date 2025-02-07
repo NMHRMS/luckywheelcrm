@@ -56,6 +56,8 @@ export default function Excelform() {
   const [assignedLeads, setAssignedLeads] = useState(0);
   const [notAssignedLeads, setNotAssignedLeads] = useState(0);
   const [filteredLeads, setFilteredLeads] = useState(leadsData);
+  const [assignStatus, setAssignStatus] = useState("");
+  const [filteredFileNames, setFilteredFileNames] = useState([]);
   const recordsToShow =
     recordsPerPage === "all" ? fileData : fileData.slice(0, recordsPerPage);
 
@@ -82,7 +84,13 @@ export default function Excelform() {
 
     fetchCreUsers();
   }, [modalVisible]);
-
+  useEffect(() => {
+    const tooltipTriggerList = document.querySelectorAll(
+      '[data-bs-toggle="tooltip"]'
+    );
+    // eslint-disable-next-line no-undef
+    tooltipTriggerList.forEach((tooltip) => new bootstrap.Tooltip(tooltip));
+  }, []);
   const toggleFilterDropdown = (key) => {
     if (key) {
       setTempFilters(filters); // Copy current filters when opening dropdown
@@ -181,6 +189,28 @@ export default function Excelform() {
     });
   };
 
+  const handleStatusFilter = async (status) => {
+    setAssignStatus(status); // Update dropdown state
+
+    try {
+      // Ensure the correct boolean is passed to the API
+      const apiStatus =
+        status === "true" ? true : status === "false" ? false : "";
+
+      const response = await getRequest(
+        `/api/Leads/filter?assigned=${apiStatus}`
+      );
+      const data = response.data || [];
+
+      console.log("API Response:", data); // Debugging: Check API response
+
+      setLeadsData(data); // Store full dataset
+      setFilteredLeads(data); // Update UI with correct leads
+    } catch (error) {
+      console.error("Error fetching filtered leads:", error);
+    }
+  };
+
   const [newLead, setNewLead] = useState({
     OwnerName: "",
     MobileNo: "",
@@ -214,9 +244,9 @@ export default function Excelform() {
   useEffect(() => {
     const fetchLeadsData = () => {
       setLoading(true);
-      getRequest("/api/Leads") // Replace with your API endpoint
+      getRequest("/api/Leads")
         .then((response) => {
-          setLeadsData(response.data || []); // Set to empty array if no data
+          setLeadsData(response.data || []);
         })
         .catch((error) => {
           console.error("Error fetching leads data:", error);
@@ -228,6 +258,36 @@ export default function Excelform() {
 
     fetchLeadsData();
   }, []);
+
+  useEffect(() => {
+    setLoading(true);
+    getRequest("/api/Leads")
+      .then((response) => {
+        const data = response.data || [];
+        setLeadsData(data);
+
+        // Extract unique file names
+        const uniqueFileNames = [
+          ...new Set(data.map((lead) => lead.excelName).filter(Boolean)),
+        ];
+        setFileNames(uniqueFileNames);
+        setFilteredFileNames(uniqueFileNames);
+      })
+      .catch((error) => {
+        console.error("Error fetching leads data:", error);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  const handleSearchChange = (e) => {
+    const searchValue = e.target.value.toLowerCase();
+    setFileName(e.target.value);
+    setFilteredFileNames(
+      fileNames.filter((name) => name.toLowerCase().includes(searchValue))
+    );
+  };
   // Empty dependency array to run only once when the component mounts
   const filterFields = (data) => {
     if (!data || typeof data !== "object") return {}; // Prevent null/undefined errors
@@ -242,13 +302,6 @@ export default function Excelform() {
     paginateData(fileData); // Reapply pagination
   };
 
-  const handleAssignClick = () => {
-    if (Object.keys(selectedRows).length === 0) {
-      alert("Please select at least one record to assign.");
-      return;
-    }
-    setModalVisible(true); // Open modal when clicking assign
-  };
   const handleFilter = () => {
     setIsFilterVisible((prev) => !prev); // Toggle filter visibility
     // Initialize filters for each field if needed
@@ -309,8 +362,15 @@ export default function Excelform() {
       return;
     }
 
+    // Check if the file name already exists
+    if (fileNames.includes(selectedFile.name)) {
+      alert("File already exists!");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("file", selectedFile);
+
     postRequest("/api/Leads/upload-excel", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     })
@@ -335,6 +395,7 @@ export default function Excelform() {
         );
       });
   };
+
   const toggleDropdown = (columnName) => {
     setDropdownVisible(dropdownVisible === columnName ? null : columnName);
     setSearchQuery("");
@@ -495,8 +556,6 @@ export default function Excelform() {
       (user) => user.userId === selectedCRE
     );
 
-    console.log("Selected CRE User:", selectedCreUser);
-
     if (!selectedCreUser) {
       alert("Invalid CRE selected.");
       return;
@@ -507,57 +566,53 @@ export default function Excelform() {
     );
 
     if (selectedRowIds.length === 0) {
-      alert("No valid files selected for assignment.");
+      alert("No valid records selected for assignment.");
       return;
     }
 
     console.log("Selected Row IDs:", selectedRowIds);
 
-    const updatedData = fileData.map((row) => {
-      if (selectedRowIds.includes(row.id)) {
-        return {
-          ...row,
-          status: "Assigned",
-          cre: `${selectedCreUser.firstName} ${
-            selectedCreUser.lastName || ""
-          }`.trim(),
-          creId: selectedCreUser.userId,
-        };
-      }
-      return row;
-    });
-
-    console.log("Updated Data:", updatedData);
-
     const currentUserId = "141d915d-617b-437a-9ef7-9511fd3646fe";
-    const leadId = selectedRowIds[0];
-
-    if (!leadId || !selectedCreUser.userId) {
-      alert("Missing required fields for assignment.");
-      return;
-    }
-
-    const requestBody = {
-      leadID: leadId,
-      assignedTo: selectedCreUser.userId,
-      assignedBy: currentUserId,
-      assignedDate: new Date().toISOString(),
-    };
-
-    console.log("Request Payload:", JSON.stringify(requestBody, null, 2));
 
     try {
-      const response = await postRequest("/api/LeadAssign/assign", requestBody);
-      console.log("API Response:", response);
+      for (const leadId of selectedRowIds) {
+        const requestBody = {
+          leadID: leadId,
+          assignedTo: selectedCreUser.userId,
+          assignedBy: currentUserId,
+          assignedDate: new Date().toISOString(),
+        };
 
-      if (!response || response.status !== 200) {
-        throw new Error(response.data?.message || "Failed to assign CRE");
+        console.log("Request Payload:", JSON.stringify(requestBody, null, 2));
+
+        const response = await postRequest(
+          "/api/LeadAssign/assign",
+          requestBody
+        );
+
+        if (!response || response.status !== 200) {
+          throw new Error(response.data?.message || "Failed to assign CRE");
+        }
       }
+
+      // Update UI: Assign the selected CRE to the leads in the table
+      const updatedData = fileData.map((row) =>
+        selectedRowIds.includes(row.id)
+          ? {
+              ...row,
+              status: "Assigned",
+              cre: `${selectedCreUser.firstName} ${
+                selectedCreUser.lastName || ""
+              }`.trim(),
+              creId: selectedCreUser.userId,
+            }
+          : row
+      );
 
       setFileData(updatedData);
       setSelectedRows({});
       setSelectAllChecked(false);
-      setModalVisible(false);
+      setAssignModalVisible(false);
       setSelectedCRE("");
 
       alert("Selected records have been assigned successfully!");
@@ -567,10 +622,10 @@ export default function Excelform() {
     }
   };
 
-  const handleModalClose = () => {
-    setModalVisible(false); // Close modal without assigning
-    setSelectedCRE(""); // Clear CRE selection
-  };
+  // const handleModalClose = () => {
+  //   setModalVisible(false); // Close modal without assigning
+  //   setSelectedCRE(""); // Clear CRE selection
+  // };
   const handleNavigateToList = () => {
     navigate("/crm/listleads"); // Navigate to ListLeads component
   };
@@ -777,12 +832,12 @@ export default function Excelform() {
               >
                 Search File
               </button>
-              <button
+              {/* <button
                 className="btn btn-outline-primary me-2"
                 // onClick={handleTemplateDownload}
               >
                 Download Template
-              </button>
+              </button> */}
 
               <button
                 className="btn btn-outline-success me-2"
@@ -809,7 +864,20 @@ export default function Excelform() {
             <div className="card-body">
               <div className="d-flex justify-content-between mb-2">
                 <h5 className="card-title">Excel Table</h5>
-                <div>
+                <div className="d-flex justify-content-end align-items-start mt-3">
+                  <div className="mb-3 me-3">
+                    <select
+                      id="assignStatus"
+                      className="form-select"
+                      value={assignStatus}
+                      onChange={(e) => handleStatusFilter(e.target.value)}
+                    >
+                      <option value="false">Not Assigned</option>
+                      <option value="true">Assigned</option>
+                    </select>
+                  </div>
+
+                  {/* Download Icon with Tooltip */}
                   <i
                     className="bi bi-file-earmark-arrow-down me-2"
                     style={{
@@ -818,8 +886,12 @@ export default function Excelform() {
                       fontSize: "1.5rem",
                     }}
                     onClick={handleDownload}
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="Download File"
                   ></i>
 
+                  {/* Upload Icon with Tooltip */}
                   <i
                     className="bi bi-file-earmark-arrow-up"
                     style={{
@@ -830,7 +902,11 @@ export default function Excelform() {
                     onClick={() =>
                       document.getElementById("fileUploadInput").click()
                     }
+                    data-bs-toggle="tooltip"
+                    data-bs-placement="top"
+                    title="Upload File"
                   ></i>
+
                   <input
                     id="fileUploadInput"
                     type="file"
@@ -845,14 +921,14 @@ export default function Excelform() {
                 {/* Pagination Top */}
                 <div className="pagination justify-content-left mb-0">
                   <ul className="pagination">
-                    {/* Previous Button */}
+                    {/* Previous Group Button */}
                     <li className="page-item">
                       <button
                         className={`page-link ${
-                          currentPage === 1 ? "disabled" : ""
+                          currentPage <= 10 ? "disabled" : ""
                         }`}
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
+                        onClick={() => handlePageChange(currentPage - 10)}
+                        disabled={currentPage <= 10}
                       >
                         Previous
                       </button>
@@ -860,34 +936,47 @@ export default function Excelform() {
 
                     {/* Page Number Buttons */}
                     {Array.from({
-                      length: Math.ceil(leadsData.length / recordsPerPage),
-                    }).map((_, index) => (
-                      <li className="page-item" key={index}>
-                        <button
-                          className={`page-link ${
-                            currentPage === index + 1 ? "disabled" : ""
-                          }`}
-                          onClick={() => handlePageChange(index + 1)}
-                          disabled={currentPage === index + 1}
-                        >
-                          {index + 1}
-                        </button>
-                      </li>
-                    ))}
+                      length: Math.min(
+                        10,
+                        Math.ceil(leadsData.length / recordsPerPage) -
+                          Math.floor((currentPage - 1) / 10) * 10
+                      ),
+                    }).map((_, index) => {
+                      const page =
+                        Math.floor((currentPage - 1) / 10) * 10 + index + 1;
+                      if (
+                        page <= Math.ceil(leadsData.length / recordsPerPage)
+                      ) {
+                        return (
+                          <li className="page-item" key={index}>
+                            <button
+                              className={`page-link ${
+                                currentPage === page ? "disabled" : ""
+                              }`}
+                              onClick={() => handlePageChange(page)}
+                              disabled={currentPage === page}
+                            >
+                              {page}
+                            </button>
+                          </li>
+                        );
+                      }
+                      return null;
+                    })}
 
-                    {/* Next Button */}
+                    {/* Next Group Button */}
                     <li className="page-item">
                       <button
                         className={`page-link ${
-                          currentPage ===
-                          Math.ceil(leadsData.length / recordsPerPage)
+                          currentPage >=
+                          Math.ceil(leadsData.length / recordsPerPage) - 10
                             ? "disabled"
                             : ""
                         }`}
-                        onClick={() => handlePageChange(currentPage + 1)}
+                        onClick={() => handlePageChange(currentPage + 10)}
                         disabled={
-                          currentPage ===
-                          Math.ceil(leadsData.length / recordsPerPage)
+                          currentPage >=
+                          Math.ceil(leadsData.length / recordsPerPage) - 10
                         }
                       >
                         Next
@@ -1123,16 +1212,16 @@ export default function Excelform() {
                 </div>
 
                 {/* Pagination Bottom */}
-                <div className="pagination justify-content-left mb-3 mt-2">
+                <div className="pagination justify-content-left mb-0">
                   <ul className="pagination">
-                    {/* Previous Button */}
+                    {/* Previous Group Button */}
                     <li className="page-item">
                       <button
                         className={`page-link ${
-                          currentPage === 1 ? "disabled" : ""
+                          currentPage <= 10 ? "disabled" : ""
                         }`}
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
+                        onClick={() => handlePageChange(currentPage - 10)}
+                        disabled={currentPage <= 10}
                       >
                         Previous
                       </button>
@@ -1140,34 +1229,47 @@ export default function Excelform() {
 
                     {/* Page Number Buttons */}
                     {Array.from({
-                      length: Math.ceil(leadsData.length / recordsPerPage),
-                    }).map((_, index) => (
-                      <li className="page-item" key={index}>
-                        <button
-                          className={`page-link ${
-                            currentPage === index + 1 ? "disabled" : ""
-                          }`}
-                          onClick={() => handlePageChange(index + 1)}
-                          disabled={currentPage === index + 1}
-                        >
-                          {index + 1}
-                        </button>
-                      </li>
-                    ))}
+                      length: Math.min(
+                        10,
+                        Math.ceil(leadsData.length / recordsPerPage) -
+                          Math.floor((currentPage - 1) / 10) * 10
+                      ),
+                    }).map((_, index) => {
+                      const page =
+                        Math.floor((currentPage - 1) / 10) * 10 + index + 1;
+                      if (
+                        page <= Math.ceil(leadsData.length / recordsPerPage)
+                      ) {
+                        return (
+                          <li className="page-item" key={index}>
+                            <button
+                              className={`page-link ${
+                                currentPage === page ? "disabled" : ""
+                              }`}
+                              onClick={() => handlePageChange(page)}
+                              disabled={currentPage === page}
+                            >
+                              {page}
+                            </button>
+                          </li>
+                        );
+                      }
+                      return null;
+                    })}
 
-                    {/* Next Button */}
+                    {/* Next Group Button */}
                     <li className="page-item">
                       <button
                         className={`page-link ${
-                          currentPage ===
-                          Math.ceil(leadsData.length / recordsPerPage)
+                          currentPage >=
+                          Math.ceil(leadsData.length / recordsPerPage) - 10
                             ? "disabled"
                             : ""
                         }`}
-                        onClick={() => handlePageChange(currentPage + 1)}
+                        onClick={() => handlePageChange(currentPage + 10)}
                         disabled={
-                          currentPage ===
-                          Math.ceil(leadsData.length / recordsPerPage)
+                          currentPage >=
+                          Math.ceil(leadsData.length / recordsPerPage) - 10
                         }
                       >
                         Next
@@ -1342,7 +1444,6 @@ export default function Excelform() {
                     value={selectedCRE}
                     onChange={(e) => setSelectedCRE(e.target.value)}
                   >
-                    <option value="">Select CRE</option>
                     {creOptions.map((cre) => (
                       <option key={cre.userId} value={cre.userId}>
                         {cre.firstName ? cre.firstName : "Unknown"}{" "}
@@ -1484,7 +1585,7 @@ export default function Excelform() {
                 }}
               >
                 <form>
-                  <div className="mb-3">
+                  {/* <div className="mb-3">
                     <label htmlFor="CompanyId" className="form-label">
                       Company ID
                     </label>
@@ -1504,7 +1605,7 @@ export default function Excelform() {
                         </option>
                       ))}
                     </select>
-                  </div>
+                  </div> */}
 
                   <div className="mb-3">
                     <label htmlFor="OwnerName" className="form-label">
@@ -1660,15 +1761,33 @@ export default function Excelform() {
                 ></button>
               </div>
               <div className="modal-body">
-                <div className="mb-3">
+                {/* Searchable Dropdown for File Name */}
+                <div className="mb-3 position-relative">
                   <input
                     type="text"
                     value={fileName}
                     onChange={(e) => setFileName(e.target.value)}
-                    placeholder="Enter file name"
+                    placeholder="Search file name..."
                     className="form-control"
                   />
+                  {filteredFileNames.length > 0 && (
+                    <ul
+                      className="dropdown-menu show"
+                      style={{ width: "100%" }}
+                    >
+                      {filteredFileNames.map((name, index) => (
+                        <li
+                          key={index}
+                          className="dropdown-item"
+                          onClick={() => setFileName(name)}
+                        >
+                          {name}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
+
                 {/* Partition for lead details */}
                 <div className="border rounded p-3">
                   <p className="mb-1">

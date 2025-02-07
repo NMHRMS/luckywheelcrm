@@ -37,12 +37,12 @@ export default function SidebarDSE() {
                    data-bs-parent="#sidebar-nav"
                  >
                    <li>
-                     <Link to="/teacher/enquiry">
+                     <Link to="/dse/assign">
                        <i className="bi bi-circle"></i>
-                       <span>DSE1</span>
+                       <span>DseLeads</span>
                      </Link>
                    </li>
-                   <li>
+                   {/* <li>
                      <Link to="/teacher/studentlist">
                        <i className="bi bi-circle"></i>
                        <span>DSE2</span>
@@ -84,7 +84,7 @@ export default function SidebarDSE() {
                        <span></span>
                      </Link>
                    </li>
-                   
+                    */}
                  </ul>
                </li>
      
@@ -100,7 +100,7 @@ export default function SidebarDSE() {
                    <span>Admission</span>
                    <i className="bi bi-chevron-down ms-auto"></i>
                  </Link> */}
-                 <ul
+                 {/* <ul
                    id="admission-nav"
                    className="nav-content collapse"
                    data-bs-parent="#sidebar-nav"
@@ -123,23 +123,23 @@ export default function SidebarDSE() {
                        <span>StudentDataSheet</span>
                      </Link>
                    </li>
-                   {/* <li>
+                   <li>
                      <Link to="/teacher/enquirylist">
                        <i className="bi bi-circle"></i>
                        <span>EnquiryList </span>
                      </Link>
-                   </li> */}
-                 </ul>
+                   </li>
+                 </ul> */}
                </li>
                {/* End Admission Nav Item */}
      
      
-               <Link to="" className="nav-item">
+               {/* <Link to="" className="nav-item">
                  <a className="nav-link collapsed" href="users-profile.html">
                    <i className="bi bi-person"></i>
                    <span>Profile</span>
                  </a>
-               </Link>
+               </Link> */}
                <Link to="/" className="nav-item">
                  <a className="nav-link collapsed" href="pages-blank.html">
                  <i className="bi bi-box-arrow-in-right"></i>

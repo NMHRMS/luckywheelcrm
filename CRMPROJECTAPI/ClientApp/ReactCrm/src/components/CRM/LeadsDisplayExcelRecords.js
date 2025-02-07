@@ -51,45 +51,54 @@ const LeadsDisplayExcelRecords = () => {
         <>
           {/* Pagination Controls - Placed above the table */}
           <div className="d-flex justify-content-left my-1">
-  <ul className="pagination">
-    <li className="page-item">
-      <button
-        onClick={() => handlePageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className="page-link"
-      >
-        Previous
-      </button>
-    </li>
+            <ul className="pagination">
+              <li className="page-item">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="page-link"
+                >
+                  Previous
+                </button>
+              </li>
 
-    {Array.from({ length: totalPages }, (_, index) => (
-      <li key={index} className={`page-item ${currentPage === index + 1 ? "active" : ""}`}>
-        <button
-          onClick={() => handlePageChange(index + 1)}
-          className="page-link"
-        >
-          {index + 1}
-        </button>
-      </li>
-    ))}
+              {Array.from({ length: totalPages }, (_, index) => (
+                <li
+                  key={index}
+                  className={`page-item ${
+                    currentPage === index + 1 ? "active" : ""
+                  }`}
+                >
+                  <button
+                    onClick={() => handlePageChange(index + 1)}
+                    className="page-link"
+                  >
+                    {index + 1}
+                  </button>
+                </li>
+              ))}
 
-    <li className="page-item">
-      <button
-        onClick={() => handlePageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className="page-link"
-      >
-        Next
-      </button>
-    </li>
-  </ul>
-</div>
+              <li className="page-item">
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="page-link"
+                >
+                  Next
+                </button>
+              </li>
+            </ul>
+          </div>
 
           {/* Table with optimized spacing */}
           <div className="table-responsive">
-            <table className="table table-bordered text-left" style={{ overflowX: "auto", whiteSpace: "nowrap" }}>
+            <table
+              className="table table-bordered text-left"
+              style={{ overflowX: "auto", whiteSpace: "nowrap" }}
+            >
               <thead className="thead-dark">
                 <tr>
+                  <th>Sr. No.</th>
                   <th>Owner Name</th>
                   <th>Mobile No</th>
                   <th>Office Name</th>
@@ -105,6 +114,7 @@ const LeadsDisplayExcelRecords = () => {
               <tbody>
                 {currentLeads.map((lead, index) => (
                   <tr key={index}>
+                    <td>{index + 1}</td>
                     <td>{lead.ownerName || "N/A"}</td>
                     <td>{lead.mobileNo || "N/A"}</td>
                     <td>{lead.officeName || "N/A"}</td>
@@ -121,35 +131,45 @@ const LeadsDisplayExcelRecords = () => {
             </table>
           </div>
 
-          {/* Pagination Controls - Placed below the table */}
-          <div className="d-flex justify-content-center my-3">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="btn btn-sm btn-secondary mx-1"
-            >
-              Previous
-            </button>
+          {/* Pagination Controls - Placed above the table */}
+          <div className="d-flex justify-content-left my-1">
+            <ul className="pagination">
+              <li className="page-item">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="page-link"
+                >
+                  Previous
+                </button>
+              </li>
 
-            {Array.from({ length: totalPages }, (_, index) => (
-              <button
-                key={index}
-                onClick={() => handlePageChange(index + 1)}
-                className={`btn btn-sm btn-secondary mx-1 ${
-                  currentPage === index + 1 ? "active" : ""
-                }`}
-              >
-                {index + 1}
-              </button>
-            ))}
+              {Array.from({ length: totalPages }, (_, index) => (
+                <li
+                  key={index}
+                  className={`page-item ${
+                    currentPage === index + 1 ? "active" : ""
+                  }`}
+                >
+                  <button
+                    onClick={() => handlePageChange(index + 1)}
+                    className="page-link"
+                  >
+                    {index + 1}
+                  </button>
+                </li>
+              ))}
 
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="btn btn-sm btn-secondary mx-1"
-            >
-              Next
-            </button>
+              <li className="page-item">
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="page-link"
+                >
+                  Next
+                </button>
+              </li>
+            </ul>
           </div>
         </>
       )}

@@ -32,7 +32,7 @@ export default function SidebarSales() {
                    <span>Product</span>
                    <i className="bi bi-chevron-down ms-auto"></i>
                  </Link>
-                 <ul
+                 {/* <ul
                    id="components-nav"
                    className="nav-content collapse"
                    data-bs-parent="#sidebar-nav"
@@ -86,7 +86,7 @@ export default function SidebarSales() {
                      </Link>
                    </li>
                    
-                 </ul>
+                 </ul> */}
                </li>
      
                {/* New Admission Nav Item */}

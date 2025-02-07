@@ -34,12 +34,12 @@ export default function SidebarDSM() {
                   data-bs-parent="#sidebar-nav"
                 >
                   <li>
-                    <Link to="/crm/excelform">
+                    <Link to="/dsm/assignlead">
                       <i className="bi bi-circle"></i>
                       <span>Leads</span>
                     </Link>
                   </li>
-                  <li>
+                  {/* <li>
                     <Link to="/admin/crm">
                       <i className="bi bi-circle"></i>
                       <span>CRM</span>
@@ -74,12 +74,12 @@ export default function SidebarDSM() {
                       <i className="bi bi-circle"></i>
                       <span>Leads</span>
                     </Link>
-                  </li>
+                  </li> */}
                 </ul>
               </li>
     
               {/* Dropdown Menu for Reports */}
-              <li className="nav-item">
+              {/* <li className="nav-item">
                 <a
                   className="nav-link collapsed"
                   data-bs-target="#reports-nav"
@@ -103,30 +103,30 @@ export default function SidebarDSM() {
                   </li>
                   
                 </ul>
-              </li>
+              </li> */}
     
               {/* End Dropdown Menu */}
     
-              <li className="nav-item">
+              {/* <li className="nav-item">
                 <a className="nav-link collapsed" href="users-profile.html">
                   <i className="bi bi-person"></i>
                   <span>Profile</span>
                 </a>
-              </li>
+              </li> */}
               {/* <!-- End Profile Page Nav --> */}
     
-              <li className="nav-item">
+              {/* <li className="nav-item">
                 <a className="nav-link collapsed" href="pages-contact.html">
                   <i className="bi bi-envelope"></i>
                   <span>Contact</span>
                 </a>
-              </li>
+              </li> */}
               {/* <!-- End Contact Page Nav --> */}
     
               
     
               <li className="nav-item">
-                <Link to="/adminlogin" className="nav-link collapsed">
+                <Link to="/" className="nav-link collapsed">
                   <i className="bi bi-box-arrow-in-right"></i>
                   <span>Logout</span>
                 </Link>

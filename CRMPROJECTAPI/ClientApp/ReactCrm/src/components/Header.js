@@ -54,7 +54,7 @@ function Header() {
       .catch((error) => console.error("Error fetching users:", error.response?.data || error.message));
   
     // Fetch branch details
-    axios.get("http://localhost:3000/branches")
+    axios.get("")
       .then((res) => {
         const branch = res.data.find((b) => b.branch_id === user.branchId);
         setBranchName(branch ? branch.branch_name : "Unknown Branch");
@@ -298,7 +298,7 @@ function Header() {
                 data-bs-toggle="dropdown"
               >
                 <img
-                  src="../assets/img/empl.jpg"
+                  src="../assets/img/profile2.png"
                   alt="image"
                   className="rounded-circle"
                 />

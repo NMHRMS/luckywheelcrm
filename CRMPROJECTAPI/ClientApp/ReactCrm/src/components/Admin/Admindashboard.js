@@ -60,7 +60,7 @@ function Dashboard() {
       </div>
 
       {/* Display total numbers */}
-      <div className="row text-center mt-4">
+      {/* <div className="row text-center mt-4">
         <div className="col-md-3 mb-3">
           <div
             className="p-3 rounded"
@@ -124,7 +124,7 @@ function Dashboard() {
             <h2>{totalData.dailyCalls}</h2>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Charts */}
       <div className="row mt-4">

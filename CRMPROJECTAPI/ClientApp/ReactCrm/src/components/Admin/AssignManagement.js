@@ -30,10 +30,7 @@ export default function AssignManagement() {
       };
 
       try {
-        const response = await postRequest(
-          "/api/UserAssignmentMapping/set-mapping",
-          payload
-        );
+        const response = await postRequest("/api/UserAssignmentMapping/set-mapping", payload);
         if (response.data === "Mapping updated successfully.") {
           setAssignments([...assignments, payload]);
         } else {
@@ -41,6 +38,9 @@ export default function AssignManagement() {
         }
       } catch (error) {
         console.error("Error assigning users:", error);
+        if (error.response) {
+          console.error("Response error:", error.response.data);
+        }
         alert("Assignment error: " + error.message);
       }
     }

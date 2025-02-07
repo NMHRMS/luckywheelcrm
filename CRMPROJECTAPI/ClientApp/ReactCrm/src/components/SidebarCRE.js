@@ -40,10 +40,10 @@ export default function SidebarCRE() {
               <li>
                 <Link to="/cre/assignworks">
                   <i className="bi bi-circle"></i>
-                  <span>CRE1</span>
+                  <span>CRELeads</span>
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link to="/teacher/studentlist">
                   <i className="bi bi-circle"></i>
                   <span>CRE2</span>
@@ -66,7 +66,7 @@ export default function SidebarCRE() {
                   <i className="bi bi-circle"></i>
                   <span>Leads</span>
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </li>
 
@@ -115,12 +115,12 @@ export default function SidebarCRE() {
           </li>
           {/* End Admission Nav Item */}
 
-          <Link to="" className="nav-item">
+          {/* <Link to="" className="nav-item">
             <a className="nav-link collapsed" href="users-profile.html">
               <i className="bi bi-person"></i>
               <span>Profile</span>
             </a>
-          </Link>
+          </Link> */}
           <Link to="/" className="nav-item">
             <a className="nav-link collapsed" href="pages-blank.html">
               <i className="bi bi-box-arrow-in-right"></i>
