@@ -26,10 +26,28 @@ namespace Application.Services
             _jwtTokenService = jwtTokenService;  
         }
 
-        public async Task<IEnumerable<LeadResponseDto>> GetAllLeadsAsync()
+        public async Task<LeadsSegregatedResponseDto> GetAllLeadsAsync()
         {
             var leads = await _context.Leads.ToListAsync();
-            return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
+
+            var groupedLeads = leads.GroupBy(l => l.MobileNo).ToList();
+
+            var newLeads = groupedLeads
+                .Where(g => g.Count() == 1)
+                .Select(g => g.First()) // Unique leads
+                .OrderBy(l => l.CreateDate);
+
+            var duplicateLeads = groupedLeads
+                .Where(g => g.Count() > 1)
+                .SelectMany(g => g) // Leads with duplicate MobileNo
+                .Where(l => l.AssignedTo == null)
+                .OrderBy(l => l.CreateDate);
+
+            return new LeadsSegregatedResponseDto
+            {
+                NewLeads = _mapper.Map<IEnumerable<LeadResponseDto>>(newLeads),
+                DuplicateLeads = _mapper.Map<IEnumerable<LeadResponseDto>>(duplicateLeads)
+            };
         }
 
         public async Task<LeadResponseDto?> GetLeadByIdAsync(Guid id)
@@ -68,7 +86,7 @@ namespace Application.Services
             var rowCount = worksheet.Dimension.Rows;
 
             var leads = new List<Lead>();
-            for (int row = 1; row <= rowCount; row++)
+            for (int row = 2; row <= rowCount; row++)
             {
                 Guid? assignedToUser = null; ;
                 Guid? product = null;
@@ -296,5 +314,6 @@ namespace Application.Services
                 ClosedLeadsCount = closedLeadsCount,
             };
         }
+
     }
 }

@@ -12,8 +12,8 @@ namespace Application.ResponseDto
         public Guid CompanyId { get; set; }
         public Guid LeadId { get; set; }
         public string? Review { get; set; }
-        public DateOnly? ReviewDate { get; set; }
-        public DateOnly? FollowUpDate { get; set; }
+        public DateTime? ReviewDate { get; set; }
+        public DateTime? FollowUpDate { get; set; }
     }
 }
 

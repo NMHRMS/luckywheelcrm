@@ -41,7 +41,7 @@ namespace Application.Services
             await _context.SaveChangesAsync();
             return _mapper.Map<LeadReviewResponseDto>(leadReview);
         }
-        public async Task<LeadReviewResponseDto> UpdateLeadReviewAsync(Guid id, LeadReviewDto leadReviewDto)
+        public async Task<LeadReviewResponseDto?> UpdateLeadReviewAsync(Guid id, LeadReviewDto leadReviewDto)
         {
             var existingLeadReview = await _context.LeadsReview.FindAsync(id);
             if (existingLeadReview == null) return null;
@@ -49,7 +49,7 @@ namespace Application.Services
             _mapper.Map(leadReviewDto, existingLeadReview);
             _context.LeadsReview.Update(existingLeadReview);
             await _context.SaveChangesAsync();
-            return _mapper.Map<LeadReviewResponseDto>(existingLeadReview);
+            return _mapper.Map<LeadReviewResponseDto?>(existingLeadReview);
         }
         public async Task<bool> DeleteLeadReviewAsync(Guid id)
         {
