@@ -8,14 +8,49 @@ function Sidebar() {
       <aside id="sidebar" className="sidebar">
         <ul className="sidebar-nav" id="sidebar-nav">
           <li className="nav-item">
-            <a className="nav-link " href="index.html">
-              <i className="bi bi-grid"></i>
-              <span>DashboardAdmin</span>
-            </a>
+            <Link to="/admin/dashboard" className="nav-link">
+              <i className="bi bi-speedometer2"></i> {/* Dashboard Icon */}
+              <span className="ms-2">Dashboard Admin</span>
+            </Link>
           </li>
-          {/* <!-- End Dashboard Nav --> */}
+
+          {/* Move items outside dropdown */}
+          <li className="nav-item">
+            <Link to="/admin/assignmanagement" className="nav-link">
+              <i className="bi bi-clipboard-check"></i> {/* Assign Icon */}
+              <span className="ms-2">Assign </span>
+            </Link>
+          </li>
 
           <li className="nav-item">
+            <Link to="/admin/userperformance" className="nav-link">
+              <i className="bi bi-bar-chart"></i> {/* Performance Icon */}
+              <span className="ms-2">User Performance</span>
+            </Link>
+          </li>
+
+          <li className="nav-item">
+            <Link to="/admin/addrole" className="nav-link">
+              <i className="bi bi-person-plus"></i> {/* Add Role Icon */}
+              <span className="ms-2">Add Role</span>
+            </Link>
+          </li>
+
+          <li className="nav-item">
+            <Link to="/admin/addbranch" className="nav-link">
+              <i className="bi bi-building"></i> {/* Branch Icon */}
+              <span className="ms-2">Add Branch</span>
+            </Link>
+          </li>
+
+          <li className="nav-item">
+            <Link to="/admin/addusers" className="nav-link">
+              <i className="bi bi-people"></i> {/* Add User Icon */}
+              <span className="ms-2">Add User</span>
+            </Link>
+          </li>
+
+          {/* <li className="nav-item">
             <a
               className="nav-link collapsed"
               data-bs-target="#components-nav"
@@ -23,116 +58,26 @@ function Sidebar() {
               href="#"
             >
               <i className="bi bi-menu-button-wide"></i>
-              <span>Components</span>
+              <span className="ms-2">Components</span>
               <i className="bi bi-chevron-down ms-auto"></i>
             </a>
             <ul
               id="components-nav"
-              className="nav-content collapse "
+              className="nav-content collapse"
               data-bs-parent="#sidebar-nav"
             >
-              <li>
-                <Link to="/admin/assignmanagement">
-                  <i className="bi bi-circle"></i>
-                  <span>Assign Management</span>
-                </Link>
-              </li>
-              <li>
-                <Link to="/admin/addrole">
-                  <i className="bi bi-circle"></i>
-                  <span>Add Role</span>
-                </Link>
-              </li>
-             
-              <li>
-                <Link to="/admin/addbranch">
-                  <i className="bi bi-circle"></i>
-                  <span>Add Branch</span>
-                </Link>
-              </li>
-              <li>
-                <Link to="/admin/addusers">
-                  <i className="bi bi-circle"></i>
-                  <span>Add User</span>
-                </Link>
-              </li>
-              {/* <li>
-                <Link to="/admin/dsm">
-                  <i className="bi bi-circle"></i>
-                  <span>DSM</span>
-                </Link>
-              </li>
-              <li>
-                <Link to="/admin/dse">
-                  <i className="bi bi-circle"></i>
-                  <span>DSE</span>
-                </Link>
-              </li>
-              <li>
-                <Link to="/admin/leads">
-                  <i className="bi bi-circle"></i>
-                  <span>Leads</span>
-                </Link>
-              </li> */}
             </ul>
-          </li>
-
-          {/* Dropdown Menu for Reports */}
-          <li className="nav-item">
-            <a
-              className="nav-link collapsed"
-              data-bs-target="#reports-nav"
-              data-bs-toggle="collapse"
-              href="#"
-            >
-              <i className="bi bi-bar-chart"></i>
-              <span>Reports</span>
-              <i className="bi bi-chevron-down ms-auto"></i>
-            </a>
-            <ul
-              id="reports-nav"
-              className="nav-content collapse "
-              data-bs-parent="#sidebar-nav"
-            >
-              <li>
-                <Link to="/admin/tabcontent">
-                  <i className="bi bi-circle"></i>
-                  <span>Reports</span>
-                </Link>
-              </li>
-              
-            </ul>
-          </li>
-
-          {/* End Dropdown Menu */}
+          </li> */}
 
           <li className="nav-item">
-            <a className="nav-link collapsed" href="users-profile.html">
-              <i className="bi bi-person"></i>
-              <span>Profile</span>
-            </a>
-          </li>
-          {/* <!-- End Profile Page Nav --> */}
-
-          <li className="nav-item">
-            <a className="nav-link collapsed" href="pages-contact.html">
-              <i className="bi bi-envelope"></i>
-              <span>Contact</span>
-            </a>
-          </li>
-          {/* <!-- End Contact Page Nav --> */}
-
-          
-
-          <li className="nav-item">
-            <Link to="/adminlogin" className="nav-link collapsed">
-              <i className="bi bi-box-arrow-in-right"></i>
-              <span>Logout</span>
+            <Link to="/" className="nav-link">
+              <i className="bi bi-box-arrow-right"></i> {/* Logout Icon */}
+              <span className="ms-2">Logout</span>
             </Link>
           </li>
-          {/* <!-- End Register Page Nav --> */}
         </ul>
       </aside>
+
       {/* <!-- End Sidebar--> */}
     </>
   );

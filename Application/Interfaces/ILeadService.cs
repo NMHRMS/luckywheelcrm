@@ -6,7 +6,7 @@ namespace Application.Interfaces
 {
     public interface ILeadService
     {
-        Task<IEnumerable<LeadResponseDto>> GetAllLeadsAsync();
+        Task<LeadsSegregatedResponseDto> GetAllLeadsAsync();
         Task<LeadResponseDto?> GetLeadByIdAsync(Guid id);
         Task<LeadResponseDto> AddLeadAsync(LeadDto leadDto);
         Task<LeadResponseDto?> UpdateLeadAsync(Guid id, LeadDto leadDto);

@@ -38,19 +38,14 @@ export default function SidebarCRM() {
                   <span>Leads</span>
                 </Link>
               </li>
-              <li>
-                <Link to="/crm/crm">
+              
+               <li>
+                <Link to="/crm/vehiclecheck">
                   <i className="bi bi-circle"></i>
-                  <span>CRM</span>
+                  <span>VehicleCheckIn</span>
                 </Link>
               </li>
-              {/* <li>
-                <Link to="/crm/cre">
-                  <i className="bi bi-circle"></i>
-                  <span>CRE</span>
-                </Link>
-              </li>
-              <li>
+             {/* <li>
                 <Link to="/crm/sales">
                   <i className="bi bi-circle"></i>
                   <span>Sales</span>
@@ -78,54 +73,29 @@ export default function SidebarCRM() {
           </li>
 
           {/* Dropdown Menu for Reports */}
-          <li className="nav-item">
-            <a
-              className="nav-link collapsed"
-              data-bs-target="#reports-nav"
-              data-bs-toggle="collapse"
-              href="#"
-            >
-              <i className="bi bi-bar-chart"></i>
-              <span>Reports</span>
-              <i className="bi bi-chevron-down ms-auto"></i>
-            </a>
-            <ul
-              id="reports-nav"
-              className="nav-content collapse "
-              data-bs-parent="#sidebar-nav"
-            >
-              <li>
-                <Link to="/admin/tabcontent">
-                  <i className="bi bi-circle"></i>
-                  <span>Reports</span>
-                </Link>
-              </li>
-              
-            </ul>
-          </li>
-
+          
           {/* End Dropdown Menu */}
 
-          <li className="nav-item">
+          {/* <li className="nav-item">
             <a className="nav-link collapsed" href="users-profile.html">
               <i className="bi bi-person"></i>
               <span>Profile</span>
             </a>
-          </li>
+          </li> */}
           {/* <!-- End Profile Page Nav --> */}
-
+{/* 
           <li className="nav-item">
             <a className="nav-link collapsed" href="pages-contact.html">
               <i className="bi bi-envelope"></i>
               <span>Contact</span>
             </a>
-          </li>
+          </li> */}
           {/* <!-- End Contact Page Nav --> */}
 
           
 
           <li className="nav-item">
-            <Link to="/adminlogin" className="nav-link collapsed">
+            <Link to="/" className="nav-link collapsed">
               <i className="bi bi-box-arrow-in-right"></i>
               <span>Logout</span>
             </Link>

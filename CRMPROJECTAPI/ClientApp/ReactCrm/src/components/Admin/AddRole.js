@@ -106,7 +106,7 @@ export default function RoleComponent() {
           <tr>
             <th>Sr.no</th>
             <th>Role Name</th>
-            <th>Actions</th>
+            {/* <th>Actions</th> */}
           </tr>
         </thead>
         <tbody>
@@ -115,7 +115,7 @@ export default function RoleComponent() {
               <tr key={role.roleId}>
                 <td>{index + 1}</td>
                 <td>{role.roleName}</td>
-                <td>
+                {/* <td>
                   <button
                     className="btn text-primary btn-sm me-2"
                     onClick={() => editRole(role)}
@@ -128,7 +128,7 @@ export default function RoleComponent() {
                   >
                     <i className="bi bi-trash"></i>
                   </button>
-                </td>
+                </td> */}
               </tr>
             ))
           ) : (

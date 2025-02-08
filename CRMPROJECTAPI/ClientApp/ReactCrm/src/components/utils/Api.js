@@ -1,7 +1,7 @@
 import axios from "axios"
 
 const Api = axios.create({
-    baseURL: process.env.EXPO_PUBLIC_API_URL || "https://dotnetnm-001-site1.otempurl.com/",
+  baseURL: process.env.EXPO_PUBLIC_API_URL || "https://localhost:7258/",
   headers: {
     "Content-Type": "application/json",
   },

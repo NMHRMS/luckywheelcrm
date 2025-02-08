@@ -25,6 +25,11 @@ import CRM from "./components/CRM/CRM";
 import CRE from "./components/CRM/CRE";
 import AssignManagement from "./components/Admin/AssignManagement";
 import LeadsDisplayExcelRecords from "./components/CRM/LeadsDisplayExcelRecords";
+import LeadsRecord from "./components/DSM/LeadsRecord";
+import DseLeads from "./components/DSE/DseLeads";
+import UserPerformance from "./components/Admin/UserPerformance";
+import VehicleCheckIn from "./components/CRM/VehicleCheckIn";
+import VehicleCheck from "./components/VehicleCheck/VehicleCheck";
 
 function App() {
   return (
@@ -32,8 +37,7 @@ function App() {
       <Routes>
         {/* Login Route */}
         <Route path="/" element={<Login />} />
-        <Route path="/adminlogin" element={<Login />} />
-
+        <Route path="/vehiclecheck" element={<VehicleCheck />} />
         {/* Admin Routes */}
         <Route path="/crm" element={<Layout />}>
           <Route path="dashboard" element={<DashboardCRM/>} />
@@ -46,13 +50,15 @@ function App() {
           <Route path="user" element={<User />} />
           <Route path="leads" element={<Leads/>} />
           <Route path="crm" element={<CRM />} />
+          <Route path="vehiclecheck" element={<VehicleCheckIn/>} />
           <Route path="leadsdisplayexcelrecords/:excelName" element={<LeadsDisplayExcelRecords/>} />
-
 
 
         </Route>
         <Route path="/dsm" element={<Layout />}>
           <Route path="dashboard" element={<DSMDashboard/>} />
+          <Route path="assignlead" element={<LeadsRecord/>} />
+
         </Route>
         <Route path="/cre" element={<Layout />}>
           <Route path="dashboard" element={<CREDashboard />} />
@@ -61,9 +67,12 @@ function App() {
         </Route>
         <Route path="/dse" element={<Layout />}>
           <Route path="dashboard" element={<DSEDashboard />} />
+          <Route path="assign" element={<DseLeads />} />
+
         </Route>
         <Route path="/sales" element={<Layout />}>
           <Route path="dashboard" element={<SalesDashboard />} />
+
         </Route>
         <Route path="/admin" element={<Layout />}>
           <Route path="dashboard" element={<Admindashboard />} />
@@ -71,6 +80,8 @@ function App() {
           <Route path="addusers" element={<AddUsers/>} />
           <Route path="addbranch" element={<AddBranch/>} />
           <Route path="assignmanagement" element={<AssignManagement/>} />
+          <Route path="userperformance" element={<UserPerformance/>} />
+
 
 
 
