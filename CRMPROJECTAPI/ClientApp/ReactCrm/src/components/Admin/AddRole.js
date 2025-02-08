@@ -1,22 +1,25 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { toast } from "react-toastify";
+import { toast, ToastContainer  } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { getRequest, postRequest, putRequest, deleteRequest } from "../utils/Api";
 import { getAuthData, fetchStoredData } from "../utils/AuthUtils";
+
 export default function RoleComponent() {
+  
   const [roles, setRoles] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [roleData, setRoleData] = useState({ id: null, roleName: "" });
 
-  // Get companyId from local storage
+   // Get companyId from local storage
   const companyId = JSON.parse(localStorage.getItem("user"))?.companyId;
 
-  // Fetch roles on component mount
-  useEffect(() => {
-    if (companyId) {
-      getRolesData();
-    }
-  }, [companyId]);
+ // Fetch roles on component mount
+ useEffect(() => {
+  if (companyId) {
+    getRolesData();
+  }
+}, [companyId]);
 
   const getRolesData = () => {
     getRequest("/api/Roles")
@@ -25,7 +28,10 @@ export default function RoleComponent() {
         const filteredRoles = res.data.filter(role => role.companyId === companyId);
         setRoles(filteredRoles);
       })
-      .catch((err) => console.error("Error fetching roles:", err));
+      .catch((err) => {
+        console.error("Error fetching roles:", err);
+        toast.error("Failed to fetch roles."); // ❌ Toast on error
+      });
   };
 
   const handleAddOrUpdateRole = () => {
@@ -43,25 +49,25 @@ export default function RoleComponent() {
       // Creating a new role
       postRequest("/api/Roles", newRoleData)
         .then((res) => {
-          toast.success("Role added successfully!");
+          toast.success("Role added successfully! ✅");
           getRolesData();
           closeModal();
         })
         .catch((err) => {
           console.error("Error adding role:", err.response?.data || err.message);
-          toast.error("Failed to add role. Check API requirements.");
+          toast.error("Failed to add role. ❌ Check API requirements.");
         });
     } else {
       // Updating an existing role
-      putRequest(`${"/api/Roles"}/${roleData.id}`, newRoleData)
-        .then((res) => {
-          toast.success("Role updated successfully!");
-          getRolesData();
-          closeModal();
-        })
+      postRequest("/api/Roles", newRoleData)
+      .then((res) => {
+        toast.success("Role added successfully! ✅");
+        setRoles([...roles, res.data]); // Update state instead of fetching again
+        closeModal();
+      })
         .catch((err) => {
           console.error("Error updating role:", err.response?.data || err.message);
-          toast.error("Failed to update role.");
+          toast.error("Failed to update role. ❌");
         });
     }
   };
@@ -76,13 +82,13 @@ export default function RoleComponent() {
   const deleteRole = (id) => {
     if (window.confirm("Are you sure you want to delete this role?")) {
       deleteRequest(`${"/api/Roles"}/${id}`)
-        .then(() => {
-          toast.success("Role deleted successfully!");
-          getRolesData();
-        })
+      .then(() => {
+        toast.success("Role deleted successfully! 🗑️");
+        setRoles(roles.filter(role => role.roleId !== id)); // Remove deleted role from state
+      })
         .catch((err) => {
           console.error("Error deleting role:", err);
-          toast.error("Failed to delete role.");
+          toast.error("Failed to delete role. ❌");
         });
     }
   };
@@ -94,6 +100,8 @@ export default function RoleComponent() {
 
   return (
     <div className="container">
+
+<ToastContainer position="top-right" autoClose={3000} hideProgressBar />
       <div className="d-flex justify-content-between mb-4">
         <h3>Roles Management</h3>
         <button className="btn btn-primary" onClick={() => setShowModal(true)}>
@@ -106,7 +114,7 @@ export default function RoleComponent() {
           <tr>
             <th>Sr.no</th>
             <th>Role Name</th>
-            {/* <th>Actions</th> */}
+             <th>Actions</th> 
           </tr>
         </thead>
         <tbody>
@@ -115,7 +123,7 @@ export default function RoleComponent() {
               <tr key={role.roleId}>
                 <td>{index + 1}</td>
                 <td>{role.roleName}</td>
-                {/* <td>
+                <td>
                   <button
                     className="btn text-primary btn-sm me-2"
                     onClick={() => editRole(role)}
@@ -128,7 +136,7 @@ export default function RoleComponent() {
                   >
                     <i className="bi bi-trash"></i>
                   </button>
-                </td> */}
+                </td>
               </tr>
             ))
           ) : (
@@ -143,7 +151,7 @@ export default function RoleComponent() {
 
       {showModal && (
   <div className="modal fade show" style={{ display: "block", backgroundColor: "rgba(0, 0, 0, 0.5)" }} tabIndex="-1">
-    <div className="modal-dialog modal-dialog-centered"> {/* Centering the modal */}
+    <div className="modal-dialog modal-dialog-centered"> 
       <div className="modal-content">
         <div className="modal-header">
           <h5 className="modal-title">

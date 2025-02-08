@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { toast, ToastContainer  } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { getRequest, postRequest, putRequest, deleteRequest } from "../utils/Api";
 import { getAuthData, fetchStoredData } from "../utils/AuthUtils";
+
 const Branch = () => {
   const [showModal, setShowModal] = useState(false);
   const [data, setData] = useState({
@@ -24,7 +27,7 @@ const Branch = () => {
     e.preventDefault();
   
     if (!companyId) {
-      console.error("Company ID is missing");
+      toast.error("Company ID is missing");
       return;
     }
   
@@ -43,8 +46,11 @@ const Branch = () => {
         .then(() => {
           loadData();
           setShowModal(false);
+          toast.success("Branch added successfully!");
         })
-        .catch((error) => console.error("Add Error:", error.response?.data));
+        .catch((error) => {console.error("Add Error:", error.response?.data);
+          toast.error("Failed to add branch!");
+     } )
     } else {
       // Update the branch
       putRequest(`/api/Branch/${id}`, branchData) // Include branchId in the request
@@ -52,8 +58,12 @@ const Branch = () => {
           loadData();
           setId(undefined);
           setShowModal(false);
+          toast.error("Failed to add branch!");
         })
-        .catch((error) => console.error("Update Error:", error.response?.data));
+        .catch((error) => {
+          console.error("Update Error:", error.response?.data);
+          toast.error("Failed to update branch!");
+        })
     }
   
     setData({ name: "", contact: "", address: "" });
@@ -64,15 +74,22 @@ const Branch = () => {
   function loadData() {
     getRequest("/api/Branch")
       .then((res) => setNewData(res.data))
-      .catch((error) => console.error("Load Error:", error.response?.data));
+      .catch((error) => {console.error("Load Error:", error.response?.data);
+        toast.error("Failed to load branches!");
+      });
   }
 
   // Handles deletion of a branch
   function handleDelete(id) {
     if (window.confirm("Are you sure you want to delete this branch?")) {
       deleteRequest(`/api/Branch/${id}`)
-        .then(() => loadData())
-        .catch((error) => console.error("Delete Error:", error.response?.data));
+        .then(() =>{
+          loadData();
+          toast.success("Branch deleted successfully!");
+        })
+        .catch((error) => { console.error("Delete Error:", error.response?.data);
+          toast.error("Failed to delete branch!");
+        });
     }
   }
 
@@ -88,7 +105,9 @@ const Branch = () => {
         });
         setShowModal(true); // Open the modal for update
       })
-      .catch((error) => console.error("Fetch Error:", error.response?.data));
+      .catch((error) => {   console.error("Fetch Error:", error.response?.data);
+        toast.error("Failed to fetch branch details!");
+      });
   }
 
   // Initialize data when component mounts
@@ -104,6 +123,7 @@ const Branch = () => {
 
   return (
     <div className="container mt-1">
+        <ToastContainer />
       <h3>Add Branch</h3>
       <div className="d-flex justify-content-end">
         <button
@@ -149,7 +169,7 @@ const Branch = () => {
         </tbody>
       </table>
 
-      {/* Modal for adding/updating branch */}
+      {/* {/ Modal for adding/updating branch /} */}
       {showModal && (
         <>
           <div

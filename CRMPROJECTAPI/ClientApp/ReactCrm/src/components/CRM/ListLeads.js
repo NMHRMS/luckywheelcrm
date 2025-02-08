@@ -11,7 +11,7 @@ const ListLeads = () => {
   useEffect(() => {
     getRequest("/api/Leads/get_leads_dataList")
       .then((response) => {
-        console.log(response.data);  // Log the response to see the structure
+        console.log(response.data); // Log the response to see the structure
         setFiles(response.data);
         setLoading(false);
       })
@@ -21,7 +21,7 @@ const ListLeads = () => {
         setLoading(false);
       });
   }, []);
-  
+
   const handleFileClick = (fileName) => {
     navigate(`/crm/leadsdisplayexcelrecords/${fileName}`);
   };
@@ -47,22 +47,40 @@ const ListLeads = () => {
             </tr>
           </thead>
           <tbody>
-          {files.map((file, index) => (
-  <tr key={index}>
-    <td>
-      <button
-        className="btn btn-link"
-        onClick={() => handleFileClick(file.excelName)}
-      >
-        {typeof file.excelName === 'string' ? file.excelName : 'Invalid name'}
-      </button>
-    </td>
-    <td>{typeof file.totalCount === 'number' ? file.totalCount : 'N/A'}</td>
-    <td>{typeof file.assignedCount === 'number' ? file.assignedCount : 'N/A'}</td>
-    <td>{typeof file.notAssignedCount === 'number' ? file.notAssignedCount : 'N/A'}</td>
-    <td>{file.createdDate ? new Date(file.createdDate).toLocaleString() : 'Invalid date'}</td>
-  </tr>
-))}
+            {files.map((file, index) => (
+              <tr key={index}>
+                <td>
+                  <button
+                    className="btn btn-link"
+                    onClick={() => handleFileClick(file.excelName)}
+                  >
+                    {typeof file.excelName === "string"
+                      ? file.excelName
+                      : "Invalid name"}
+                  </button>
+                </td>
+                <td>
+                  {typeof file.totalCount === "number"
+                    ? file.totalCount
+                    : "N/A"}
+                </td>
+                <td>
+                  {typeof file.assignedCount === "number"
+                    ? file.assignedCount
+                    : "N/A"}
+                </td>
+                <td>
+                  {typeof file.notAssignedCount === "number"
+                    ? file.notAssignedCount
+                    : "N/A"}
+                </td>
+                <td>
+                  {file.createdDate
+                    ? new Date(file.createdDate).toLocaleString()
+                    : "Invalid date"}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       )}
