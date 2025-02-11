@@ -29,6 +29,8 @@ public partial class ApplicationDbContext : DbContext
 
     public virtual DbSet<LeadTracking> LeadsTracking { get; set; }
 
+    public virtual DbSet<Category> Categories {  get; set; }
+
     public virtual DbSet<Product> Products { get; set; }
 
     public virtual DbSet<Role> Roles { get; set; }
@@ -107,7 +109,6 @@ public partial class ApplicationDbContext : DbContext
                   .HasConstraintName("FK_LeadSources_Companies");
         });
 
-
         modelBuilder.Entity<Company>(entity =>
         {
             entity.HasKey(e => e.CompanyId).HasName("PK_Companies");
@@ -182,6 +183,20 @@ public partial class ApplicationDbContext : DbContext
             entity.HasOne(e => e.AssignedByUser).WithMany(u => u.AssignedByLeadTrackings).HasForeignKey(e => e.AssignedBy).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_LeadsTracking_Users1");
         });
 
+        modelBuilder.Entity<Category>(entity =>
+        {
+            entity.HasKey(e => e.CategoryId).HasName("PK_Categories");
+
+            entity.Property(e => e.CategoryId).HasColumnName("CategoryID");
+            entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
+            entity.Property(e => e.CategoryName).IsRequired().HasMaxLength(50);
+            entity.HasOne(e => e.Company)
+                  .WithMany(c => c.Categories)
+                  .HasForeignKey(e => e.CompanyId)
+                  .OnDelete(DeleteBehavior.ClientSetNull)
+                  .HasConstraintName("FK_Categories_Companies");
+        });
+
         modelBuilder.Entity<Product>(entity =>
         {
             entity.HasKey(e => e.ProductId).HasName("PK_Products");
@@ -192,6 +207,11 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.ProductName).HasMaxLength(100);
             entity.Property(e => e.UpdateDate).HasColumnType("datetime");
             entity.HasOne(d => d.Company).WithMany(p => p.Products).HasForeignKey(d => d.CompanyId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Products_Companies");
+            entity.HasOne(e => e.Category)
+                 .WithMany(c => c.Products)
+                 .HasForeignKey(e => e.CategoryId)
+                 .OnDelete(DeleteBehavior.ClientSetNull)
+                 .HasConstraintName("FK_Products_Categories");
         });
 
         modelBuilder.Entity<Role>(entity =>
@@ -213,6 +233,7 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.UserId).HasColumnName("UserID");
             entity.Property(e => e.BranchId).HasColumnName("BranchID");
             entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
+            entity.Property(e => e.CategoryId).HasColumnName("CategoryID");
             entity.Property(e => e.ContactNumber).HasMaxLength(50);
             entity.Property(e => e.CreateDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
             entity.Property(e => e.EmailId).HasColumnName("EmailID").HasMaxLength(50);
@@ -220,10 +241,12 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.LastName).HasMaxLength(25);
             entity.Property(e => e.Password).HasMaxLength(50);
             entity.Property(e => e.RoleId).HasColumnName("RoleID");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.UpdateDate).HasColumnType("datetime");
             entity.HasOne(d => d.Company).WithMany(p => p.Users).HasForeignKey(d => d.CompanyId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Users_Companies");
             entity.HasOne(d => d.Branch).WithMany(p => p.Users).HasForeignKey(d => d.BranchId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Users_Branches");
             entity.HasOne(d => d.Role).WithMany(p => p.Users).HasForeignKey(d => d.RoleId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Users_Roles");
+            entity.HasOne(d => d.Category).WithMany(p => p.Users).HasForeignKey(d => d.RoleId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Users_Categories");
         });
 
         modelBuilder.Entity<User>()

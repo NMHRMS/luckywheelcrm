@@ -31,6 +31,8 @@ public partial class Company
 
     public virtual ICollection<User> Users { get; set; } = new List<User>();
 
+    public virtual ICollection<Category> Categories { get; set; } = new List<Category>();
+
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();
 
     public virtual ICollection<VehicleInOutRecord> VehicleCheckInCheckOut { get; set; } = new List<VehicleInOutRecord>();

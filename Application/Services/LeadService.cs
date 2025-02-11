@@ -25,7 +25,6 @@ namespace Application.Services
             _leadAssignService = leadAssignService;
             _jwtTokenService = jwtTokenService;  
         }
-
         public async Task<LeadsSegregatedResponseDto> GetAllLeadsAsync()
         {
             var leads = await _context.Leads.ToListAsync();
@@ -34,19 +33,26 @@ namespace Application.Services
 
             var newLeads = groupedLeads
                 .Where(g => g.Count() == 1)
-                .Select(g => g.First()) // Unique leads
+                .Select(g => g.First()) 
+                .Where(l => l.Status != "Blocked") 
                 .OrderBy(l => l.CreateDate);
 
             var duplicateLeads = groupedLeads
                 .Where(g => g.Count() > 1)
-                .SelectMany(g => g) // Leads with duplicate MobileNo
-                .Where(l => l.AssignedTo == null)
+                .SelectMany(g => g) 
+                .Where(l => l.AssignedTo == null && l.Status != "Blocked") 
+                .OrderBy(l => l.CreateDate);
+
+
+            var blockedLeads = leads
+                .Where(l => l.Status == "Blocked")
                 .OrderBy(l => l.CreateDate);
 
             return new LeadsSegregatedResponseDto
             {
                 NewLeads = _mapper.Map<IEnumerable<LeadResponseDto>>(newLeads),
-                DuplicateLeads = _mapper.Map<IEnumerable<LeadResponseDto>>(duplicateLeads)
+                DuplicateLeads = _mapper.Map<IEnumerable<LeadResponseDto>>(duplicateLeads),
+                BlockedLeads = _mapper.Map<IEnumerable<LeadResponseDto>>(blockedLeads)
             };
         }
 

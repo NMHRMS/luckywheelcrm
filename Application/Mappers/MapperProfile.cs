@@ -29,6 +29,8 @@ namespace Application.Mappers
             CreateMap<LeadReview, LeadReviewResponseDto>();
             CreateMap<CallRecord, CallRecordDto>().ReverseMap();
             CreateMap<CallRecord, CallRecordResponseDto>();
+            CreateMap<Category, CategoryDto>().ReverseMap();
+            CreateMap<Category, CategoryResponseDto>();
             CreateMap<VehicleInOutRecord, VehicleCheckInDto>().ReverseMap();
             CreateMap<VehicleInOutRecord, VehicleCheckOutDto>().ReverseMap();
             CreateMap<VehicleInOutRecord, VehicleCheckInResponseDto>();

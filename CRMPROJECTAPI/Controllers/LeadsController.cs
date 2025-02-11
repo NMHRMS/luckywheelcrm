@@ -18,12 +18,11 @@ namespace CRMPROJECTAPI.Controllers
         {
             _leadService = leadService;
         }
-
         [HttpGet]
         public async Task<IActionResult> GetAllLeads()
         {
-            var leadsResponse = await _leadService.GetAllLeadsAsync();
-            return Ok(leadsResponse);
+            var leads = await _leadService.GetAllLeadsAsync();
+            return Ok(leads);
         }
 
         [HttpGet("{id}")]
