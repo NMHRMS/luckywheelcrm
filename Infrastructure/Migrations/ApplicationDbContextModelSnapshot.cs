@@ -119,6 +119,30 @@ namespace Infrastructure.Migrations
                     b.ToTable("CallRecords");
                 });
 
+            modelBuilder.Entity("Domain.Models.Category", b =>
+                {
+                    b.Property<Guid>("CategoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CategoryID");
+
+                    b.Property<string>("CategoryName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CompanyID");
+
+                    b.HasKey("CategoryId")
+                        .HasName("PK_Categories");
+
+                    b.HasIndex("CompanyId");
+
+                    b.ToTable("Categories");
+                });
+
             modelBuilder.Entity("Domain.Models.Company", b =>
                 {
                     b.Property<Guid>("CompanyId")
@@ -216,6 +240,9 @@ namespace Infrastructure.Migrations
                     b.Property<Guid?>("AssignedTo")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int?>("ChasisNo")
+                        .HasColumnType("int");
+
                     b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("CompanyID");
@@ -229,7 +256,7 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("DealerName")
+                    b.Property<string>("CurrentVehicle")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -249,15 +276,11 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime?>("FollowUpDate")
                         .HasColumnType("datetime");
 
-                    b.Property<int?>("LadenWeight")
-                        .HasColumnType("int");
-
                     b.Property<string>("LeadSource")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("LeadType")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
@@ -267,10 +290,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("nvarchar(15)");
 
                     b.Property<string>("ModelName")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("OfficeName")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -299,7 +318,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Status")
-                        .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)")
@@ -307,10 +325,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<DateTime?>("UpdateDate")
                         .HasColumnType("datetime");
-
-                    b.Property<string>("VehicleClass")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("LeadId")
                         .HasName("PK_Leads");
@@ -437,6 +451,9 @@ namespace Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("ProductID");
 
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("CompanyID");
@@ -456,6 +473,8 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("ProductId")
                         .HasName("PK_Products");
+
+                    b.HasIndex("CategoryId");
 
                     b.HasIndex("CompanyId");
 
@@ -533,6 +552,10 @@ namespace Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("BranchID");
 
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CategoryID");
+
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("CompanyID");
@@ -557,6 +580,11 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(25)
                         .HasColumnType("nvarchar(25)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("LastName")
                         .HasMaxLength(25)
@@ -717,6 +745,17 @@ namespace Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Domain.Models.Category", b =>
+                {
+                    b.HasOne("Domain.Models.Company", "Company")
+                        .WithMany("Categories")
+                        .HasForeignKey("CompanyId")
+                        .IsRequired()
+                        .HasConstraintName("FK_Categories_Companies");
+
+                    b.Navigation("Company");
+                });
+
             modelBuilder.Entity("Domain.Models.District", b =>
                 {
                     b.HasOne("Domain.Models.State", "State")
@@ -813,11 +852,19 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Models.Product", b =>
                 {
+                    b.HasOne("Domain.Models.Category", "Category")
+                        .WithMany("Products")
+                        .HasForeignKey("CategoryId")
+                        .IsRequired()
+                        .HasConstraintName("FK_Products_Categories");
+
                     b.HasOne("Domain.Models.Company", "Company")
                         .WithMany("Products")
                         .HasForeignKey("CompanyId")
                         .IsRequired()
                         .HasConstraintName("FK_Products_Companies");
+
+                    b.Navigation("Category");
 
                     b.Navigation("Company");
                 });
@@ -846,6 +893,12 @@ namespace Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Users_Companies");
 
+                    b.HasOne("Domain.Models.Category", "Category")
+                        .WithMany("Users")
+                        .HasForeignKey("RoleId")
+                        .IsRequired()
+                        .HasConstraintName("FK_Users_Categories");
+
                     b.HasOne("Domain.Models.Role", "Role")
                         .WithMany("Users")
                         .HasForeignKey("RoleId")
@@ -853,6 +906,8 @@ namespace Infrastructure.Migrations
                         .HasConstraintName("FK_Users_Roles");
 
                     b.Navigation("Branch");
+
+                    b.Navigation("Category");
 
                     b.Navigation("Company");
 
@@ -913,11 +968,20 @@ namespace Infrastructure.Migrations
                     b.Navigation("VehicleCheckInCheckOut");
                 });
 
+            modelBuilder.Entity("Domain.Models.Category", b =>
+                {
+                    b.Navigation("Products");
+
+                    b.Navigation("Users");
+                });
+
             modelBuilder.Entity("Domain.Models.Company", b =>
                 {
                     b.Navigation("Branches");
 
                     b.Navigation("CallRecords");
+
+                    b.Navigation("Categories");
 
                     b.Navigation("LeadSources");
 

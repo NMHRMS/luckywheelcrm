@@ -11,6 +11,9 @@ namespace Domain.Models
         public Guid DistrictId { get; set; }
         public Guid StateId { get; set; }
         public string DistrictName { get; set; }
-        public virtual State State { get; set; }    
+        public virtual State State { get; set; }
+
+        public virtual ICollection<Lead> Leads { get; set; } = new List<Lead>();
+
     }
 }

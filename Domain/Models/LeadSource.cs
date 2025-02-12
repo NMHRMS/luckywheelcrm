@@ -12,5 +12,6 @@ namespace Domain.Models
         public Guid CompanyId { get; set; }
         public string SourceName { get; set; }
         public virtual Company Company { get; set; }
+        public virtual ICollection<Lead> Leads { get; set; } = new List<Lead>();
     }
 }

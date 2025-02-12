@@ -33,28 +33,34 @@ namespace Application.Services
 
             var newLeads = groupedLeads
                 .Where(g => g.Count() == 1)
-                .Select(g => g.First()) 
-                .Where(l => l.Status != "Blocked") 
-                .OrderBy(l => l.CreateDate);
+                .Select(g => g.First())
+                .Where(l => l.Status != "Blocked")
+                .OrderBy(l => l.CreateDate)
+                .ToList(); 
 
             var duplicateLeads = groupedLeads
                 .Where(g => g.Count() > 1)
-                .SelectMany(g => g) 
-                .Where(l => l.AssignedTo == null && l.Status != "Blocked") 
-                .OrderBy(l => l.CreateDate);
-
+                .SelectMany(g => g)
+                .Where(l => l.AssignedTo == null && l.Status != "Blocked")
+                .OrderBy(l => l.CreateDate)
+                .ToList();
 
             var blockedLeads = leads
                 .Where(l => l.Status == "Blocked")
-                .OrderBy(l => l.CreateDate);
+                .OrderBy(l => l.CreateDate)
+                .ToList();
 
             return new LeadsSegregatedResponseDto
             {
                 NewLeads = _mapper.Map<IEnumerable<LeadResponseDto>>(newLeads),
                 DuplicateLeads = _mapper.Map<IEnumerable<LeadResponseDto>>(duplicateLeads),
-                BlockedLeads = _mapper.Map<IEnumerable<LeadResponseDto>>(blockedLeads)
+                BlockedLeads = _mapper.Map<IEnumerable<LeadResponseDto>>(blockedLeads),
+                NewLeadsCount = newLeads.Count(),
+                DuplicateLeadsCount = duplicateLeads.Count(),
+                BlockedLeadsCount = blockedLeads.Count()
             };
         }
+
 
         public async Task<LeadResponseDto?> GetLeadByIdAsync(Guid id)
         {
@@ -104,16 +110,16 @@ namespace Application.Services
                     OwnerName = worksheet.Cells[row, 7].Value?.ToString() ?? "Unknown",
                     FatherName = worksheet.Cells[row, 8].Value?.ToString(),
                     MobileNo = worksheet.Cells[row, 14].Value?.ToString() ?? "N/A",
-                    OfficeName = worksheet.Cells[row, 3].Value?.ToString(),
-                    DistrictName = worksheet.Cells[row, 4].Value?.ToString() ?? "Unknown",
+                    //OfficeName = worksheet.Cells[row, 3].Value?.ToString(),
+                    //DistrictId = worksheet.Cells[row, 4].Value?.ToString() ?? "Unknown",
                     CurrentAddress = worksheet.Cells[row, 9].Value?.ToString() ?? "N/A",
                     RegistrationNo = worksheet.Cells[row, 5].Value?.ToString(),
                     RegistrationDate = DateTime.TryParse(worksheet.Cells[row, 6].Value?.ToString(), out DateTime regDate) ? regDate : (DateTime?)null,
-                    VehicleClass = worksheet.Cells[row, 10].Value?.ToString(),
-                    StateName = worksheet.Cells[row, 2].Value?.ToString() ?? "Unknown",
-                    LadenWeight = null,
+                    CurrentVehicle = worksheet.Cells[row, 10].Value?.ToString(),
+                    //StateId = worksheet.Cells[row, 2].Value?.ToString() ?? "Unknown",
+                    ChasisNo = null,
                     ModelName = worksheet.Cells[row, 13].Value?.ToString(),
-                    DealerName = worksheet.Cells[row, 15].Value?.ToString(),
+                    //DealerName = worksheet.Cells[row, 15].Value?.ToString(),
                     ProductId = product,
                     LeadType = "General",
                     Status = "Not Called",
@@ -185,24 +191,21 @@ namespace Application.Services
             return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
         }
 
-        public async Task<IEnumerable<LeadResponseDto>> SearchLeadsAsync(string? name, string? state, string? district, string? modelName, string? dealerName)
+        public async Task<IEnumerable<LeadResponseDto>> SearchLeadsAsync(string? name, string? state, string? district, string? modelName)
         {
             var query = _context.Leads.AsQueryable();
 
             if (!string.IsNullOrEmpty(name))
                 query = query.Where(l => l.OwnerName.Contains(name));
 
-            if (!string.IsNullOrEmpty(state))
-                query = query.Where(l => l.StateName.Contains(state));
+            //if (!string.IsNullOrEmpty(state))
+            //    query = query.Where(l => l.StateName.Contains(state));
 
-            if (!string.IsNullOrEmpty(district))
-                query = query.Where(l => l.DistrictName.Contains(district));
+            //if (!string.IsNullOrEmpty(district))
+            //    query = query.Where(l => l.DistrictName.Contains(district));
 
             if (!string.IsNullOrEmpty(modelName))
                 query = query.Where(l => l.ModelName.Contains(modelName));
-
-            if (!string.IsNullOrEmpty(dealerName))
-                query = query.Where(l => l.DealerName.Contains(dealerName));
 
             var leads = await query.ToListAsync();
             return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);

@@ -18,5 +18,6 @@ namespace Domain.Models
         //Collection Properties
         public virtual ICollection<Product> Products { get; set; } = new List<Product>();
         public virtual ICollection<User> Users { get; set; } = new List<User>();
+        public virtual ICollection<Lead> Leads { get; set; } = new List<Lead>();
     }
 }

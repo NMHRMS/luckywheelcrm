@@ -129,32 +129,68 @@ public partial class ApplicationDbContext : DbContext
         {
             entity.HasKey(e => e.LeadId).HasName("PK_Leads");
             entity.ToTable("Leads", tb => tb.HasTrigger("trg_UpdateDate_Leads"));
-            entity.Property(e => e.LeadId).HasColumnName("LeadID");
-            entity.Property(e => e.AssignedDate).HasColumnType("datetime");
-            entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
-            entity.Property(e => e.CreateDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
-            entity.Property(e => e.CurrentAddress);
-            entity.Property(e => e.DealerName).HasMaxLength(100);
-            entity.Property(e => e.DistrictName).HasMaxLength(100);
-            entity.Property(e => e.FatherName).HasMaxLength(100);
-            entity.Property(e => e.FollowUpDate).HasColumnType("datetime");
-            entity.Property(e => e.LeadSource).HasMaxLength(100);
-            entity.Property(e => e.ExcelName).HasMaxLength(100);
-            entity.Property(e => e.LeadType).HasMaxLength(50);
-            entity.Property(e => e.MobileNo).HasMaxLength(15);
-            entity.Property(e => e.ModelName).HasMaxLength(100);
-            entity.Property(e => e.OfficeName).HasMaxLength(100);
-            entity.Property(e => e.OwnerName).HasMaxLength(100);
-            entity.Property(e => e.ProductId).HasColumnName("ProductID");
-            entity.Property(e => e.RegistrationNo).HasMaxLength(50);
-            entity.Property(e => e.StateName).HasMaxLength(100);
-            entity.Property(e => e.Status).HasMaxLength(20).HasDefaultValue("Not Called");
-            entity.Property(e => e.UpdateDate).HasColumnType("datetime");
-            entity.Property(e => e.VehicleClass).HasMaxLength(100);
 
-            entity.HasOne(d => d.AssignedToUser).WithMany(p => p.Leads).HasForeignKey(d => d.AssignedTo).HasConstraintName("FK_Leads_Users");
-            entity.HasOne(d => d.Company).WithMany(p => p.Leads).HasForeignKey(d => d.CompanyId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Leads_Companies");
-            entity.HasOne(d => d.Product).WithMany(p => p.Leads).HasForeignKey(d => d.ProductId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Leads_Products");
+            entity.Property(e => e.LeadId).HasColumnName("LeadID");
+            entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
+            entity.Property(e => e.CategoryId).HasColumnName("CategoryID");
+            entity.Property(e => e.ProductId).HasColumnName("ProductID");
+            entity.Property(e => e.AssignedTo).HasColumnName("AssignedTo");
+            entity.Property(e => e.DistrictId).HasColumnName("DistrictID");
+            entity.Property(e => e.StateId).HasColumnName("StateID");
+            entity.Property(e => e.LeadSourceId).HasColumnName("LeadSourceID");
+
+            entity.Property(e => e.ExcelName).HasMaxLength(100);
+            entity.Property(e => e.OwnerName).HasMaxLength(100);
+            entity.Property(e => e.FatherName).HasMaxLength(100);
+            entity.Property(e => e.MobileNo).HasMaxLength(15);
+            entity.Property(e => e.CurrentAddress).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.RegistrationNo).HasMaxLength(50);
+            entity.Property(e => e.RegistrationDate).HasColumnType("datetime2(7)");
+            entity.Property(e => e.CurrentVehicle).HasMaxLength(100);
+            entity.Property(e => e.ChasisNo).HasColumnType("int");
+            entity.Property(e => e.ModelName).HasMaxLength(100);
+            entity.Property(e => e.LeadType).HasMaxLength(50);
+            entity.Property(e => e.AssignedDate).HasColumnType("datetime");
+            entity.Property(e => e.FollowUpDate).HasColumnType("datetime");
+            entity.Property(e => e.Remark).HasColumnType("nvarchar(max)");
+            entity.Property(e => e.Status).HasMaxLength(20).HasDefaultValue("Not Called");
+            entity.Property(e => e.CreateDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+            entity.Property(e => e.UpdateDate).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Company)
+                .WithMany(p => p.Leads)
+                .HasForeignKey(d => d.CompanyId)
+                .HasConstraintName("FK_Leads_Companies");
+
+            entity.HasOne(d => d.Category)
+                .WithMany(p => p.Leads)
+                .HasForeignKey(d => d.CategoryId)
+                .HasConstraintName("FK_Leads_Categories");
+
+            entity.HasOne(d => d.Product)
+                .WithMany(p => p.Leads)
+                .HasForeignKey(d => d.ProductId)
+                .HasConstraintName("FK_Leads_Products");
+
+            entity.HasOne(d => d.District)
+                .WithMany(p => p.Leads)
+                .HasForeignKey(d => d.DistrictId)
+                .HasConstraintName("FK_Leads_Districts");
+
+            entity.HasOne(d => d.State)
+                .WithMany(p => p.Leads)
+                .HasForeignKey(d => d.StateId)
+                .HasConstraintName("FK_Leads_States");
+
+            entity.HasOne(d => d.LeadSource)
+                .WithMany(p => p.Leads)
+                .HasForeignKey(d => d.LeadSourceId)
+                .HasConstraintName("FK_Leads_LeadSources");
+
+            entity.HasOne(d => d.AssignedToUser)
+                .WithMany(p => p.Leads)
+                .HasForeignKey(d => d.AssignedTo)
+                .HasConstraintName("FK_Leads_AssignedTo");
         });
 
         modelBuilder.Entity<LeadReview>(entity =>
@@ -230,25 +266,43 @@ public partial class ApplicationDbContext : DbContext
         {
             entity.HasKey(e => e.UserId).HasName("PK_Users");
             entity.ToTable("Users", tb => tb.HasTrigger("trg_UpdateDate_Users"));
+
             entity.Property(e => e.UserId).HasColumnName("UserID");
-            entity.Property(e => e.BranchId).HasColumnName("BranchID");
             entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
+            entity.Property(e => e.BranchId).HasColumnName("BranchID");
+            entity.Property(e => e.RoleId).HasColumnName("RoleID");
             entity.Property(e => e.CategoryId).HasColumnName("CategoryID");
-            entity.Property(e => e.ContactNumber).HasMaxLength(50);
-            entity.Property(e => e.CreateDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
             entity.Property(e => e.EmailId).HasColumnName("EmailID").HasMaxLength(50);
+            entity.Property(e => e.Password).HasMaxLength(50);
             entity.Property(e => e.FirstName).HasMaxLength(25);
             entity.Property(e => e.LastName).HasMaxLength(25);
-            entity.Property(e => e.Password).HasMaxLength(50);
-            entity.Property(e => e.RoleId).HasColumnName("RoleID");
+            entity.Property(e => e.ContactNumber).HasMaxLength(50);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.CreateDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
             entity.Property(e => e.UpdateDate).HasColumnType("datetime");
-            entity.HasOne(d => d.Company).WithMany(p => p.Users).HasForeignKey(d => d.CompanyId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Users_Companies");
-            entity.HasOne(d => d.Branch).WithMany(p => p.Users).HasForeignKey(d => d.BranchId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Users_Branches");
-            entity.HasOne(d => d.Role).WithMany(p => p.Users).HasForeignKey(d => d.RoleId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Users_Roles");
-            entity.HasOne(d => d.Category).WithMany(p => p.Users).HasForeignKey(d => d.RoleId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Users_Categories");
-        });
 
+            entity.HasOne(d => d.Company)
+                .WithMany(p => p.Users)
+                .HasForeignKey(d => d.CompanyId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Users_Companies");
+
+            entity.HasOne(d => d.Branch)
+                .WithMany(p => p.Users)
+                .HasForeignKey(d => d.BranchId)
+                .HasConstraintName("FK_Users_Branches");
+
+            entity.HasOne(d => d.Role)
+                .WithMany(p => p.Users)
+                .HasForeignKey(d => d.RoleId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Users_Roles");
+
+            entity.HasOne(d => d.Category)
+                .WithMany(p => p.Users)
+                .HasForeignKey(d => d.CategoryId)
+                .HasConstraintName("FK_Users_Categories");
+        });
         modelBuilder.Entity<User>()
             .HasMany(u => u.AssignedUsers)
             .WithMany(u => u.AssigneeUsers)

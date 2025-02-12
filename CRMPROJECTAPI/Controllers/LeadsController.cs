@@ -113,10 +113,9 @@ namespace CRMPROJECTAPI.Controllers
         [FromQuery] string? name,
         [FromQuery] string? state,
         [FromQuery] string? district,
-        [FromQuery] string? modelName,
-        [FromQuery] string? dealerName)
+        [FromQuery] string? modelName)
         {
-            var leads = await _leadService.SearchLeadsAsync(name, state, district, modelName, dealerName);
+            var leads = await _leadService.SearchLeadsAsync(name, state, district, modelName);
             return Ok(leads);
         }
 
