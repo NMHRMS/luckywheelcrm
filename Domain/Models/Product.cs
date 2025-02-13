@@ -10,7 +10,7 @@ public partial class Product
 {
     public Guid ProductId { get; set; }
     public Guid CompanyId { get; set; }
-    public Guid CategoryId { get; set; }        
+    public Guid? CategoryId { get; set; }        
     public string ProductName { get; set; }
     public DateTime CreateDate { get; set; }
     public DateTime? UpdateDate { get; set; }

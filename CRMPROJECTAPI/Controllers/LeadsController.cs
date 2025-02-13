@@ -18,6 +18,14 @@ namespace CRMPROJECTAPI.Controllers
         {
             _leadService = leadService;
         }
+
+        [HttpGet("latest-leads")]
+        public async Task<IActionResult> GetLatestUploadedLeads()
+        {
+            var leads = await _leadService.GetLatestUploadedLeadsAsync();
+            return Ok(leads);
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetAllLeads()
         {
@@ -68,22 +76,29 @@ namespace CRMPROJECTAPI.Controllers
                 return NotFound("Lead not found.");
             return Ok(updatedLead);
         }
-       
+
         [HttpPost("upload-excel")]
         public async Task<IActionResult> UploadLeads(IFormFile file)
         {
             if (file == null || file.Length == 0)
-                return BadRequest("Invalid file");
+                return BadRequest(new { message = "Invalid file", latestLeads = (object)null });
 
             try
             {
                 await _leadService.UploadLeadsFromExcelAsync(file);
-                return Ok("Leads uploaded successfully.");
             }
             catch (Exception ex)
             {
-                return BadRequest($"Error uploading leads: {ex.Message}");
+                return BadRequest(new { message = $"Error uploading leads: {ex.Message}", latestLeads = (object)null });
             }
+
+            var latestLeads = await _leadService.GetLatestUploadedLeadsAsync();
+
+            return Ok(new
+            {
+                message = "Leads uploaded successfully.",
+                latestLeads
+            });
         }
 
         [HttpGet("assigned/{userId}")]

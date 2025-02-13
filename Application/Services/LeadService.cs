@@ -25,6 +25,57 @@ namespace Application.Services
             _leadAssignService = leadAssignService;
             _jwtTokenService = jwtTokenService;  
         }
+
+        public async Task<LeadsSegregatedResponseDto> GetLatestUploadedLeadsAsync()
+        {
+            // Get the latest uploaded Excel file name
+            var latestExcelFile = await _context.Leads
+                .OrderByDescending(l => l.CreateDate)
+                .Select(l => l.ExcelName)
+                .FirstOrDefaultAsync();
+
+            if (string.IsNullOrEmpty(latestExcelFile))
+            {
+                throw new Exception("No leads found. Please upload a file first.");
+            }
+
+            // Fetch all leads from that latest Excel file
+            var leads = await _context.Leads
+                .Where(l => l.ExcelName == latestExcelFile)
+                .ToListAsync();
+
+            var groupedLeads = leads.GroupBy(l => l.MobileNo).ToList();
+
+            var newLeads = groupedLeads
+                .Where(g => g.Count() == 1)
+                .Select(g => g.First())
+                .Where(l => l.Status != "Blocked")
+                .OrderBy(l => l.CreateDate)
+                .ToList();
+
+            var duplicateLeads = groupedLeads
+                .Where(g => g.Count() > 1)
+                .SelectMany(g => g)
+                .Where(l => l.AssignedTo == null && l.Status != "Blocked")
+                .OrderBy(l => l.CreateDate)
+                .ToList();
+
+            var blockedLeads = leads
+                .Where(l => l.Status == "Blocked")
+                .OrderBy(l => l.CreateDate)
+                .ToList();
+
+            return new LeadsSegregatedResponseDto
+            {
+                NewLeads = _mapper.Map<IEnumerable<LeadResponseDto>>(newLeads),
+                DuplicateLeads = _mapper.Map<IEnumerable<LeadResponseDto>>(duplicateLeads),
+                BlockedLeads = _mapper.Map<IEnumerable<LeadResponseDto>>(blockedLeads),
+                NewLeadsCount = newLeads.Count(),
+                DuplicateLeadsCount = duplicateLeads.Count(),
+                BlockedLeadsCount = blockedLeads.Count()
+            };
+        }
+
         public async Task<LeadsSegregatedResponseDto> GetAllLeadsAsync()
         {
             var leads = await _context.Leads.ToListAsync();
@@ -60,7 +111,6 @@ namespace Application.Services
                 BlockedLeadsCount = blockedLeads.Count()
             };
         }
-
 
         public async Task<LeadResponseDto?> GetLeadByIdAsync(Guid id)
         {
@@ -98,34 +148,54 @@ namespace Application.Services
             var rowCount = worksheet.Dimension.Rows;
 
             var leads = new List<Lead>();
+
+            // Get all required data from the database beforehand to map values
+            var states = await _context.States.ToDictionaryAsync(s => s.StateName, s => s.StateId);
+            var districts = await _context.Districts.ToDictionaryAsync(d => d.DistrictName, d => d.DistrictId);
+            var products = await _context.Products.ToDictionaryAsync(p => p.ProductName, p => p.ProductId);
+
+
+            var companyId = _jwtTokenService.GetCompanyIdFromToken();
+
             for (int row = 2; row <= rowCount; row++)
             {
-                Guid? assignedToUser = null; ;
-                Guid? product = null;
-                var companyId = _jwtTokenService.GetCompanyIdFromToken();
+                var stateName = worksheet.Cells[row, 2].Value?.ToString();
+                var districtName = worksheet.Cells[row, 3].Value?.ToString();
+                var ownerName = worksheet.Cells[row, 4].Value?.ToString();
+                var fatherName = worksheet.Cells[row, 5].Value?.ToString();
+                var mobileNo = worksheet.Cells[row, 6].Value?.ToString();
+                var currentAddress = worksheet.Cells[row, 7].Value?.ToString();
+                var currentVehicle = worksheet.Cells[row, 8].Value?.ToString();
+                var chasisNo = worksheet.Cells[row, 9].Value?.ToString();
+                var registrationNo = worksheet.Cells[row, 10].Value?.ToString();
+                var registrationDateStr = worksheet.Cells[row, 11].Value?.ToString();
+                var productName = worksheet.Cells[row, 12].Value?.ToString();
+                var modelName = worksheet.Cells[row, 13].Value?.ToString();
+
+                // Attempt to parse registration date
+                DateTime? registrationDate = DateTime.TryParse(registrationDateStr, out DateTime regDate) ? regDate : (DateTime?)null;
+
+                // Mapping values from Excel to the Lead model
                 var lead = new Lead
                 {
-                    LeadSource = null,
                     ExcelName = file.FileName,
-                    OwnerName = worksheet.Cells[row, 7].Value?.ToString() ?? "Unknown",
-                    FatherName = worksheet.Cells[row, 8].Value?.ToString(),
-                    MobileNo = worksheet.Cells[row, 14].Value?.ToString() ?? "N/A",
-                    //OfficeName = worksheet.Cells[row, 3].Value?.ToString(),
-                    //DistrictId = worksheet.Cells[row, 4].Value?.ToString() ?? "Unknown",
-                    CurrentAddress = worksheet.Cells[row, 9].Value?.ToString() ?? "N/A",
-                    RegistrationNo = worksheet.Cells[row, 5].Value?.ToString(),
-                    RegistrationDate = DateTime.TryParse(worksheet.Cells[row, 6].Value?.ToString(), out DateTime regDate) ? regDate : (DateTime?)null,
-                    CurrentVehicle = worksheet.Cells[row, 10].Value?.ToString(),
-                    //StateId = worksheet.Cells[row, 2].Value?.ToString() ?? "Unknown",
+                    OwnerName = ownerName ?? "Unknown",
+                    FatherName = fatherName ?? "N/A",
+                    MobileNo = mobileNo ?? "N/A",
+                    StateId = states.ContainsKey(stateName) ? states[stateName] : null,
+                    DistrictId = districts.ContainsKey(districtName) ? districts[districtName] : null,
+                    CurrentAddress = currentAddress ?? "N/A",
+                    CurrentVehicle = currentVehicle ?? "None",
                     ChasisNo = null,
-                    ModelName = worksheet.Cells[row, 13].Value?.ToString(),
-                    //DealerName = worksheet.Cells[row, 15].Value?.ToString(),
-                    ProductId = product,
-                    LeadType = "General",
+                    RegistrationNo = registrationNo ?? null,
+                    RegistrationDate = registrationDate ?? null,
+                    ModelName = modelName,
+                    ProductId = products.ContainsKey(productName) ? products[productName] : null,
+                    LeadType = "N/A",
                     Status = "Not Called",
                     CreateDate = DateTime.UtcNow,
                     UpdateDate = DateTime.UtcNow,
-                    AssignedTo = assignedToUser,
+                    AssignedTo = null,
                     AssignedDate = null,
                     FollowUpDate = null,
                     Remark = null,
@@ -139,7 +209,6 @@ namespace Application.Services
             try
             {
                 await _context.Leads.AddRangeAsync(leads);
-
                 await _context.SaveChangesAsync();
             }
             catch (Exception ex)

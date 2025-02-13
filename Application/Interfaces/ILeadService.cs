@@ -6,6 +6,7 @@ namespace Application.Interfaces
 {
     public interface ILeadService
     {
+        Task<LeadsSegregatedResponseDto> GetLatestUploadedLeadsAsync();
         Task<LeadsSegregatedResponseDto> GetAllLeadsAsync();
         Task<LeadResponseDto?> GetLeadByIdAsync(Guid id);
         Task<LeadResponseDto> AddLeadAsync(LeadDto leadDto);

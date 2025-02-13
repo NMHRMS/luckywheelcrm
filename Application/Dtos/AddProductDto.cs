@@ -9,6 +9,8 @@ namespace Application.Dtos
     public class AddProductDto
     {
         public Guid CompanyId { get; set; }
+        public Guid? CategoryId { get; set; }
         public string ProductName { get; set; }
     }
 }
+    
