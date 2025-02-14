@@ -24,6 +24,7 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ILeadService, LeadService>();
+builder.Services.AddScoped<ILeadSourceService, LeadSourceService>();
 builder.Services.AddScoped<ILeadReviewService, LeadReviewService>();
 builder.Services.AddScoped<ICallRecordService, CallRecordService>();
 builder.Services.AddScoped<IProductService, ProductService>();

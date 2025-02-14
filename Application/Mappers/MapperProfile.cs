@@ -37,6 +37,8 @@ namespace Application.Mappers
             CreateMap<VehicleInOutRecord, VehicleCheckOutResponseDto>(); 
             CreateMap<Lead, LeadDto>().ReverseMap();
             CreateMap<Lead, LeadResponseDto>();
+            CreateMap<LeadSource, AddLeadSourceDto>().ReverseMap();
+            CreateMap<LeadSource, LeadSourceResponseDto>();
             CreateMap<LeadTracking, LeadResponseDto>();
             CreateMap<LeadTracking, LeadTrackingResponseDto>();
             CreateMap<LeadAssignmentDto, LeadTracking>()

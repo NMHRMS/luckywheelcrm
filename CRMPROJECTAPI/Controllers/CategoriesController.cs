@@ -37,7 +37,7 @@ namespace CRMPROJECTAPI.Controllers
         {
             var category = await _categoryService.AddCategoryAsync(categoryDto);
 
-            if (category == null) return BadRequest();
+            if (category == null) return BadRequest("Error creating category.");
             return Ok(category);
         }
 
