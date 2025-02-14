@@ -3,6 +3,8 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 // import { getRequest } from "../utils/Api";
 import { getRequest } from "./utils/Api";
+import { jwtDecode } from "jwt-decode"; // Correct import
+
 function Header() {
   const [isSidebarActive, setIsSidebarActive] = useState(false);
   const [userName, setUserName] = useState("");
@@ -10,6 +12,7 @@ function Header() {
   const [userRole, setUserRole] = useState("");
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
+
   const toggleSidebar = () => {
     setIsSidebarActive((prev) => !prev);
     const body = document.body;
@@ -23,48 +26,44 @@ function Header() {
       sidebar.classList.add("collapsed");
     }
   };
-
   useEffect(() => {
-    if (!storedUser) {
-      console.log("No user data found in localStorage.");
-      return;
-    }
-  
-    const user = JSON.parse(storedUser);
-    console.log("Stored User:", user);
-  
-    // Fetch users and find the logged-in user
-    getRequest("/api/users")
-      .then((response) => {
-        console.log("API Response Users:", response.data);
-        const users = response.data;
-        const loggedInUser = users.find((u) => u.userId === user.userId);
-  
-        if (loggedInUser) {
-          console.log("Logged-in User:", loggedInUser);
-          
-          const fullName = [loggedInUser.firstName, loggedInUser.lastName].filter(Boolean).join(" ");
-          setUserName(fullName || "Unknown User");
-  
-          setUserRole(loggedInUser.roleId || "No Role Assigned");
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      try {
+        const decodedToken = jwtDecode(token);
+        console.log("Decoded Token:", decodedToken);
+
+        const extractedName =
+          decodedToken[
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+          ] || "User";
+        const roleId = decodedToken.roleId; // Ensure this key exists in the token
+
+        setUserName(extractedName.trim());
+
+        if (roleId) {
+          // Fetch role name from API
+          getRequest(`/api/roles/${roleId}`)
+            .then((response) => {
+              console.log("Fetched Role:", response.data.roleName);
+              setUserRole(response.data.roleName || "No Role Assigned");
+            })
+            .catch((error) => {
+              console.error("Error fetching role:", error);
+              setUserRole("No Role Assigned");
+            });
         } else {
-          console.warn("User not found in API response.");
+          setUserRole("No Role Assigned");
         }
-      })
-      .catch((error) => console.error("Error fetching users:", error.response?.data || error.message));
-  
-    // Fetch branch details
-    axios.get("")
-      .then((res) => {
-        const branch = res.data.find((b) => b.branch_id === user.branchId);
-        setBranchName(branch ? branch.branch_name : "Unknown Branch");
-      })
-      .catch((error) => {
-        console.error("Error fetching branch data:", error.response?.data || error.message);
-        setBranchName("Error loading branch");
-      });
+      } catch (error) {
+        console.error("Error decoding token:", error);
+      }
+    } else {
+      console.log("No token found in localStorage.");
+    }
   }, []);
-  
+
   return (
     <>
       {/* <!-- ======= Header ======= --> */}
@@ -111,6 +110,10 @@ function Header() {
                 <i className="bi bi-search"></i>
               </a>
             </li>
+            <div className="me-3">
+              <span className="fw-bold text-primary">Welcome!! {userName}</span>
+              <span className="text-muted"> - {userRole}</span>
+            </div>
             {/* <!-- End Search Icon--> */}
 
             <li className="nav-item dropdown">
@@ -309,45 +312,63 @@ function Header() {
               {/* <!-- End Profile Iamge Icon --> */}
 
               <ul className="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
-  <li className="dropdown-header">
-    {/* <h6>{user.firstName} {user.lastName ? user.lastName : ''}</h6> */}
-    <h6>crm</h6>
-    {/* <span>{user.role || 'No Role'}</span> */}
-  </li>
-  <li><hr className="dropdown-divider" /></li>
+                <li className="dropdown-header">
+                  <h6>{userName}</h6>
+                  <span>{userRole}</span>
+                </li>
+                <li>
+                  <hr className="dropdown-divider" />
+                </li>
 
-  <li>
-    <Link to="/users-profile" className="dropdown-item d-flex align-items-center">
-      <i className="bi bi-person"></i>
-      <span>My Profile</span>
-    </Link>
-  </li>
-  <li><hr className="dropdown-divider" /></li>
+                <li>
+                  <Link
+                    to="/users-profile"
+                    className="dropdown-item d-flex align-items-center"
+                  >
+                    <i className="bi bi-person"></i>
+                    <span>My Profile</span>
+                  </Link>
+                </li>
+                <li>
+                  <hr className="dropdown-divider" />
+                </li>
 
-  <li>
-    <Link to="/account-settings" className="dropdown-item d-flex align-items-center">
-      <i className="bi bi-gear"></i>
-      <span>Account Settings</span>
-    </Link>
-  </li>
-  <li><hr className="dropdown-divider" /></li>
+                <li>
+                  <Link
+                    to="/account-settings"
+                    className="dropdown-item d-flex align-items-center"
+                  >
+                    <i className="bi bi-gear"></i>
+                    <span>Account Settings</span>
+                  </Link>
+                </li>
+                <li>
+                  <hr className="dropdown-divider" />
+                </li>
 
-  <li>
-    <Link to="/faq" className="dropdown-item d-flex align-items-center">
-      <i className="bi bi-question-circle"></i>
-      <span>Need Help?</span>
-    </Link>
-  </li>
-  <li><hr className="dropdown-divider" /></li>
+                <li>
+                  <Link
+                    to="/faq"
+                    className="dropdown-item d-flex align-items-center"
+                  >
+                    <i className="bi bi-question-circle"></i>
+                    <span>Need Help?</span>
+                  </Link>
+                </li>
+                <li>
+                  <hr className="dropdown-divider" />
+                </li>
 
-  <li>
-    <Link to="/" className="dropdown-item d-flex align-items-center">
-      <i className="bi bi-box-arrow-right"></i>
-      <span>Sign Out</span>
-    </Link>
-  </li>
-</ul>
-
+                <li>
+                  <Link
+                    to="/"
+                    className="dropdown-item d-flex align-items-center"
+                  >
+                    <i className="bi bi-box-arrow-right"></i>
+                    <span>Sign Out</span>
+                  </Link>
+                </li>
+              </ul>
 
               {/* <!-- End Profile Dropdown Items --> */}
             </li>

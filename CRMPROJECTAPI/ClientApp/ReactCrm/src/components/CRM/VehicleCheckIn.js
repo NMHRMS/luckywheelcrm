@@ -22,7 +22,7 @@ function VehicleEntry() {
     // }
 
     try {
-      const response = await getRequest("https://localhost:7258/api/Branch")
+      const response = await getRequest("/api/Branch")
 
       if (Array.isArray(response.data)) {
         setBranches(
@@ -53,14 +53,14 @@ function VehicleEntry() {
 
     let url = "";
     if (branch === "All") {
-      url = "https://localhost:7258/api/VehicleInOut/all";
+      url = "/api/VehicleInOut/all";
     } else {
       const selectedBranchId = branches.find((b) => b.name === branch)?.id;
       if (!selectedBranchId) {
         console.error("Branch ID not found for:", branch);
         return;
       }
-      url = `https://localhost:7258/api/VehicleInOut/get-checkInOutDetails_by_id?branchId=${selectedBranchId}`;
+      url = `/api/VehicleInOut/get-checkInOutDetails_by_id?branchId=${selectedBranchId}`;
     }
 
     try {

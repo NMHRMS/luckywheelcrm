@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { getRequest, postRequest, putRequest, deleteRequest } from "../utils/Api";
+import { toast, ToastContainer  } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { getAuthData, fetchStoredData } from "../utils/AuthUtils";
 
 const AddUsers = () => {
@@ -33,19 +35,19 @@ const AddUsers = () => {
         setUsers(res.data);
         setFilteredUsers(res.data);
       })
-      .catch((error) => console.error("Error fetching users: ", error));
+      .catch((error) => toast.error("Error fetching users: ", error));
 
     getRequest("/api/Roles")
       .then((res) => setRoles(res.data))
-      .catch((error) => console.error("Error fetching roles: ", error));
+      .catch((error) => toast.error("Error fetching roles: ", error));
 
     getRequest("/api/Companies")
       .then((res) => setCompanies(res.data))
-      .catch((error) => console.error("Error fetching companies: ", error));
+      .catch((error) => toast.error("Error fetching companies: ", error));
 
     getRequest("/api/Branch")
       .then((res) => setBranches(res.data))
-      .catch((error) => console.error("Error fetching branches: ", error));
+      .catch((error) => toast.error("Error fetching branches: ", error));
   }, []);
 
   const handleRoleFilterChange = (e) => {
@@ -72,8 +74,10 @@ const AddUsers = () => {
         const updatedUsers = users.filter((user) => user.userId !== userId);
         setUsers(updatedUsers);
         setFilteredUsers(updatedUsers);
+        toast.success("User deleted successfully");
+
       })
-      .catch((error) => console.error("Error deleting user: ", error));
+      .catch((error) => toast.error("Error deleting user: ", error));
   };
 
   const handleInputChange = (e) => {
@@ -96,6 +100,7 @@ const AddUsers = () => {
           setFilteredUsers(updatedUsers);
           setShowModal(false);
           resetNewUser();
+          toast.success("User updated successfully");
         })
         .catch((error) => console.error("Error updating user:", error));
     } else {
@@ -106,8 +111,9 @@ const AddUsers = () => {
           setFilteredUsers(updatedUsers);
           setShowModal(false);
           resetNewUser();
+          toast.success("User added successfully");
         })
-        .catch((error) => console.error("Error adding user:", error));
+        .catch((error) => toast.error("Error adding user"));
     }
   };
 
@@ -159,6 +165,7 @@ const AddUsers = () => {
 
   return (
     <div className="container mt-1">
+       <ToastContainer />
       <h3>User List</h3>
 
       <div className="mb-2 d-flex">
