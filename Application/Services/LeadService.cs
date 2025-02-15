@@ -28,23 +28,26 @@ namespace Application.Services
 
         public async Task<LeadsSegregatedResponseDto> GetLatestUploadedLeadsAsync()
         {
-            // Get the latest uploaded Excel file name
-            var latestExcelFile = await _context.Leads
+            var latestExcelName = await _context.Leads
                 .OrderByDescending(l => l.CreateDate)
                 .Select(l => l.ExcelName)
                 .FirstOrDefaultAsync();
 
-            if (string.IsNullOrEmpty(latestExcelFile))
-            {
-                throw new Exception("No leads found. Please upload a file first.");
-            }
+            if (latestExcelName == null)
+                return new LeadsSegregatedResponseDto();
 
-            // Fetch all leads from that latest Excel file
-            var leads = await _context.Leads
-                .Where(l => l.ExcelName == latestExcelFile)
+
+            var leadList = await _context.Leads
+                .Where(l => l.ExcelName == latestExcelName)
+                .Include(l => l.District)
+                .Include(l => l.State)
+                .Include(l => l.LeadSource)
+                .Include(l => l.Category)
+                .Include(l => l.Product)
+                .Include(l => l.AssignedToUser)
                 .ToListAsync();
 
-            var groupedLeads = leads.GroupBy(l => l.MobileNo).ToList();
+            var groupedLeads = leadList.GroupBy(l => l.MobileNo).ToList();
 
             var newLeads = groupedLeads
                 .Where(g => g.Count() == 1)
@@ -60,7 +63,7 @@ namespace Application.Services
                 .OrderBy(l => l.CreateDate)
                 .ToList();
 
-            var blockedLeads = leads
+            var blockedLeads = leadList
                 .Where(l => l.Status == "Blocked")
                 .OrderBy(l => l.CreateDate)
                 .ToList();
@@ -80,6 +83,15 @@ namespace Application.Services
         {
             var leads = await _context.Leads.ToListAsync();
 
+
+            var leadList = await _context.Leads
+                .Include(l => l.District)
+                .Include(l => l.State)
+                .Include(l => l.LeadSource)
+                .Include(l => l.Category)
+                .Include(l => l.Product)
+                .Include(l => l.AssignedToUser)
+                .ToListAsync();
             var groupedLeads = leads.GroupBy(l => l.MobileNo).ToList();
 
             var newLeads = groupedLeads
@@ -118,12 +130,44 @@ namespace Application.Services
             return lead == null ? null : _mapper.Map<LeadResponseDto>(lead);
         }
 
-        public async Task<LeadResponseDto> AddLeadAsync(LeadDto leadDto)
+        public async Task<LeadResponseDto?> AddLeadAsync(LeadDto leadDto)
         {
+            var states = await _context.States.ToDictionaryAsync(s => s.StateName, s => s.StateId);
+            var districts = await _context.Districts.ToDictionaryAsync(d => d.DistrictName, d => d.DistrictId);
+            var leadSources = await _context.LeadSources.ToDictionaryAsync(ls => ls.SourceName, ls => ls.SourceId);
+            var categories = await _context.Categories.ToDictionaryAsync(c => c.CategoryName, c => c.CategoryId);
+            var products = await _context.Products.ToDictionaryAsync(p => p.ProductName, p => p.ProductId);
+
+            var users = await _context.Users
+                .Select(u => new { FullName = (u.FirstName ?? "") + " " + (u.LastName ?? ""), u.UserId })
+                .ToDictionaryAsync(u => u.FullName.Trim(), u => u.UserId);
+
             var lead = _mapper.Map<Lead>(leadDto);
+
+            lead.StateId = !string.IsNullOrWhiteSpace(leadDto.StateName) && states.ContainsKey(leadDto.StateName)
+                ? states[leadDto.StateName]
+                : null;
+            lead.DistrictId = !string.IsNullOrWhiteSpace(leadDto.DistrictName) && districts.ContainsKey(leadDto.DistrictName)
+                ? districts[leadDto.DistrictName]
+                : null;
+            lead.LeadSourceId = !string.IsNullOrWhiteSpace(leadDto.LeadSourceName) && leadSources.ContainsKey(leadDto.LeadSourceName)
+                ? leadSources[leadDto.LeadSourceName]
+                : null;
+            lead.CategoryId = !string.IsNullOrWhiteSpace(leadDto.CategoryName) && categories.ContainsKey(leadDto.CategoryName)
+                ? categories[leadDto.CategoryName]
+                : null;
+            lead.ProductId = !string.IsNullOrWhiteSpace(leadDto.ProductName) && products.ContainsKey(leadDto.ProductName)
+                ? products[leadDto.ProductName]
+                : null;
+
+            lead.AssignedTo = !string.IsNullOrWhiteSpace(leadDto.AssignedToName) && users.ContainsKey(leadDto.AssignedToName)
+                ? users[leadDto.AssignedToName]
+                : null;
+
             lead.LeadId = Guid.NewGuid();
             _context.Leads.Add(lead);
             await _context.SaveChangesAsync();
+
             return _mapper.Map<LeadResponseDto>(lead);
         }
 
@@ -132,9 +176,42 @@ namespace Application.Services
             var existingLead = await _context.Leads.FindAsync(id);
             if (existingLead == null) return null;
 
+            var states = await _context.States.ToDictionaryAsync(s => s.StateName, s => s.StateId);
+            var districts = await _context.Districts.ToDictionaryAsync(d => d.DistrictName, d => d.DistrictId);
+            var leadSources = await _context.LeadSources.ToDictionaryAsync(ls => ls.SourceName, ls => ls.SourceId);
+            var categories = await _context.Categories.ToDictionaryAsync(c => c.CategoryName, c => c.CategoryId);
+            var products = await _context.Products.ToDictionaryAsync(p => p.ProductName, p => p.ProductId);
+
+            var users = await _context.Users
+                .Select(u => new { FullName = (u.FirstName ?? "") + " " + (u.LastName ?? ""), u.UserId })
+                .ToDictionaryAsync(u => u.FullName.Trim(), u => u.UserId);
+
             _mapper.Map(leadDto, existingLead);
+
+            existingLead.StateId = !string.IsNullOrWhiteSpace(leadDto.StateName) && states.ContainsKey(leadDto.StateName)
+                ? states[leadDto.StateName]
+                : null;
+            existingLead.DistrictId = !string.IsNullOrWhiteSpace(leadDto.DistrictName) && districts.ContainsKey(leadDto.DistrictName)
+                ? districts[leadDto.DistrictName]
+                : null;
+            existingLead.LeadSourceId = !string.IsNullOrWhiteSpace(leadDto.LeadSourceName) && leadSources.ContainsKey(leadDto.LeadSourceName)
+                ? leadSources[leadDto.LeadSourceName]
+                : null;
+            existingLead.CategoryId = !string.IsNullOrWhiteSpace(leadDto.CategoryName) && categories.ContainsKey(leadDto.CategoryName)
+                ? categories[leadDto.CategoryName]
+                : null;
+            existingLead.ProductId = !string.IsNullOrWhiteSpace(leadDto.ProductName) && products.ContainsKey(leadDto.ProductName)
+                ? products[leadDto.ProductName]
+                : null;
+
+            existingLead.AssignedTo = !string.IsNullOrWhiteSpace(leadDto.AssignedToName) && users.ContainsKey(leadDto.AssignedToName)
+                ? users[leadDto.AssignedToName]
+                : null;
+
+            existingLead.UpdateDate = DateTime.UtcNow;
             _context.Leads.Update(existingLead);
             await _context.SaveChangesAsync();
+
             return _mapper.Map<LeadResponseDto>(existingLead);
         }
 
@@ -149,7 +226,6 @@ namespace Application.Services
 
             var leads = new List<Lead>();
 
-            // Get all required data from the database beforehand to map values
             var states = await _context.States.ToDictionaryAsync(s => s.StateName, s => s.StateId);
             var districts = await _context.Districts.ToDictionaryAsync(d => d.DistrictName, d => d.DistrictId);
             var products = await _context.Products.ToDictionaryAsync(p => p.ProductName, p => p.ProductId);
@@ -172,10 +248,8 @@ namespace Application.Services
                 var productName = worksheet.Cells[row, 12].Value?.ToString();
                 var modelName = worksheet.Cells[row, 13].Value?.ToString();
 
-                // Attempt to parse registration date
                 DateTime? registrationDate = DateTime.TryParse(registrationDateStr, out DateTime regDate) ? regDate : (DateTime?)null;
 
-                // Mapping values from Excel to the Lead model
                 var lead = new Lead
                 {
                     ExcelName = file.FileName,

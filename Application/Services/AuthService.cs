@@ -30,6 +30,7 @@ namespace Application.Services
         public async Task<AddUserDto?> LoginAsync(string email, string password)
         {
             var user = await _context.Users
+                .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.EmailId == email && u.Password == password);
 
             if (user == null)
@@ -44,15 +45,23 @@ namespace Application.Services
 
         private string GenerateJwtToken(User user)
         {
+            var roleName = user.Role?.RoleName;
+
             var claims = new List<Claim>
-        {
-          new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
-          new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"), 
-          new Claim(ClaimTypes.Email, user.EmailId),
-          new Claim("branchId", user.BranchId.ToString()),
-          new Claim("companyId", user.CompanyId.ToString()),
-          new Claim("roleId", user.RoleId.ToString())
-         };
+            {
+              new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
+              new Claim(ClaimTypes.Name, $"{user.FirstName} {user.LastName}"), 
+              new Claim(ClaimTypes.Email, user.EmailId),
+              new Claim("branchId", user.BranchId.ToString()),
+              new Claim("companyId", user.CompanyId.ToString()),
+              new Claim("roleId", user.RoleId.ToString())
+            };
+
+            if (!string.IsNullOrEmpty(roleName))
+            {
+                claims.Add(new Claim("roleName", roleName));
+            }
+
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

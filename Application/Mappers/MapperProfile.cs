@@ -36,7 +36,16 @@ namespace Application.Mappers
             CreateMap<VehicleInOutRecord, VehicleCheckInResponseDto>();
             CreateMap<VehicleInOutRecord, VehicleCheckOutResponseDto>(); 
             CreateMap<Lead, LeadDto>().ReverseMap();
-            CreateMap<Lead, LeadResponseDto>();
+            CreateMap<Lead, LeadResponseDto>()
+                 .ForMember(dest => dest.LeadSourceName, opt => opt.MapFrom(src => src.LeadSource.SourceName))
+                 .ForMember(dest => dest.DistrictName, opt => opt.MapFrom(src => src.District.DistrictName))
+                 .ForMember(dest => dest.StateName, opt => opt.MapFrom(src => src.State.StateName))
+                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.CategoryName))
+                 .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.ProductName))
+                 .ForMember(dest => dest.AssignedToName,
+                       opt => opt.MapFrom(src => src.AssignedToUser != null
+                                                ? $"{src.AssignedToUser.FirstName} {src.AssignedToUser.LastName}"
+                                                : null));
             CreateMap<LeadSource, AddLeadSourceDto>().ReverseMap();
             CreateMap<LeadSource, LeadSourceResponseDto>();
             CreateMap<LeadTracking, LeadResponseDto>();

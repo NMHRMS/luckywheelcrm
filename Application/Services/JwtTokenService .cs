@@ -43,5 +43,13 @@ namespace Application.Services
 
             return userNameClaim?.Value;
         }
+
+        public string GetRoleNameFromToken()
+        {
+            var roleNameClaim = _httpContextAccessor.HttpContext.User.Claims
+                .FirstOrDefault(c => c.Type == "roleName");
+
+            return roleNameClaim?.Value;
+        }
     }
 }

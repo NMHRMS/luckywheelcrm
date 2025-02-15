@@ -10,7 +10,8 @@ namespace Application.Interfaces
     {
         Guid? GetCompanyIdFromToken();  
         Guid? GetUserIdFromToken();     
-        string GetUserNameFromToken();  
+        string GetUserNameFromToken();
+        string GetRoleNameFromToken();
     }
 }
 
