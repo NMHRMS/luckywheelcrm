@@ -12,7 +12,7 @@ function Header() {
   const [userRole, setUserRole] = useState("");
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
-
+ 
   const toggleSidebar = () => {
     setIsSidebarActive((prev) => !prev);
     const body = document.body;
@@ -37,32 +37,22 @@ function Header() {
         const extractedName =
           decodedToken[
             "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
-          ] || "User";
-        const roleId = decodedToken.roleId; // Ensure this key exists in the token
+          ]?.trim() || "User";
 
-        setUserName(extractedName.trim());
+        const extractedRole =
+          decodedToken["roleName"]?.trim() || "No Role Assigned"; // ✅ Fix here
 
-        if (roleId) {
-          // Fetch role name from API
-          getRequest(`/api/roles/${roleId}`)
-            .then((response) => {
-              console.log("Fetched Role:", response.data.roleName);
-              setUserRole(response.data.roleName || "No Role Assigned");
-            })
-            .catch((error) => {
-              console.error("Error fetching role:", error);
-              setUserRole("No Role Assigned");
-            });
-        } else {
-          setUserRole("No Role Assigned");
-        }
+        setUserName(extractedName);
+        setUserRole(extractedRole);
       } catch (error) {
         console.error("Error decoding token:", error);
       }
     } else {
       console.log("No token found in localStorage.");
     }
-  }, []);
+  }, [localStorage.getItem("token")]); // ✅ Added dependency for updates
+
+
 
   return (
     <>

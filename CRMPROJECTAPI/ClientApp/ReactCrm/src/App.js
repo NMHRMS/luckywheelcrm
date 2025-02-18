@@ -4,10 +4,7 @@ import Layout from "./components/Layout";
 import Admindashboard from "./components/Admin/Admindashboard";
 
 // import Calendar from './components/Admin/Calendar';
-import User from "./components/Admin/User";
-import Sales from "./components/Admin/Sales";
-import DSM from "./components/Admin/DSM";
-import DSE from "./components/Admin/DSE";
+
 import Login from "./components/Login/Login";
 import CREDashboard from "./components/CRE/CREDashboard";
 import DSEDashboard from "./components/DSE/DSEDashboard";
@@ -22,7 +19,6 @@ import AddBranch from "./components/Admin/AddBranch";
 import ListLeads from "./components/CRM/ListLeads";
 import AssignWorks from "./components/CRE/AssignWorks";
 import CRM from "./components/CRM/CRM";
-import CRE from "./components/CRM/CRE";
 import AssignManagement from "./components/Admin/AssignManagement";
 import LeadsDisplayExcelRecords from "./components/CRM/LeadsDisplayExcelRecords";
 import LeadsRecord from "./components/DSM/LeadsRecord";
@@ -30,6 +26,18 @@ import DseLeads from "./components/DSE/DseLeads";
 import UserPerformance from "./components/Admin/UserPerformance";
 import VehicleCheckIn from "./components/CRM/VehicleCheckIn";
 import VehicleCheck from "./components/VehicleCheck/VehicleCheck";
+import DuplicatesLeads from "./components/CRM/DuplicatesLeads";
+import FileSearchModal from "./components/CRM/FileSearchModal";
+import AssignModal from "./components/CRM/AssignModal";
+import FileUpload from "./components/CRM/FileUpload";
+import Filters from "./components/CRM/Filters";
+import LeadModal from "./components/CRM/LeadModal";
+import Pagination from "./components/CRM/Pagination";
+import Categories from "./components/Admin/Categories";
+import Allleads from "./components/CRM/Allleads";
+import AssignedNotAssignedList from "./components/CRM/Assignednotassignedlist";
+import RejectList from "./components/CRM/RejectList";
+import PerformanceUser from "./components/CRM/PerformanceUser";
 
 function App() {
   return (
@@ -41,17 +49,24 @@ function App() {
         {/* Admin Routes */}
         <Route path="/crm" element={<Layout />}>
           <Route path="dashboard" element={<DashboardCRM/>} />
-          <Route path="cre" element={<CRE/>} />
-          <Route path="sales" element={<Sales />} />
           <Route path="excelform" element={<Excelform/>} />
-          <Route path="listleads" element={<ListLeads/>} />
-          <Route path="dse" element={<DSE />} />
-          <Route path="dsm" element={<DSM />} />
-          <Route path="user" element={<User />} />
+          <Route path="listleads" element={<ListLeads/>} />        
           <Route path="leads" element={<Leads/>} />
           <Route path="crm" element={<CRM />} />
           <Route path="vehiclecheck" element={<VehicleCheckIn/>} />
           <Route path="leadsdisplayexcelrecords/:excelName" element={<LeadsDisplayExcelRecords/>} />
+          <Route path="listleads" element={<ListLeads/>} />
+          <Route path="duplicateleads" element={<DuplicatesLeads/>} />
+          <Route path="assignmodal" element={<AssignModal/>} />
+          <Route path="filesearch" element={<FileSearchModal/>}/>
+          <Route path="fileupload" element={<FileUpload />} />
+          <Route path="filters" element={<Filters/>} />
+          <Route path="leadmodal" element={<LeadModal/>} />
+          <Route path="pagination" element={<Pagination />} />
+          <Route path="allleads" element={<Allleads/>} />
+          <Route path="asiignedleads" element={<AssignedNotAssignedList/>} />
+          <Route path="rejectleads" element={<RejectList/>} />
+          <Route path="performance" element={<PerformanceUser/>} />
 
 
         </Route>
@@ -81,7 +96,7 @@ function App() {
           <Route path="addbranch" element={<AddBranch/>} />
           <Route path="assignmanagement" element={<AssignManagement/>} />
           <Route path="userperformance" element={<UserPerformance/>} />
-
+          <Route path="categories" element={<Categories />} />
 
 
 

@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { getRequest, postRequest, putRequest, deleteRequest } from "../utils/Api";
-import { toast, ToastContainer  } from "react-toastify";
+import {
+  getRequest,
+  postRequest,
+  putRequest,
+  deleteRequest,
+} from "../utils/Api";
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { getAuthData, fetchStoredData } from "../utils/AuthUtils";
+import { getAuthData, fetchStoredData } from "../utils/UserDataUtils";
 
 const AddUsers = () => {
   const [users, setUsers] = useState([]);
@@ -14,6 +19,10 @@ const AddUsers = () => {
   const [companies, setCompanies] = useState([]);
   const [branches, setBranches] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [getUser, setGetuser] = useState("");
+  const [showBranchesAndCategories, setShowBranchesAndCategories] =
+    useState(false);
+  const [showOnlyBranches, setShowOnlyBranches] = useState(false);
 
   const [newUser, setNewUser] = useState({
     firstName: "",
@@ -21,13 +30,23 @@ const AddUsers = () => {
     emailId: "",
     password: "",
     contactNumber: "",
-    companyId: 0,
-    branchId: 0,
-    roleId: 0,
+    branchId: "",
+    roleId: "",
+    categoriesId: "",
   });
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
+
+  useEffect(() => {
+    const loadUserData = async () => {
+      const storedData = await fetchStoredData();
+      if (storedData) {
+        setGetuser(storedData);
+      }
+    };
+    loadUserData();
+  }, []);
 
   useEffect(() => {
     getRequest("/api/users")
@@ -75,20 +94,72 @@ const AddUsers = () => {
         setUsers(updatedUsers);
         setFilteredUsers(updatedUsers);
         toast.success("User deleted successfully");
-
       })
       .catch((error) => toast.error("Error deleting user: ", error));
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewUser((prevUser) => ({
-      ...prevUser,
+  // const handleInputChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setNewUser((prevUser) => ({
+  //     ...prevUser,
+  //     [name]: value,
+  //   }));
+  // };
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+
+    console.log(`Selected ${name}:`, value);
+
+    if (name === "roleId") {
+      const selectedRoleId = value.toLowerCase(); // Normalize case
+
+      // Define role IDs for case-insensitive comparison
+      const roleWithBranchesAndCategories = [
+        "633b4045-ae76-43ce-9419-cbf91b4bfd07",
+        "82cf21da-45cd-4fe2-b892-7b5cb2bc8883",
+        "a8c8ea20-7154-4d78-97ea-a4d5cf217a27",
+      ];
+      const roleWithOnlyBranches = ["da9f9bc0-e58a-4a9f-8d59-183099ce2ba9"];
+
+      console.log("Normalized roleId:", selectedRoleId);
+
+      if (roleWithBranchesAndCategories.includes(selectedRoleId)) {
+        console.log(
+          "Matched roleId for showing branches & categories:",
+          selectedRoleId
+        );
+        setShowBranchesAndCategories(true);
+        setShowOnlyBranches(false);
+      } else if (roleWithOnlyBranches.includes(selectedRoleId)) {
+        console.log(
+          "Matched roleId for showing only branches:",
+          selectedRoleId
+        );
+        setShowBranchesAndCategories(false);
+        setShowOnlyBranches(true);
+      } else {
+        console.log("No matching roleId:", selectedRoleId);
+        setShowBranchesAndCategories(false);
+        setShowOnlyBranches(false);
+
+        // Set branchId and categoriesId to null when not needed
+        setNewUser((prevUser) => ({
+          ...prevUser,
+          branchId: null,
+          categoriesId: null,
+        }));
+      }
+    }
+
+    setNewUser((prevFormData) => ({
+      ...prevFormData,
       [name]: value,
     }));
   };
 
   const handleSave = () => {
+    if (!getUser.companyId) return;
     if (isEditMode) {
       const updateUser = { ...newUser, userId: currentUserId };
       putRequest(`/api/users/${currentUserId}`, updateUser)
@@ -104,7 +175,12 @@ const AddUsers = () => {
         })
         .catch((error) => console.error("Error updating user:", error));
     } else {
-      postRequest("/api/users", newUser)
+      const data = {
+        ...newUser,
+        companyId: getUser.companyId,
+      };
+
+      postRequest("/api/users", data)
         .then((res) => {
           const updatedUsers = [...users, res.data];
           setUsers(updatedUsers);
@@ -134,7 +210,6 @@ const AddUsers = () => {
       emailId: "",
       password: "",
       contactNumber: "",
-      companyId: 0,
       branchId: 0,
       roleId: 0,
     });
@@ -143,7 +218,7 @@ const AddUsers = () => {
   const handleSearchChange = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
-  
+
     if (query.trim() === "") {
       setFilteredUsers(users);
     } else {
@@ -151,21 +226,21 @@ const AddUsers = () => {
         const firstName = user.firstName ? user.firstName.toLowerCase() : "";
         const lastName = user.lastName ? user.lastName.toLowerCase() : "";
         const emailId = user.emailId ? user.emailId.toLowerCase() : "";
-  
+
         return (
           firstName.includes(query.toLowerCase()) ||
           lastName.includes(query.toLowerCase()) ||
           emailId.includes(query.toLowerCase())
         );
       });
-  
+
       setFilteredUsers(searchResults);
     }
   };
-
+ 
   return (
     <div className="container mt-1">
-       <ToastContainer />
+      <ToastContainer />
       <h3>User List</h3>
 
       <div className="mb-2 d-flex">
@@ -191,7 +266,10 @@ const AddUsers = () => {
           ))}
         </select>
 
-        <button className="btn btn-outline-secondary ms-2" onClick={handleClearFilter}>
+        <button
+          className="btn btn-outline-secondary ms-2"
+          onClick={handleClearFilter}
+        >
           Clear Filter
         </button>
 
@@ -218,6 +296,7 @@ const AddUsers = () => {
             <th>Branch</th>
             <th>Role</th>
             <th>Actions</th>
+            
           </tr>
         </thead>
         <tbody>
@@ -235,10 +314,16 @@ const AddUsers = () => {
                 <td>{branch ? branch.name : "N/A"}</td>
                 <td>{role ? role.roleName : "N/A"}</td>
                 <td>
-                  <button className="btn btn-sm text-primary me-2" onClick={() => handleEdit(user.userId)}>
+                  <button
+                    className="btn btn-sm text-primary me-2"
+                    onClick={() => handleEdit(user.userId)}
+                  >
                     <i className="bi bi-pencil-square"></i>
                   </button>
-                  <button className="btn btn-sm text-danger" onClick={() => handleDelete(user.userId)}>
+                  <button
+                    className="btn btn-sm text-danger"
+                    onClick={() => handleDelete(user.userId)}
+                  >
                     <i className="bi bi-trash"></i>
                   </button>
                 </td>
@@ -325,7 +410,6 @@ const AddUsers = () => {
                       required
                     />
                   </div>
-
                   <div className="mb-3">
                     <label htmlFor="contactNumber" className="form-label">
                       Contact Number
@@ -340,52 +424,6 @@ const AddUsers = () => {
                       required
                     />
                   </div>
-
-                  <div className="mb-3">
-                    <label htmlFor="companyId" className="form-label">
-                      Company
-                    </label>
-                    <select
-                      id="companyId"
-                      name="companyId"
-                      className="form-control"
-                      value={newUser.companyId}
-                      onChange={handleInputChange}
-                      required
-                    >
-                      <option value="">Select Company</option>
-                      {companies.map((company) => (
-                        <option
-                          key={company.companyId}
-                          value={company.companyId}
-                        >
-                          {company.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="mb-3">
-                    <label htmlFor="branchId" className="form-label">
-                      Branch
-                    </label>
-                    <select
-                      id="branchId"
-                      name="branchId"
-                      className="form-control"
-                      value={newUser.branchId}
-                      onChange={handleInputChange}
-                      required
-                    >
-                      <option value="">Select Branch</option>
-                      {branches.map((branch) => (
-                        <option key={branch.branchId} value={branch.branchId}>
-                          {branch.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
                   <div className="mb-3">
                     <label htmlFor="roleId" className="form-label">
                       Role
@@ -406,6 +444,49 @@ const AddUsers = () => {
                       ))}
                     </select>
                   </div>
+
+                  {(showBranchesAndCategories || showOnlyBranches) && (
+                    <div className="mb-3">
+                      <label htmlFor="branchId" className="form-label">
+                        Branch
+                      </label>
+                      <select
+                        id="branchId"
+                        name="branchId"
+                        className="form-control"
+                        value={newUser.branchId}
+                        onChange={handleInputChange}
+                        required
+                      >
+                        <option value="">Select Branch</option>
+                        {branches.map((branch) => (
+                          <option key={branch.branchId} value={branch.branchId}>
+                            {branch.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  {showBranchesAndCategories && (
+                    <div className="mb-3">
+                      <label htmlFor="categoriesId" className="form-label">
+                        Categories/Vertical
+                      </label>
+                      <select
+                        id="categoriesId"
+                        name="categoriesId"
+                        className="form-control"
+                        value={newUser.categoriesId}
+                        onChange={handleInputChange}
+                        required
+                      >
+                        <option value="">Select categories</option>
+                        <option value="1"> HCV </option>
+                        <option value="2"> Bus </option>
+                        <option value="3"> Icv </option>
+                      </select>
+                    </div>
+                  )}
                 </div>
                 <div className="modal-footer">
                   <button

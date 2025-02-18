@@ -1,8 +1,5 @@
-import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-// import { toast, ToastContainer  } from "react-toastify";
-// import "react-toastify/dist/ReactToastify.css";
 import * as XLSX from "xlsx";
 import {
   FaSortAlphaDown,
@@ -10,12 +7,7 @@ import {
   FaTimes,
   FaSearch,
 } from "react-icons/fa";
-import {
-  getRequest,
-  postRequest,
-  putRequest,
-  deleteRequest,
-} from "../utils/Api";
+import { getRequest, postRequest } from "../utils/Api";
 import { getAuthData, fetchStoredData } from "../utils/AuthUtils";
 export default function Excelform() {
   const [fileData, setFileData] = useState([]);
@@ -60,22 +52,74 @@ export default function Excelform() {
   const [filteredLeads, setFilteredLeads] = useState(leadsData);
   const [assignStatus, setAssignStatus] = useState("");
   const [filteredFileNames, setFilteredFileNames] = useState([]);
-  const recordsToShow =
-    recordsPerPage === "all" ? fileData : fileData.slice(0, recordsPerPage);
+  const [leadTab, setLeadTab] = useState("new"); // Default tab: New Leads
+  const [leadCounts, setLeadCounts] = useState({
+    new: 92,
+    duplicate: 12,
+    blocked: 0,
+  });
+
+  const [tabLeads, setTabLeads] = useState([]); // Stores leads for the selected tab
+
+  useEffect(() => {
+    fetchLeadSummary();
+  }, []);
+
+  const fetchLeadSummary = async () => {
+    try {
+      const response = await getRequest("/api/Leads");
+      setLeadCounts({
+        new: response.data.newLeads.length || 0,
+        duplicate: response.data.duplicateLeads.length || 0,
+        blocked: response.data.blockedUsers.length || 0,
+      });
+
+      setTabLeads(response.data.newLeads || []); // Default: Show new leads
+    } catch (error) {
+      console.error("Error fetching lead summary:", error);
+    }
+  };
+
+  const handleTabChange = (tabType) => {
+    setLeadTab(tabType);
+
+    switch (tabType) {
+      case "new":
+        setTabLeads(leadCounts.new ? leadsData.newLeads : []);
+        break;
+      case "duplicate":
+        setTabLeads(leadCounts.duplicate ? leadsData.duplicateLeads : []);
+        break;
+      case "blocked":
+        setTabLeads(leadCounts.blocked ? leadsData.blockedUsers : []);
+        break;
+      default:
+        setTabLeads([]);
+    }
+  };
 
   useEffect(() => {
     const fetchCreUsers = async () => {
       setLoading(true);
       try {
         const usersResponse = await getRequest("/api/Users");
-        console.log("Fetched Users:", usersResponse.data); // Debugging log
-
+        console.log("Fetched Users:", usersResponse.data);
+  
+        if (!Array.isArray(usersResponse.data)) {
+          console.error("API response is not an array:", usersResponse.data);
+          return;
+        }
+  
+        usersResponse.data.forEach((user) => {
+          console.log(`User: ${user.firstName} ${user.lastName}, Role: ${user.roleName}`);
+        });
+  
         const creUsersList = usersResponse.data.filter(
-          (user) => user.roleId === "ad851efd-cd73-43ff-aca5-9f3bc12127b2"
+          (user) => user.roleName?.toLowerCase() === "cre"
         );
-
-        console.log("Filtered CRE Users:", creUsersList); // Debugging log
-
+  
+        console.log("Filtered CRE Users:", creUsersList);
+  
         setCreOptions(creUsersList);
       } catch (error) {
         console.error("Error fetching CRE users:", error);
@@ -83,9 +127,11 @@ export default function Excelform() {
         setLoading(false);
       }
     };
-
+  
     fetchCreUsers();
   }, [modalVisible]);
+  
+  
   useEffect(() => {
     const tooltipTriggerList = document.querySelectorAll(
       '[data-bs-toggle="tooltip"]'
@@ -119,7 +165,13 @@ export default function Excelform() {
   //       value?.toString().toLowerCase().includes(searchQuery.toLowerCase())
   //     )
   // );
+
   useEffect(() => {
+    if (!Array.isArray(leadsData)) {
+      console.error("leadsData is not an array:", leadsData);
+      return; // Exit early to prevent errors
+    }
+
     const uniqueValues = {};
     leadsData.forEach((lead) => {
       Object.keys(lead).forEach((key) => {
@@ -127,9 +179,11 @@ export default function Excelform() {
         uniqueValues[key].add(lead[key]);
       });
     });
+
     Object.keys(uniqueValues).forEach(
       (key) => (uniqueValues[key] = Array.from(uniqueValues[key]))
     );
+
     setUniqueColumnValues(uniqueValues);
   }, [leadsData]);
 
@@ -161,9 +215,11 @@ export default function Excelform() {
       // Axios automatically parses JSON, so use response.data directly
       const data = response.data;
 
-      setLeadsData(data.leads);
-      const totalLeads = data.leads.length;
-      const assignedLeads = data.leads.filter((lead) => lead.assigned).length;
+      setLeadsData(Array.isArray(data.newLeads) ? data.newLeads : []);
+      const totalLeads = data.newLeads.length;
+      const assignedLeads = data.newLeads.filter(
+        (lead) => lead.assigned
+      ).length;
       const notAssignedLeads = totalLeads - assignedLeads;
 
       setTotalLeads(totalLeads);
@@ -192,24 +248,17 @@ export default function Excelform() {
   };
 
   const handleStatusFilter = async (status) => {
-    setAssignStatus(status); // Update dropdown state
-
+    setAssignStatus(status);
     try {
-      // Ensure the correct boolean is passed to the API
       const apiStatus =
         status === "true" ? true : status === "false" ? false : "";
-
       const response = await getRequest(
         `/api/Leads/filter?assigned=${apiStatus}`
       );
-      const data = response.data || [];
-
-      console.log("API Response:", data); // Debugging: Check API response
-
-      setLeadsData(data); // Store full dataset
-      setFilteredLeads(data); // Update UI with correct leads
+      setLeadsData(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Error fetching filtered leads:", error);
+      setLeadsData([]); // Prevent setting to undefined
     }
   };
 
@@ -248,7 +297,9 @@ export default function Excelform() {
       setLoading(true);
       getRequest("/api/Leads")
         .then((response) => {
-          setLeadsData(response.data || []);
+          setLeadsData(
+            Array.isArray(response.data.newLeads) ? response.data.newLeads : []
+          );
         })
         .catch((error) => {
           console.error("Error fetching leads data:", error);
@@ -260,36 +311,20 @@ export default function Excelform() {
 
     fetchLeadsData();
   }, []);
-
   useEffect(() => {
-    setLoading(true);
     getRequest("/api/Leads")
       .then((response) => {
-        const data = response.data || [];
-        setLeadsData(data);
-
-        // Extract unique file names
-        const uniqueFileNames = [
-          ...new Set(data.map((lead) => lead.excelName).filter(Boolean)),
-        ];
-        setFileNames(uniqueFileNames);
-        setFilteredFileNames(uniqueFileNames);
+        console.log("API Response:", response.data); // Debugging
+        setLeadsData(
+          Array.isArray(response.data.newLeads) ? response.data.newLeads : []
+        );
       })
       .catch((error) => {
         console.error("Error fetching leads data:", error);
-      })
-      .finally(() => {
-        setLoading(false);
+        setLeadsData([]); // Prevent undefined
       });
   }, []);
 
-  const handleSearchChange = (e) => {
-    const searchValue = e.target.value.toLowerCase();
-    setFileName(e.target.value);
-    setFilteredFileNames(
-      fileNames.filter((name) => name.toLowerCase().includes(searchValue))
-    );
-  };
   // Empty dependency array to run only once when the component mounts
   const filterFields = (data) => {
     if (!data || typeof data !== "object") return {}; // Prevent null/undefined errors
@@ -378,9 +413,7 @@ export default function Excelform() {
     })
       .then((response) => {
         console.log("File uploaded successfully:", response.data);
-        // toast.success("File Updoleded successfully!");
-        alert("File Updoleded successfully!");
-
+        alert("File uploaded successfully!");
 
         // Update filenames list
         setFileNames((prev) => [...prev, selectedFile.name]);
@@ -447,12 +480,15 @@ export default function Excelform() {
     }));
   };
 
-  const filteredData = leadsData.filter((lead) => {
-    return Object.keys(filters).every((column) => {
-      if (!filters[column].length) return true; // No filter, return all
-      return filters[column].includes(lead[column]);
-    });
-  });
+  const filteredData = Array.isArray(leadsData)
+    ? leadsData.filter((lead) => {
+        return Object.keys(filters).every((column) => {
+          if (!filters[column].length) return true;
+          return filters[column].includes(lead[column]);
+        });
+      })
+    : [];
+
   const paginateData = () => {
     // Ensure leadsData is an array before using slice
     if (Array.isArray(leadsData) && leadsData.length > 0) {
@@ -484,9 +520,9 @@ export default function Excelform() {
     });
     setFileData(sortedData);
   };
-  // const handleCustomSort = () => {
-  //   alert("Custom Sort clicked! Implement your custom sort logic here.");
-  // };
+  const handleCustomSort = () => {
+    alert("Custom Sort clicked! Implement your custom sort logic here.");
+  };
   const handleClear = () => {
     setFilters({});
     setDropdownVisible(null); // Close dropdowns after clearing
@@ -620,8 +656,6 @@ export default function Excelform() {
       setSelectedCRE("");
 
       alert("Selected records have been assigned successfully!");
-          // toast.success("Lead Assigned Successfully");
-
     } catch (error) {
       console.error("Error assigning CRE:", error);
       alert(`Error: ${error.message}`);
@@ -640,7 +674,6 @@ export default function Excelform() {
   };
   const handleSave = async () => {
     const leadData = {
-      CompanyId: selectedCompany,
       OwnerName: newLead.OwnerName,
       MobileNo: newLead.MobileNo,
       DistrictName: newLead.DistrictName,
@@ -726,7 +759,6 @@ export default function Excelform() {
 
   return (
     <div className="container">
-      {/* <ToastContainer position="top-right" autoClose={3000} hideProgressBar /> */}
       <div className="row justify-content-center">
         <div className="card-body">
           <h5 className="card-title text-left mb-1" style={{ fontSize: 25 }}>
@@ -789,7 +821,7 @@ export default function Excelform() {
                     A
                   </button>
                 </li>
-                {/* <li>
+                <li>
                   <button
                     className="dropdown-item d-flex align-items-center"
                     data-bs-toggle="modal"
@@ -798,15 +830,15 @@ export default function Excelform() {
                     <i className="bi bi-layout-text-sidebar-reverse me-2"></i>{" "}
                     Custom Sort
                   </button>
-                </li> */}
-                {/* <li>
+                </li>
+                <li>
                   <button
                     className="dropdown-item d-flex align-items-center"
                     onClick={handleFilter}
                   >
                     <i className="bi bi-funnel me-2"></i> Filter
                   </button>
-                </li> */}
+                </li>
                 <li>
                   <button
                     className="dropdown-item d-flex align-items-center"
@@ -815,14 +847,14 @@ export default function Excelform() {
                     <i className="bi bi-x-circle me-2"></i> Clear
                   </button>
                 </li>
-                {/* <li>
+                <li>
                   <button
                     className="dropdown-item d-flex align-items-center"
                     onClick={handleReapply}
                   >
                     <i className="bi bi-arrow-clockwise me-2"></i> Reapply
                   </button>
-                </li> */}
+                </li>
               </ul>
             </div>
 
@@ -869,8 +901,8 @@ export default function Excelform() {
           </div>
           <div className="card">
             <div className="card-body">
-              <div className="d-flex justify-content-between mb-2">
-                <h5 className="card-title">Excel Table</h5>
+              <div className="d-flex justify-content-between mb-0">
+                <h5 className="card-title ms-2">Excel Table</h5>
                 <div className="d-flex justify-content-end align-items-start mt-3">
                   <div className="mb-3 me-3">
                     <select
@@ -924,80 +956,143 @@ export default function Excelform() {
                 </div>
               </div>
 
-              <div
-                className="table-container"
-                style={{ position: "relative", width: "100%" }}
-              >
-                {/* Pagination Top */}
-                <div className="pagination justify-content-left mb-0">
-                  <ul className="pagination">
-                    {/* Previous Group Button */}
-                    <li className="page-item">
+              <div className="table-container">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  {/* Tabs on the Left */}
+                  <ul className="nav nav-tabs border-0">
+                    <li className="nav-item">
                       <button
-                        className={`page-link ${
-                          currentPage <= 10 ? "disabled" : ""
+                        className={`nav-link ${
+                          leadTab === "new"
+                            ? "active text-primary"
+                            : "text-muted"
                         }`}
-                        onClick={() => handlePageChange(currentPage - 10)}
-                        disabled={currentPage <= 10}
+                        onClick={() => handleTabChange("new")}
+                        style={{
+                          border: "none",
+                          borderBottom:
+                            leadTab === "new"
+                              ? "2px solid #0d6efd"
+                              : "2px solid transparent",
+                          background: "none",
+                        }}
                       >
-                        Previous
+                        New Leads ({leadCounts.new})
                       </button>
                     </li>
-
-                    {/* Page Number Buttons */}
-                    {Array.from({
-                      length: Math.min(
-                        10,
-                        Math.ceil(leadsData.length / recordsPerPage) -
-                          Math.floor((currentPage - 1) / 10) * 10
-                      ),
-                    }).map((_, index) => {
-                      const page =
-                        Math.floor((currentPage - 1) / 10) * 10 + index + 1;
-                      if (
-                        page <= Math.ceil(leadsData.length / recordsPerPage)
-                      ) {
-                        return (
-                          <li className="page-item" key={index}>
-                            <button
-                              className={`page-link ${
-                                currentPage === page ? "disabled" : ""
-                              }`}
-                              onClick={() => handlePageChange(page)}
-                              disabled={currentPage === page}
-                            >
-                              {page}
-                            </button>
-                          </li>
-                        );
-                      }
-                      return null;
-                    })}
-
-                    {/* Next Group Button */}
-                    <li className="page-item">
+                    <li className="nav-item">
                       <button
-                        className={`page-link ${
-                          currentPage >=
-                          Math.ceil(leadsData.length / recordsPerPage) - 10
-                            ? "disabled"
-                            : ""
+                        className={`nav-link ${
+                          leadTab === "duplicate"
+                            ? "active text-primary"
+                            : "text-muted"
                         }`}
-                        onClick={() => handlePageChange(currentPage + 10)}
-                        disabled={
-                          currentPage >=
-                          Math.ceil(leadsData.length / recordsPerPage) - 10
-                        }
+                        onClick={() => handleTabChange("duplicate")}
+                        style={{
+                          border: "none",
+                          borderBottom:
+                            leadTab === "duplicate"
+                              ? "2px solid #0d6efd"
+                              : "2px solid transparent",
+                          background: "none",
+                        }}
                       >
-                        Next
+                        Duplicate Leads ({leadCounts.duplicate})
+                      </button>
+                    </li>
+                    <li className="nav-item">
+                      <button
+                        className={`nav-link ${
+                          leadTab === "blocked"
+                            ? "active text-primary"
+                            : "text-muted"
+                        }`}
+                        onClick={() => handleTabChange("blocked")}
+                        style={{
+                          border: "none",
+                          borderBottom:
+                            leadTab === "blocked"
+                              ? "2px solid #0d6efd"
+                              : "2px solid transparent",
+                          background: "none",
+                        }}
+                      >
+                        Blocked Users ({leadCounts.blocked})
                       </button>
                     </li>
                   </ul>
+
+                  {/* Pagination on the Right */}
+                  <div className="pagination mb-0">
+                    <ul className="pagination mb-0">
+                      <li className="page-item">
+                        <button
+                          className={`page-link ${
+                            currentPage <= 10 ? "disabled" : ""
+                          }`}
+                          onClick={() => handlePageChange(currentPage - 10)}
+                          disabled={currentPage <= 10}
+                        >
+                          Previous
+                        </button>
+                      </li>
+                      {Array.from({
+                        length: Math.min(
+                          10,
+                          Math.ceil(leadsData.length / recordsPerPage) -
+                            Math.floor((currentPage - 1) / 10) * 10
+                        ),
+                      }).map((_, index) => {
+                        const page =
+                          Math.floor((currentPage - 1) / 10) * 10 + index + 1;
+                        if (
+                          page <= Math.ceil(leadsData.length / recordsPerPage)
+                        ) {
+                          return (
+                            <li className="page-item" key={index}>
+                              <button
+                                className={`page-link ${
+                                  currentPage === page ? "disabled" : ""
+                                }`}
+                                onClick={() => handlePageChange(page)}
+                                disabled={currentPage === page}
+                              >
+                                {page}
+                              </button>
+                            </li>
+                          );
+                        }
+                        return null;
+                      })}
+                      <li className="page-item">
+                        <button
+                          className={`page-link ${
+                            currentPage >=
+                            Math.ceil(leadsData.length / recordsPerPage) - 10
+                              ? "disabled"
+                              : ""
+                          }`}
+                          onClick={() => handlePageChange(currentPage + 10)}
+                          disabled={
+                            currentPage >=
+                            Math.ceil(leadsData.length / recordsPerPage) - 10
+                          }
+                        >
+                          Next
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
 
                 {/* Table */}
                 <div style={{ overflowX: "auto", whiteSpace: "nowrap" }}>
-                  <table className="table table-bordered text-left">
+                  <h5 className="card-title">
+                    {leadTab === "new" && "New Leads"}
+                    {leadTab === "duplicate" && "Duplicate Leads"}
+                    {leadTab === "blocked" && "Blocked Users"}
+                  </h5>
+                  <table className="table table-bordered text-left table-hover">
                     <thead>
                       <tr>
                         {/* Select All Checkbox */}
@@ -1297,7 +1392,116 @@ export default function Excelform() {
           </div>
         </div>
       </div>
-
+      <div
+        className="modal fade"
+        id="customSortModal"
+        tabIndex="-1"
+        aria-labelledby="customSortModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog modal-lg">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="customSortModalLabel">
+                Custom Sort
+              </h5>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
+              <div className="row mb-3">
+                <div className="col-md-4">
+                  <label htmlFor="sortByColumn" className="form-label">
+                    Sort By
+                  </label>
+                  <select
+                    className="form-select"
+                    id="sortByColumn"
+                    onChange={(e) => setSortByColumn(e.target.value)}
+                  >
+                    {fileData.length > 0 &&
+                      Object.keys(fileData[0]).map((column, index) => (
+                        <option key={index} value={column}>
+                          {column}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+                <div className="col-md-4">
+                  <label htmlFor="sortOn" className="form-label">
+                    Sort On
+                  </label>
+                  <select
+                    className="form-select"
+                    id="sortOn"
+                    onChange={(e) => setSortOn(e.target.value)}
+                  >
+                    <option value="Cell Values">Cell Values</option>
+                    <option value="Font Color">Font Color</option>
+                    <option value="Cell Color">Cell Color</option>
+                  </select>
+                </div>
+                <div className="col-md-4">
+                  <label htmlFor="order" className="form-label">
+                    Order
+                  </label>
+                  <select
+                    className="form-select"
+                    id="order"
+                    onChange={(e) => setOrder(e.target.value)}
+                  >
+                    <option value="A to Z">A to Z</option>
+                    <option value="Z to A">Z to A</option>
+                  </select>
+                </div>
+              </div>
+              <button className="btn btn-primary" onClick={addSortLevel}>
+                Add Level
+              </button>
+              <div className="mt-3">
+                <h6>Sort Levels:</h6>
+                <ul className="list-group">
+                  {sortLevels.map((level, index) => (
+                    <li
+                      key={index}
+                      className="list-group-item d-flex justify-content-between align-items-center"
+                    >
+                      {`Column: ${level.column}, Sort On: ${level.sortOn}, Order: ${level.order}`}
+                      <button
+                        className="btn btn-danger btn-sm"
+                        onClick={() => removeSortLevel(index)}
+                      >
+                        Remove
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary"
+                onClick={handleApplySort}
+                data-bs-dismiss="modal"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
       {assignModalVisible && (
         <div
           className="modal show"
@@ -1340,19 +1544,23 @@ export default function Excelform() {
                     Select CRE:
                   </label>
                   <select
-                    id="creSelect"
-                    className="form-select"
-                    value={selectedCRE}
-                    onChange={(e) => setSelectedCRE(e.target.value)}
-                  >
-                     <option value="">Select CRE</option>
-                    {creOptions.map((cre) => (
-                      <option key={cre.userId} value={cre.userId}>
-                        {cre.firstName ? cre.firstName : "Unknown"}{" "}
-                        {cre.lastName ? cre.lastName : ""}
-                      </option>
-                    ))}
-                  </select>
+  id="creSelect"
+  className="form-select"
+  value={selectedCRE}
+  onChange={(e) => setSelectedCRE(e.target.value)}
+>
+  <option value="">Select CRE</option>
+  {creOptions.length === 0 ? (
+    <option disabled>No CRE Users Found</option>
+  ) : (
+    creOptions.map((cre) => (
+      <option key={cre.userId} value={cre.userId}>
+        {cre.firstName || "Unknown"} {cre.lastName || ""}
+      </option>
+    ))
+  )}
+</select>
+
                 </div>
               </div>
               <div className="modal-footer">
@@ -1725,7 +1933,6 @@ export default function Excelform() {
           </div>
         </div>
       )}
-
       <ul>
         {fileNames.map((name, index) => (
           <li key={index}>{name}</li>

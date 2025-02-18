@@ -1,15 +1,23 @@
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Table, Select, Button } from "antd";
+import { FilterOutlined, DownOutlined, UpOutlined } from "@ant-design/icons";
 import { useParams } from "react-router-dom";
 import { getRequest } from "../utils/Api";
 
+const { Option } = Select;
+
 const LeadsDisplayExcelRecords = () => {
-  const { excelName } = useParams(); // Get file name from URL
+  const { excelName } = useParams();
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [filters, setFilters] = useState({});
+  const [sortColumn, setSortColumn] = useState(null); 
+  const [sortOrder, setSortOrder] = useState("asc");
   const [currentPage, setCurrentPage] = useState(1);
-  const [leadsPerPage] = useState(50); // You can adjust this to control how many leads per page
+  const leadsPerPage = 50;
 
+  // Fetch leads data
   useEffect(() => {
     getRequest(`/api/Leads/get_leads_by_excelname?excelName=${excelName}`)
       .then((response) => {
@@ -23,153 +31,201 @@ const LeadsDisplayExcelRecords = () => {
       });
   }, [excelName]);
 
-  // Pagination Logic
+  // Handle sorting
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortColumn(column);
+      setSortOrder("asc");
+    }
+  };
+
+  // Handle filter changes
+  const handleFilterChange = (value, column) => {
+    setFilters({
+      ...filters,
+      [column]: value,
+    });
+  };
+
+  // Reset filters
+  const handleResetFilters = () => {
+    setFilters({});
+  };
+
+  // Filtering logic
+  const filteredLeads = leads.filter((lead) => {
+    return Object.keys(filters).every((key) => {
+      if (filters[key] && filters[key].length > 0) {
+        return filters[key].includes(lead[key]);
+      }
+      return true;
+    });
+  });
+
+  // Sorting logic
+  const sortedLeads = [...filteredLeads].sort((a, b) => {
+    if (sortColumn) {
+      const valA = a[sortColumn] || "";
+      const valB = b[sortColumn] || "";
+      return sortOrder === "asc" ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
+    }
+    return 0;
+  });
+
+  // Pagination logic
   const indexOfLastLead = currentPage * leadsPerPage;
   const indexOfFirstLead = indexOfLastLead - leadsPerPage;
-  const currentLeads = leads.slice(indexOfFirstLead, indexOfLastLead);
+  const currentLeads = sortedLeads.slice(indexOfFirstLead, indexOfLastLead);
+  const totalPages = Math.ceil(sortedLeads.length / leadsPerPage);
 
-  // Total number of pages
-  const totalPages = Math.ceil(leads.length / leadsPerPage);
-
-  // Change page handler
   const handlePageChange = (pageNumber) => {
     if (pageNumber >= 1 && pageNumber <= totalPages) {
       setCurrentPage(pageNumber);
     }
   };
 
+  // Ant Design Table columns configuration
+  const columns = [
+    {
+      title: (
+        <>
+          Sr. No.
+          {sortColumn === "srNo" && (sortOrder === "asc" ? <UpOutlined /> : <DownOutlined />)}
+        </>
+      ),
+      dataIndex: "srNo",
+      key: "srNo",
+      sorter: () => handleSort("srNo"),
+      render: (text) => text || "N/A",
+      
+    },
+    {
+      title: "Owner Name",
+      dataIndex: "ownerName",
+      sorter: (a, b) => a.ownerName.localeCompare(b.ownerName),
+      filters: [...new Set(leads.map((lead) => ({ text: lead.ownerName, value: lead.ownerName })))],
+      onFilter: (value, record) => record.ownerName === value,
+      filterSearch: true,
+    },
+    {
+      title: "Mobile No",
+      dataIndex: "mobileNo",
+      sorter: (a, b) => a.mobileNo.localeCompare(b.mobileNo),
+      filters: [...new Set(leads.map((lead) => ({ text: lead.mobileNo, value: lead.mobileNo })))],
+      onFilter: (value, record) => record.mobileNo === value,
+      filterSearch: true,
+    },
+
+    {
+      title: "District",
+      dataIndex: "district",
+      sorter: (a, b) => a.district.localeCompare(b.district),
+      filters: [...new Set(leads.map((lead) => ({ text: lead.district, value: lead.district })))],
+      onFilter: (value, record) => record.district === value,
+      filterSearch: true,
+    },
+    {
+      title: "State",
+      dataIndex: "state",
+      sorter: (a, b) => a.state.localeCompare(b.state),
+      filters: [...new Set(leads.map((lead) => ({ text: lead.state, value: lead.state })))],
+      onFilter: (value, record) => record.state === value,
+      filterSearch: true,
+    },
+    {
+      title: "Registration No",
+      dataIndex: "registrationNo",
+      sorter: (a, b) => a.registrationNo.localeCompare(b.registrationNo),
+      filters: [...new Set(leads.map((lead) => ({ text: lead.registrationNo, value: lead.registrationNo })))],
+      onFilter: (value, record) => record.registrationNo === value,
+      filterSearch: true,
+    },
+    {
+      title: "Vehicle Class",
+      dataIndex: "vehicleClass",
+      sorter: (a, b) => a.vehicleClass.localeCompare(b.vehicleClass),
+      filters: [...new Set(leads.map((lead) => ({ text: lead.vehicleClass, value: lead.vehicleClass })))],
+      onFilter: (value, record) => record.vehicleClass === value,
+      filterSearch: true,
+    },
+    {
+      title: "Model Name",
+      dataIndex: "modelName",
+      sorter: (a, b) => a.modelName.localeCompare(b.modelName),
+      filters: [...new Set(leads.map((lead) => ({ text: lead.modelName, value: lead.modelName })))],
+      onFilter: (value, record) => record.modelName === value,
+      filterSearch: true,
+    },
+    {
+      title: "Dealer Name",
+      dataIndex: "dealerName",
+      sorter: (a, b) => a.dealerName.localeCompare(b.dealerName),
+      filters: [...new Set(leads.map((lead) => ({ text: lead.dealerName, value: lead.dealerName })))],
+      onFilter: (value, record) => record.dealerName === value,
+      filterSearch: true,
+    },
+
+    {
+      title: "Office Name",
+      dataIndex: "officeName",
+      sorter: (a, b) => a.officeName.localeCompare(b.officeName),
+      filters: [...new Set(leads.map((lead) => ({ text: lead.officeName, value: lead.officeName })))],
+      onFilter: (value, record) => record.officeName === value,
+      filterSearch: true,
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      sorter: (a, b) => a.status.localeCompare(b.status),
+      filters: [...new Set(leads.map((lead) => ({ text: lead.status, value: lead.status })))],
+      onFilter: (value, record) => record.status === value,
+      filterSearch: true,
+    }
+
+  ];
+
   return (
     <div className="container mt-4">
       <h2 className="mb-3 text-left">Leads from: {excelName}</h2>
       {loading ? (
-        <p className="text-left">Loading leads...</p>
+        <p>Loading leads...</p>
       ) : error ? (
-        <p className="text-danger text-left">{error}</p>
+        <p className="text-danger">{error}</p>
       ) : leads.length === 0 ? (
-        <p className="text-center">No leads found.</p>
+        <p>No leads found.</p>
       ) : (
         <>
-          {/* Pagination Controls - Placed above the table */}
-          <div className="d-flex justify-content-left my-1">
-            <ul className="pagination">
-              <li className="page-item">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="page-link"
-                >
-                  Previous
-                </button>
-              </li>
+          <Table
+            columns={columns}
+            dataSource={currentLeads}
+            rowKey="srNo"
+            pagination={false}
+            loading={loading}
+            onChange={handleSort}
+            bordered
+            size="middle"
+            scroll={{ x: "max-content" }}
+          />
 
-              {Array.from({ length: totalPages }, (_, index) => (
-                <li
-                  key={index}
-                  className={`page-item ${
-                    currentPage === index + 1 ? "active" : ""
-                  }`}
-                >
-                  <button
-                    onClick={() => handlePageChange(index + 1)}
-                    className="page-link"
-                  >
-                    {index + 1}
-                  </button>
-                </li>
-              ))}
-
-              <li className="page-item">
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="page-link"
-                >
-                  Next
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          {/* Table with optimized spacing */}
-          <div className="table-responsive">
-            <table
-              className="table table-bordered text-left"
-              style={{ overflowX: "auto", whiteSpace: "nowrap" }}
-            >
-              <thead className="thead-dark">
-                <tr>
-                  <th>Sr. No.</th>
-                  <th>Owner Name</th>
-                  <th>Mobile No</th>
-                  <th>Office Name</th>
-                  <th>District</th>
-                  <th>State</th>
-                  <th>Registration No</th>
-                  <th>Vehicle Class</th>
-                  <th>Model Name</th>
-                  <th>Dealer Name</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentLeads.map((lead, index) => (
-                  <tr key={index}>
-                    <td>{index + 1}</td>
-                    <td>{lead.ownerName || "N/A"}</td>
-                    <td>{lead.mobileNo || "N/A"}</td>
-                    <td>{lead.officeName || "N/A"}</td>
-                    <td>{lead.districtName || "N/A"}</td>
-                    <td>{lead.stateName || "N/A"}</td>
-                    <td>{lead.registrationNo || "N/A"}</td>
-                    <td>{lead.vehicleClass || "N/A"}</td>
-                    <td>{lead.modelName || "N/A"}</td>
-                    <td>{lead.dealerName || "N/A"}</td>
-                    <td>{lead.status || "N/A"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination Controls - Placed above the table */}
-          <div className="d-flex justify-content-left my-1">
-            <ul className="pagination">
-              <li className="page-item">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="page-link"
-                >
-                  Previous
-                </button>
-              </li>
-
-              {Array.from({ length: totalPages }, (_, index) => (
-                <li
-                  key={index}
-                  className={`page-item ${
-                    currentPage === index + 1 ? "active" : ""
-                  }`}
-                >
-                  <button
-                    onClick={() => handlePageChange(index + 1)}
-                    className="page-link"
-                  >
-                    {index + 1}
-                  </button>
-                </li>
-              ))}
-
-              <li className="page-item">
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="page-link"
-                >
-                  Next
-                </button>
-              </li>
-            </ul>
+          {/* Pagination Controls */}
+          <div className="pagination">
+            <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
+              Previous
+            </button>
+            {Array.from({ length: totalPages }, (_, index) => (
+              <button
+                key={index}
+                onClick={() => handlePageChange(index + 1)}
+                className={currentPage === index + 1 ? "active" : ""}
+              >
+                {index + 1}
+              </button>
+            ))}
+            <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>
+              Next
+            </button>
           </div>
         </>
       )}
