@@ -203,7 +203,6 @@ namespace Application.Services
             existingLead.ProductId = !string.IsNullOrWhiteSpace(leadDto.ProductName) && products.ContainsKey(leadDto.ProductName)
                 ? products[leadDto.ProductName]
                 : null;
-
             existingLead.AssignedTo = !string.IsNullOrWhiteSpace(leadDto.AssignedToName) && users.ContainsKey(leadDto.AssignedToName)
                 ? users[leadDto.AssignedToName]
                 : null;
@@ -272,6 +271,7 @@ namespace Application.Services
                     AssignedTo = null,
                     AssignedDate = null,
                     FollowUpDate = null,
+                    LastRevertedBy = null,
                     Remark = null,
                     LeadId = Guid.NewGuid(),
                     CompanyId = companyId,
@@ -316,7 +316,6 @@ namespace Application.Services
             {
                 var assignmentDto = _mapper.Map<LeadAssignmentDto>(updateDto);
                 assignmentDto.LeadID = leadId;
-                assignmentDto.AssignedBy = currentUserId.Value; 
                 assignmentDto.AssignedDate = DateTime.UtcNow;
 
                 await _leadAssignService.AssignLeadAsync(assignmentDto);
@@ -390,6 +389,47 @@ namespace Application.Services
             {
                 leads = leadList,
                 totalLeadsCount = totalLeads
+            };
+        }
+
+        public async Task<UserLeadsStatusResponseDto> GetDashboardLeads(Guid userId)
+        {
+            var leadList = _context.Leads.Where(u => u.AssignedTo == userId).ToList();
+            int totalLeads = leadList.Count;
+
+            var InterestedList = leadList.Where(l => l.Status == "Interested").ToList();
+            int InterestedCount = InterestedList.Count;
+
+            var NotInterestedList = leadList.Where(l => l.Status == "Not Interested").ToList();
+            int NotInterestedCount = NotInterestedList.Count;
+
+            var NotCalledList = leadList.Where(l => l.Status == "Not Called").ToList();
+            int NotCalledCount = NotCalledList.Count;
+
+            var ConnectedList = leadList.Where(l => l.Status == "Connected").ToList();
+            int ConnectedCount = ConnectedList.Count;
+
+            var NotConnectedList = leadList.Where(l => l.Status == "Not Connected").ToList();
+            int NotConnectedCount = NotConnectedList.Count;
+
+            var PendingList = leadList.Where(l => l.Status == "Pending").ToList();
+            int PendingCount = PendingList.Count;
+
+            var ClosedList = leadList.Where(l => l.Status == "Closed").ToList();
+            int ClosedCount = ClosedList.Count;
+
+            return new UserLeadsStatusResponseDto
+            {
+                leads = leadList,
+                totalAssignedCount = totalLeads,
+                InterestedCount = InterestedCount,
+                NotInterestedCount = NotInterestedCount,
+                NotCalledCount = NotCalledCount,
+                ConnectedCount = ConnectedCount,
+                NotConnectedCount = NotConnectedCount,
+                PendingCount = PendingCount,
+                ClosedCount = ClosedCount
+
             };
         }
 

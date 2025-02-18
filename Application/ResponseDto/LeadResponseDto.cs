@@ -29,6 +29,8 @@
         public string AssignedToName { get; set; }
         public DateTime? AssignedDate { get; set; }
         public DateTime? FollowUpDate { get; set; }
+        public Guid? LastRevertedBy { get; set; }
+        public string LastRevertedByName { get; set; }
         public string? Remark { get; set; }
         public string? Status { get; set; }
     }

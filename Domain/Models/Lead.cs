@@ -23,6 +23,7 @@ public partial class Lead
     public Guid? AssignedTo { get; set; }
     public DateTime? AssignedDate { get; set; }
     public DateTime? FollowUpDate { get; set; }
+    public Guid? LastRevertedBy { get; set; }
     public string? Remark { get; set; }
     public string? Status { get; set; }
     public DateTime CreateDate { get; set; }
@@ -30,6 +31,7 @@ public partial class Lead
 
     //Navigation properties
     public virtual User? AssignedToUser { get; set; }
+    public virtual User? RevertedByUser { get; set; }
     public virtual District? District { get; set; }
     public virtual State? State { get; set; }
     public virtual Company? Company { get; set; }
@@ -39,6 +41,5 @@ public partial class Lead
 
     //Collection Properties
     public virtual ICollection<LeadTracking> LeadTrackings { get; set; } = new List<LeadTracking>();
-    public virtual ICollection<CallRecord> CallRecords { get; set; } = new List<CallRecord>();
     public virtual ICollection<LeadReview> LeadsReview { get; set; } = new List<LeadReview>();
 }

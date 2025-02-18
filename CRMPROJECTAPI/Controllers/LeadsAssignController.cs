@@ -1,5 +1,6 @@
 ﻿using Application.Dtos;
 using Application.Interfaces;
+using Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -20,7 +21,7 @@ namespace CRMPROJECTAPI.Controllers
         [HttpPost("assign")]
         public async Task<IActionResult> AssignLead([FromBody] LeadAssignmentDto requestDto)
         {
-            if (requestDto == null || requestDto.LeadID == Guid.Empty || requestDto.AssignedTo == Guid.Empty || requestDto.AssignedBy == Guid.Empty)
+            if (requestDto == null || requestDto.LeadID == Guid.Empty || requestDto.AssignedTo == Guid.Empty)
                 return BadRequest("Invalid data");
 
             try
@@ -48,5 +49,26 @@ namespace CRMPROJECTAPI.Controllers
             }
             return Ok(history);
         }
+
+        [HttpPost("revert")]
+        public async Task<IActionResult> RevertLeadAssignment([FromBody] LeadRevertDto request)
+        {
+            try
+            {
+                var response = await _leadAssignService.RevertLeadAssignmentAsync(request);
+                return Ok(new { message = "Lead assignment reverted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+        [HttpGet("rejected-leads")]
+        public async Task<IActionResult> GetRejectedLeadsForCRM()
+        {
+            var revertedLeads = await _leadAssignService.GetRevertedLeadsAsync();
+            return Ok(revertedLeads);
+        }
+
     }
 }

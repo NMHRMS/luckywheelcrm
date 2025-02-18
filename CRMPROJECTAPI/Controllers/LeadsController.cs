@@ -157,13 +157,19 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(leads);
         }
 
+        [HttpGet("dashboard_leads_user")]
+        public async Task<IActionResult> GetDashboardLeads(Guid userId)
+        {
+            var leads = await _leadService.GetDashboardLeads(userId);
+            return Ok(leads);
+        }
 
-[HttpGet("get_leads_by_excelname")]
-public async Task<IActionResult> GetLeadsByExcelName(string excelName)
-{
-    var leads = await _leadService.GetLeadsByExcelName(excelName);
-    return Ok(leads);
-}
+        [HttpGet("get_leads_by_excelname")]
+        public async Task<IActionResult> GetLeadsByExcelName(string excelName)
+        {
+            var leads = await _leadService.GetLeadsByExcelName(excelName);
+            return Ok(leads);
+        }
 
 
         [HttpGet("get_leads_dataList")]

@@ -57,20 +57,55 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.UpdateDate).HasColumnType("datetime");
 
         });
-
         modelBuilder.Entity<CallRecord>(entity =>
         {
             entity.HasKey(e => e.RecordId).HasName("PK_CallRecords");
-            entity.Property(e => e.RecordId).HasColumnName("CallRecordID");
-            entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
-            entity.Property(e => e.UserId).HasColumnName("UserID");
-            entity.Property(e => e.LeadId).HasColumnName("LeadID");
-            entity.Property(e => e.Recordings).HasMaxLength(100).IsFixedLength();
-            entity.Property(e => e.Date).HasColumnType("datetime");
-            entity.Property(e => e.CreateDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
-            entity.HasOne(e => e.Company).WithMany(c => c.CallRecords).HasForeignKey(e => e.CompanyId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_CallRecords_Companies");
-            entity.HasOne(e => e.Lead).WithMany(c => c.CallRecords).HasForeignKey(e => e.LeadId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_CallRecords_Leads");
-            entity.HasOne(e => e.User).WithMany(c => c.CallRecords).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_CallRecords_Users");
+
+            entity.Property(e => e.RecordId)
+                .HasColumnName("CallRecordID");
+
+            entity.Property(e => e.CompanyId)
+                .HasColumnName("CompanyID");
+
+            entity.Property(e => e.UserId)
+                .HasColumnName("UserID");
+
+            entity.Property(e => e.Name)
+                .HasMaxLength(100);
+
+            entity.Property(e => e.MobileNo)
+                .HasMaxLength(15);
+
+            entity.Property(e => e.CallType)
+                .HasMaxLength(50);
+
+            entity.Property(e => e.Recordings)
+                .HasColumnType("binary(100)");
+
+            entity.Property(e => e.Date)
+                .HasColumnType("datetime");
+
+            entity.Property(e => e.Duration)
+                .HasColumnType("time(7)");
+
+            entity.Property(e => e.Status)
+                .HasMaxLength(50);
+
+            entity.Property(e => e.CreateDate)
+                .HasColumnType("datetime")
+                .HasDefaultValueSql("(getdate())");
+
+            entity.HasOne(e => e.Company)
+                .WithMany(c => c.CallRecords)
+                .HasForeignKey(e => e.CompanyId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CallRecords_Companies");
+
+            entity.HasOne(e => e.User)
+                .WithMany(c => c.CallRecords)
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CallRecords_Users");
         });
 
         modelBuilder.Entity<District>(entity =>
@@ -152,6 +187,7 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.LeadType).HasMaxLength(50);
             entity.Property(e => e.AssignedDate).HasColumnType("datetime");
             entity.Property(e => e.FollowUpDate).HasColumnType("datetime");
+            entity.Property(e => e.LastRevertedBy).HasColumnName("LastRevertedBy");
             entity.Property(e => e.Remark).HasColumnType("nvarchar(max)");
             entity.Property(e => e.Status).HasMaxLength(20).HasDefaultValue("Not Called");
             entity.Property(e => e.CreateDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
@@ -190,7 +226,14 @@ public partial class ApplicationDbContext : DbContext
             entity.HasOne(d => d.AssignedToUser)
                 .WithMany(p => p.Leads)
                 .HasForeignKey(d => d.AssignedTo)
+                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Leads_AssignedTo");
+
+            entity.HasOne(d => d.RevertedByUser)
+               .WithMany()
+               .HasForeignKey(d => d.LastRevertedBy)
+               .OnDelete(DeleteBehavior.ClientSetNull)
+               .HasConstraintName("FK_Leads_LastRevertedBy");
         });
 
         modelBuilder.Entity<LeadReview>(entity =>

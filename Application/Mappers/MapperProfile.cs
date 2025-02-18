@@ -45,6 +45,10 @@ namespace Application.Mappers
                  .ForMember(dest => dest.AssignedToName,
                        opt => opt.MapFrom(src => src.AssignedToUser != null
                                                 ? $"{src.AssignedToUser.FirstName} {src.AssignedToUser.LastName}"
+                                                : null))
+                 .ForMember(dest => dest.LastRevertedByName,
+                       opt => opt.MapFrom(src => src.RevertedByUser != null
+                                                ? $"{src.RevertedByUser.FirstName} {src.RevertedByUser.LastName}"
                                                 : null));
             CreateMap<LeadSource, AddLeadSourceDto>().ReverseMap();
             CreateMap<LeadSource, LeadSourceResponseDto>();
@@ -55,7 +59,6 @@ namespace Application.Mappers
             CreateMap<LeadCallUpdateDto, Lead>();
             CreateMap<LeadCallUpdateDto, LeadAssignmentDto>()
                 .ForMember(dest => dest.LeadID, opt => opt.Ignore()) 
-                .ForMember(dest => dest.AssignedBy, opt => opt.Ignore()) 
                 .ForMember(dest => dest.AssignedDate, opt => opt.Ignore()); 
         }
     }
