@@ -70,5 +70,13 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(revertedLeads);
         }
 
+        [HttpGet("closed-leads")]
+        public async Task<IActionResult> GetClosedLeads()
+        {
+            var leads = await _leadAssignService.GetClosedLeadsAsync();
+            return Ok(leads);
+        }
+
+
     }
 }

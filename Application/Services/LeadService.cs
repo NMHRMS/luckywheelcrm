@@ -214,8 +214,20 @@ namespace Application.Services
             return _mapper.Map<LeadResponseDto>(existingLead);
         }
 
-        public async Task UploadLeadsFromExcelAsync(IFormFile file)
+        public async Task<bool> CheckIfFileExists(string fileName)
         {
+            return await _context.Leads.AnyAsync(l => l.ExcelName == fileName);
+        }
+
+
+        public async Task UploadLeadsFromExcelAsync(IFormFile file, string fileName)
+        {
+            bool fileExists = await _context.Leads.AnyAsync(l => l.ExcelName == fileName);
+            if (fileExists)
+            {
+                throw new Exception("A file with this name already exists. Please rename the file before uploading.");
+            }
+
             using var stream = new MemoryStream();
             await file.CopyToAsync(stream);
             using var package = new ExcelPackage(stream);
@@ -251,7 +263,7 @@ namespace Application.Services
 
                 var lead = new Lead
                 {
-                    ExcelName = file.FileName,
+                    ExcelName = fileName,
                     OwnerName = ownerName ?? "Unknown",
                     FatherName = fatherName ?? "N/A",
                     MobileNo = mobileNo ?? "N/A",
@@ -397,10 +409,10 @@ namespace Application.Services
             var leadList = _context.Leads.Where(u => u.AssignedTo == userId).ToList();
             int totalLeads = leadList.Count;
 
-            var InterestedList = leadList.Where(l => l.Status == "Interested").ToList();
+            var InterestedList = leadList.Where(l => l.Status == "Psitive").ToList();
             int InterestedCount = InterestedList.Count;
 
-            var NotInterestedList = leadList.Where(l => l.Status == "Not Interested").ToList();
+            var NotInterestedList = leadList.Where(l => l.Status == "Negative").ToList();
             int NotInterestedCount = NotInterestedList.Count;
 
             var NotCalledList = leadList.Where(l => l.Status == "Not Called").ToList();

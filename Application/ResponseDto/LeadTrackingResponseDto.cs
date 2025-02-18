@@ -10,6 +10,7 @@ namespace Application.ResponseDto
     {
         public Guid TrackId { get; set; }
         public Guid LeadId { get; set; }
+        public string LeadStatus { get; set; }
         public Guid AssignedTo { get; set; }
         public string AssignedToName { get; set; }
         public Guid AssignedBy { get; set; }
@@ -17,6 +18,5 @@ namespace Application.ResponseDto
         public DateTime AssignedDate { get; set; }
         public string LeadDuration { get; set; } 
         public string LeadDurationFormatted { get; set; } 
-        public string LeadStatus { get; set; }
     }
 }

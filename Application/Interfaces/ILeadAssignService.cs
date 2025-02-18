@@ -9,6 +9,7 @@ namespace Application.Interfaces
         Task<IEnumerable<LeadTrackingResponseDto>> GetLeadHistoryAsync(Guid leadId);
         Task<LeadResponseDto> RevertLeadAssignmentAsync(LeadRevertDto requestDto);
         Task<IEnumerable<LeadResponseDto>> GetRevertedLeadsAsync();
+        Task<IEnumerable<LeadTrackingResponseDto>> GetClosedLeadsAsync();
     }
 
 }

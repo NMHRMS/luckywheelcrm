@@ -78,14 +78,20 @@ namespace CRMPROJECTAPI.Controllers
         }
 
         [HttpPost("upload-excel")]
-        public async Task<IActionResult> UploadLeads(IFormFile file)
+        public async Task<IActionResult> UploadLeads(IFormFile file, string fileName)
         {
             if (file == null || file.Length == 0)
                 return BadRequest(new { message = "Invalid file", latestLeads = (object)null });
 
+            bool fileExists = await _leadService.CheckIfFileExists(fileName);
+            if (fileExists)
+            {
+                return BadRequest(new { message = "A file with this name already exists. Please rename it before uploading.", latestLeads = (object)null });
+            }
+
             try
             {
-                await _leadService.UploadLeadsFromExcelAsync(file);
+                await _leadService.UploadLeadsFromExcelAsync(file, fileName);
             }
             catch (Exception ex)
             {

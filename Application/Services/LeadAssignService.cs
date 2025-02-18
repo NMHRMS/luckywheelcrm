@@ -57,51 +57,6 @@ public class LeadsAssignService : ILeadAssignService
         await _context.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<LeadTrackingResponseDto>> GetLeadHistoryAsync(Guid leadId)
-    {
-        var leadStatus = await _context.Leads
-            .Where(l => l.LeadId == leadId)
-            .Select(l => l.Status)
-            .FirstOrDefaultAsync();
-
-        var leadTrackingRecords = await _context.LeadsTracking
-            .Where(lt => lt.LeadId == leadId)
-            .OrderByDescending(lt => lt.AssignedDate)
-            .ToListAsync();
-
-        var responseDtos = _mapper.Map<IEnumerable<LeadTrackingResponseDto>>(leadTrackingRecords);
-
-        var userIds = leadTrackingRecords
-            .SelectMany(lt => new[] { lt.AssignedTo, lt.AssignedBy })
-            .Distinct()
-            .ToList();
-
-        var userNames = await _context.Users
-            .Where(u => userIds.Contains(u.UserId))
-            .Select(u => new { u.UserId, FullName = u.FirstName + " " + (u.LastName ?? "") })
-            .ToDictionaryAsync(u => u.UserId, u => u.FullName);
-
-        foreach (var dto in responseDtos)
-        {
-            dto.AssignedToName = userNames.ContainsKey(dto.AssignedTo) ? userNames[dto.AssignedTo] : "";
-            dto.AssignedByName = userNames.ContainsKey(dto.AssignedBy) ? userNames[dto.AssignedBy] : "";
-            dto.LeadStatus = leadStatus; 
-        }
- 
-        for (int i = 0; i < responseDtos.Count(); i++)
-        {
-            var currentRecord = responseDtos.ElementAt(i);
-            DateTime assignedDate = currentRecord.AssignedDate;
-            DateTime nextAssignedDate = (i > 0) ? responseDtos.ElementAt(i - 1).AssignedDate : DateTime.UtcNow;
-
-            TimeSpan duration = nextAssignedDate - assignedDate;
-
-            currentRecord.LeadDuration = $"{(int)duration.TotalMinutes} minutes"; 
-            currentRecord.LeadDurationFormatted = $"{(int)duration.TotalDays} days {duration.Hours} hours";
-        }
-        return responseDtos;
-    }
-
     public async Task<LeadResponseDto> RevertLeadAssignmentAsync(LeadRevertDto requestDto)
     {
         var lastRevertedBy = _jwtTokenService.GetUserIdFromToken();
@@ -149,7 +104,6 @@ public class LeadsAssignService : ILeadAssignService
         return _mapper.Map<LeadResponseDto>(lead);
     }
 
-
     public async Task<IEnumerable<LeadResponseDto>> GetRevertedLeadsAsync()
     {
         var leadList = await _context.Leads
@@ -169,53 +123,96 @@ public class LeadsAssignService : ILeadAssignService
 
         return _mapper.Map<IEnumerable<LeadResponseDto>>(revertedLeads);
     }
+
+    public async Task<IEnumerable<LeadTrackingResponseDto>> GetClosedLeadsAsync()
+    {
+        var closedLeads = await _context.Leads
+            .Where(l => l.Status == "Closed")
+            .Select(l => l.LeadId)
+            .Distinct()
+            .ToListAsync();
+
+        var leadTrackingRecords = await _context.LeadsTracking
+              .Where(lt => closedLeads.Contains(lt.LeadId))
+              .OrderByDescending(lt => lt.AssignedDate) 
+              .ToListAsync();
+
+        var responseDtos = _mapper.Map<IEnumerable<LeadTrackingResponseDto>>(leadTrackingRecords);
+
+        var userIds = leadTrackingRecords
+            .SelectMany(lt => new[] { lt.AssignedTo, lt.AssignedBy })
+            .Distinct()
+            .ToList();
+
+        var userNames = await _context.Users
+            .Where(u => userIds.Contains(u.UserId))
+            .Select(u => new { u.UserId, FullName = u.FirstName + " " + (u.LastName ?? "") })
+            .ToDictionaryAsync(u => u.UserId, u => u.FullName);
+
+        foreach (var dto in responseDtos)
+        {
+            dto.AssignedToName = userNames.ContainsKey(dto.AssignedTo) ? userNames[dto.AssignedTo] : "";
+            dto.AssignedByName = userNames.ContainsKey(dto.AssignedBy) ? userNames[dto.AssignedBy] : "";
+            dto.LeadStatus = "Closed";
+        }
+
+        for (int i = 0; i < responseDtos.Count(); i++)
+        {
+            var currentRecord = responseDtos.ElementAt(i);
+            DateTime assignedDate = currentRecord.AssignedDate;
+            DateTime nextAssignedDate = (i > 0) ? responseDtos.ElementAt(i - 1).AssignedDate : DateTime.UtcNow;
+
+            TimeSpan duration = nextAssignedDate - assignedDate;
+
+            currentRecord.LeadDuration = $"{(int)duration.TotalMinutes} minutes";
+            currentRecord.LeadDurationFormatted = $"{(int)duration.TotalDays} days {duration.Hours} hours";
+        }
+
+        return responseDtos;
+    }
+
+    public async Task<IEnumerable<LeadTrackingResponseDto>> GetLeadHistoryAsync(Guid leadId)
+    {
+        var leadStatus = await _context.Leads
+            .Where(l => l.LeadId == leadId)
+            .Select(l => l.Status)
+            .FirstOrDefaultAsync();
+
+        var leadTrackingRecords = await _context.LeadsTracking
+            .Where(lt => lt.LeadId == leadId)
+            .OrderByDescending(lt => lt.AssignedDate)
+            .ToListAsync();
+
+        var responseDtos = _mapper.Map<IEnumerable<LeadTrackingResponseDto>>(leadTrackingRecords);
+
+        var userIds = leadTrackingRecords
+            .SelectMany(lt => new[] { lt.AssignedTo, lt.AssignedBy })
+            .Distinct()
+            .ToList();
+
+        var userNames = await _context.Users
+            .Where(u => userIds.Contains(u.UserId))
+            .Select(u => new { u.UserId, FullName = u.FirstName + " " + (u.LastName ?? "") })
+            .ToDictionaryAsync(u => u.UserId, u => u.FullName);
+
+        foreach (var dto in responseDtos)
+        {
+            dto.AssignedToName = userNames.ContainsKey(dto.AssignedTo) ? userNames[dto.AssignedTo] : "";
+            dto.AssignedByName = userNames.ContainsKey(dto.AssignedBy) ? userNames[dto.AssignedBy] : "";
+            dto.LeadStatus = leadStatus;
+        }
+
+        for (int i = 0; i < responseDtos.Count(); i++)
+        {
+            var currentRecord = responseDtos.ElementAt(i);
+            DateTime assignedDate = currentRecord.AssignedDate;
+            DateTime nextAssignedDate = (i > 0) ? responseDtos.ElementAt(i - 1).AssignedDate : DateTime.UtcNow;
+
+            TimeSpan duration = nextAssignedDate - assignedDate;
+
+            currentRecord.LeadDuration = $"{(int)duration.TotalMinutes} minutes";
+            currentRecord.LeadDurationFormatted = $"{(int)duration.TotalDays} days {duration.Hours} hours";
+        }
+        return responseDtos;
+    }
 }
-
-
-    //public async Task RevertLeadAssignmentAsync(LeadRevertDto requestDto)
-    //{
-    //    var lead = await _context.Leads
-    //   .Include(l => l.LeadSource)
-    //   .Include(l => l.District)
-    //   .Include(l => l.State)
-    //   .Include(l => l.Category)
-    //   .Include(l => l.Product)
-    //   .Include(l => l.AssignedToUser)
-    //   .Include(l => l.RevertedByUser)
-    //   .FirstOrDefaultAsync(l => l.LeadId == requestDto.LeadId);
-
-        
-    //    var lead = await _context.Leads.FindAsync(requestDto.LeadId);
-    //    if (lead == null || lead.AssignedTo == null)
-    //    {
-    //        throw new Exception("Lead not found or not assigned.");
-    //    }
-
-    //    //if (lead.AssignedTo != requestDto.LastRejectedBy)
-    //    //{
-    //    //    throw new UnauthorizedAccessException("You are not authorized to revert this lead.");
-    //    //}
-
-    //    // Find the latest tracking record for this lead assignment
-    //    var trackingRecord = await _context.LeadsTracking
-    //        .Where(lt => lt.LeadId == requestDto.LeadId && lt.AssignedTo == requestDto.LastRevertedBy)
-    //        .OrderByDescending(lt => lt.AssignedDate)
-    //        .FirstOrDefaultAsync();
-
-    //    if (trackingRecord != null)
-    //    {
-    //        // Store rejection details in Leads table
-    //        lead.LastRevertedBy = requestDto.LastRevertedBy;
-    //        lead.Remark = requestDto.Remark;
-
-    //        // Remove tracking record
-    //        _context.LeadsTracking.Remove(trackingRecord);
-    //    }
-
-    //    // Reset AssignedTo and AssignedDate in Leads table
-    //    lead.AssignedTo = null;
-    //    lead.AssignedDate = null;
-    //    _context.Leads.Update(lead);
-
-    //    await _context.SaveChangesAsync();
-    //}
