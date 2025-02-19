@@ -106,29 +106,29 @@ function VehicleEntry() {
     <div className="p-4">
       <h1 className="text-center mb-4">Vehicle Check-In/Check-Out Records</h1>
 
-      <div className="d-flex justify-content-end gap-2 mb-2 me-2">
-        <button
-          className={`btn btn-sm px-3 py-2 rounded-3 shadow-sm ${
-            selectedBranch === "All" ? "btn-primary" : "btn-outline-secondary"
-          }`}
-          style={{ width: "100px", height: "40px" }}
-          onClick={() => handleBranchClick("All")}
-        >
-          All
-        </button>
-        {branches.map((branch) => (
-          <button
-            key={branch.id}
-            className={`btn btn-sm px-3 py-2 rounded-3 shadow-sm ${
-              selectedBranch === branch.name ? "btn-primary" : "btn-outline-secondary"
-            }`}
-            style={{ width: "100px", height: "40px" }}
-            onClick={() => handleBranchClick(branch.name)}
-          >
-            {branch.name}
-          </button>
-        ))}
-      </div>
+      <div className="d-flex justify-content-end gap-2 mb-2 me-2 flex-wrap">
+  <button
+    className={`btn btn-sm rounded-3 shadow-sm ${
+      selectedBranch === "All" ? "btn-primary" : "btn-outline-secondary"
+    }`}
+    style={{ minWidth: "100px", height: "40px", whiteSpace: "nowrap", padding: "8px 12px" }}
+    onClick={() => handleBranchClick("All")}
+  >
+    All
+  </button>
+  {branches.map((branch) => (
+    <button
+      key={branch.id}
+      className={`btn btn-sm rounded-3 shadow-sm ${
+        selectedBranch === branch.name ? "btn-primary" : "btn-outline-secondary"
+      }`}
+      style={{ minWidth: "100px", height: "40px", whiteSpace: "nowrap", padding: "8px 12px" }}
+      onClick={() => handleBranchClick(branch.name)}
+    >
+      {branch.name}
+    </button>
+  ))}
+</div>
 
       <div className="container my-3">
         {loading ? (

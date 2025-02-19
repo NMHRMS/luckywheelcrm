@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
+import { Table, Select, Button, Dropdown, Checkbox, Input } from "antd";
+import { DownOutlined } from "@ant-design/icons";
 import { getRequest, postRequest } from "../utils/Api";
 
 export default function AssignManagement() {
   const [users, setUsers] = useState([]);
   const [assigner, setAssigner] = useState("");
-  const [assignees, setAssignees] = useState([]); // Array for multiple selections
+  const [assignees, setAssignees] = useState([]);
   const [assignments, setAssignments] = useState([]);
-  const [dropdownOpen, setDropdownOpen] = useState(false); // Toggle for custom dropdown
+  const [searchText, setSearchText] = useState(""); // Search input for Assignees
 
   useEffect(() => {
     getRequest("/api/Users")
@@ -27,7 +29,7 @@ export default function AssignManagement() {
     if (assigner && assignees.length > 0) {
       const payload = {
         assignerUserId: assigner,
-        assigneeUserIds: assignees, // Send multiple assignees
+        assigneeUserIds: assignees,
       };
 
       try {
@@ -50,10 +52,71 @@ export default function AssignManagement() {
   const handleCheckboxChange = (userId) => {
     setAssignees((prev) =>
       prev.includes(userId)
-        ? prev.filter((id) => id !== userId) // Remove if already selected
-        : [...prev, userId] // Add if not selected
+        ? prev.filter((id) => id !== userId)
+        : [...prev, userId]
     );
   };
+
+  // Filter users based on search text
+  const filteredUsers = users.filter((user) =>
+    user.firstName.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  // Custom Assignees Dropdown with Search Bar
+  const assigneeMenu = (
+    <div style={{ maxHeight: "250px", width: "250px", padding: "10px", background: "#fff", borderRadius: "5px", boxShadow: "0px 4px 6px rgba(0,0,0,0.1)" }}>
+      <Input
+        placeholder="Search assignees..."
+        value={searchText}
+        onChange={(e) => setSearchText(e.target.value)}
+        style={{ marginBottom: "10px", width: "100%" }}
+      />
+      <div style={{ maxHeight: "200px", overflowY: "auto" }}>
+        {filteredUsers.map((user) => (
+          <div key={user.userId} style={{ display: "flex", alignItems: "center", padding: "5px" }}>
+            <Checkbox
+              checked={assignees.includes(user.userId)}
+              onChange={() => handleCheckboxChange(user.userId)}
+            >
+              {user.firstName}
+            </Checkbox>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const columns = [
+    {
+      title: "Sr. No",
+      dataIndex: "index",
+      key: "index",
+      render: (_, __, index) => index + 1,
+    },
+    {
+      title: "Assigner",
+      dataIndex: "assignerUserId",
+      key: "assignerUserId",
+      filters: users.map((user) => ({ text: user.firstName, value: user.userId })),
+      onFilter: (value, record) => record.assignerUserId === value,
+      sorter: (a, b) =>
+        getUserName(a.assignerUserId).localeCompare(getUserName(b.assignerUserId)),
+      render: (assignerUserId) => getUserName(assignerUserId),
+      filterMode: "tree", // Enables tree filtering
+      filterSearch: true, // Enables search in the filter
+    },
+    {
+      title: "Assignees",
+      dataIndex: "assigneeUserIds",
+      key: "assigneeUserIds",
+      render: (assigneeUserIds) =>
+        assigneeUserIds.map((id) => getUserName(id)).join(", "),
+      filters: users.map((user) => ({ text: user.firstName, value: user.userId })),
+      onFilter: (value, record) => record.assigneeUserIds.includes(value),
+      filterMode: "tree",
+      filterSearch: true,
+    },
+  ];
 
   return (
     <div className="container mt-4">
@@ -61,70 +124,48 @@ export default function AssignManagement() {
       <div className="row mb-3">
         <div className="col-md-6">
           <label className="form-label">Assigner</label>
-          <select
-            className="form-select"
+          <Select
+            style={{ width: "100%" }}
+            placeholder="Select Assigner"
             value={assigner}
-            onChange={(e) => setAssigner(e.target.value)}
+            onChange={(value) => setAssigner(value)}
+            showSearch
+            optionFilterProp="children"
+            filterOption={(input, option) =>
+              option.children.toLowerCase().includes(input.toLowerCase())
+            }
           >
-            <option value="">Select Assigner</option>
             {users.map((user) => (
-              <option key={user.userId} value={user.userId}>
+              <Select.Option key={user.userId} value={user.userId}>
                 {user.firstName}
-              </option>
+              </Select.Option>
             ))}
-          </select>
+          </Select>
         </div>
         <div className="col-md-6">
           <label className="form-label">Assignees</label>
-          <div className="dropdown">
-            <button
-              className="form-select"
-              type="button"
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-            >
+          <Dropdown overlay={assigneeMenu} trigger={["click"]}>
+            <Button style={{ width: "100%" }}>
               {assignees.length > 0
                 ? assignees.map((id) => getUserName(id)).join(", ")
-                : "Select Assignees"}
-            </button>
-            {dropdownOpen && (
-              <div className="dropdown-menu show w-100" style={{ maxHeight: "200px", overflowY: "auto" }}>
-                {users.map((user) => (
-                  <div key={user.userId} className="dropdown-item">
-                    <input
-                      type="checkbox"
-                      className="form-check-input me-2"
-                      checked={assignees.includes(user.userId)}
-                      onChange={() => handleCheckboxChange(user.userId)}
-                    />
-                    {user.firstName}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+                : "Select Assignees"}{" "}
+              <DownOutlined />
+            </Button>
+          </Dropdown>
         </div>
       </div>
-      <button className="btn btn-primary" onClick={handleAssign}>
+      <Button type="primary" onClick={handleAssign}>
         Assign
-      </button>
-      <table className="table table-bordered mt-4">
-        <thead>
-          <tr>
-            <th>Sr. No</th>
-            <th>Assigner</th>
-            <th>Assignees</th>
-          </tr>
-        </thead>
-        <tbody>
-          {assignments.map((assignment, index) => (
-            <tr key={index}>
-              <td>{index + 1}</td>
-              <td>{getUserName(assignment.assignerUserId)}</td>
-              <td>{assignment.assigneeUserIds.map((id) => getUserName(id)).join(", ")}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      </Button>
+
+      {/* Ant Design Table with sorting and filtering icons */}
+      <Table
+        columns={columns}
+        dataSource={assignments.map((item, index) => ({ ...item, key: index }))}
+        bordered
+        className="mt-4"
+        pagination={{ pageSize: 5 }}
+      />
     </div>
   );
 }

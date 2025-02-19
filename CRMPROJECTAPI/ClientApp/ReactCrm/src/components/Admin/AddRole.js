@@ -1,206 +1,323 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { toast, ToastContainer  } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { getRequest, postRequest, putRequest, deleteRequest } from "../utils/Api";
-import { getAuthData, fetchStoredData } from "../utils/AuthUtils";
+import { Table, Button, Modal, Input, message, Checkbox } from "antd";
+import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  getRequest,
+  postRequest,
+  deleteRequest,
+  putRequest,
+} from "../utils/Api";
+import { fetchStoredData } from "../utils/UserDataUtils";
+import Loader from "../utils/Loader";
 
 export default function RoleComponent() {
-  
   const [roles, setRoles] = useState([]);
-  const [showModal, setShowModal] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [roleData, setRoleData] = useState({ id: null, roleName: "" });
+  const [loading, setLoading] = useState(false);
+  const [userData, setUserData] = useState({
+    branchId: "",
+    companyId: "",
+    userId: "",
+  });
+  const [searchText, setSearchText] = useState("");
+  const [selectedRoles, setSelectedRoles] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
 
-   // Get companyId from local storage
-  const companyId = JSON.parse(localStorage.getItem("user"))?.companyId;
+  useEffect(() => {
+    const loadUserData = async () => {
+      const storedData = await fetchStoredData();
+      if (storedData) {
+        setUserData(storedData);
+      }
+    };
+    loadUserData();
+  }, []);
 
- // Fetch roles on component mount
- useEffect(() => {
-  if (companyId) {
-    getRolesData();
-  }
-}, [companyId]);
+  useEffect(() => {
+    if (userData.companyId) {
+      getRolesData();
+    }
+  }, [userData]);
 
   const getRolesData = () => {
+    setLoading(true);
     getRequest("/api/Roles")
       .then((res) => {
-        // Filter roles by companyId
-        const filteredRoles = res.data.filter(role => role.companyId === companyId);
+        const filteredRoles = res.data.filter(
+          (role) => role.companyId === userData.companyId
+        );
         setRoles(filteredRoles);
+        setFilteredData(filteredRoles);
       })
       .catch((err) => {
         console.error("Error fetching roles:", err);
-        toast.error("Failed to fetch roles."); // ❌ Toast on error
-      });
+        message.error("Failed to fetch roles.");
+      })
+      .finally(() => setLoading(false));
   };
 
   const handleAddOrUpdateRole = () => {
     if (!roleData.roleName.trim()) {
-      toast.error("Role name is required!");
+      message.error("Role name is required!");
       return;
     }
-  
+
     const newRoleData = {
+      roleId: roleData.id,
       roleName: roleData.roleName,
-      companyId: companyId, // Ensure companyId is included
+      companyId: userData.companyId,
     };
-  
+
     if (!roleData.id) {
-      // Creating a new role
       postRequest("/api/Roles", newRoleData)
         .then((res) => {
-          toast.success("Role added successfully! ✅");
-          getRolesData();
+          message.success("Role added successfully!");
+          setRoles([...roles, res.data]);
+          setFilteredData([...roles, res.data]);
           closeModal();
         })
         .catch((err) => {
-          console.error("Error adding role:", err.response?.data || err.message);
-          toast.error("Failed to add role. ❌ Check API requirements.");
+          console.error("Error adding role:", err);
+          message.error("Failed to add role.");
         });
     } else {
-      // Updating an existing role
-      postRequest("/api/Roles", newRoleData)
-      .then((res) => {
-        toast.success("Role added successfully! ✅");
-        setRoles([...roles, res.data]); // Update state instead of fetching again
-        closeModal();
-      })
+      putRequest(`/api/Roles/${roleData.id}`, newRoleData)
+        .then(() => {
+          message.success("Role updated successfully!");
+          setRoles((prevRoles) =>
+            prevRoles.map((role) =>
+              role.roleId === roleData.id
+                ? { ...role, roleName: roleData.roleName }
+                : role
+            )
+          );
+          setFilteredData((prevRoles) =>
+            prevRoles.map((role) =>
+              role.roleId === roleData.id
+                ? { ...role, roleName: roleData.roleName }
+                : role
+            )
+          );
+          closeModal();
+        })
         .catch((err) => {
-          console.error("Error updating role:", err.response?.data || err.message);
-          toast.error("Failed to update role. ❌");
+          console.error("Error updating role:", err);
+          message.error("Failed to update role.");
         });
     }
   };
-  
-  
 
   const editRole = (role) => {
     setRoleData({ id: role.roleId, roleName: role.roleName });
-    setShowModal(true);
+    setIsModalOpen(true);
   };
 
   const deleteRole = (id) => {
-    if (window.confirm("Are you sure you want to delete this role?")) {
-      deleteRequest(`${"/api/Roles"}/${id}`)
-      .then(() => {
-        toast.success("Role deleted successfully! 🗑️");
-        setRoles(roles.filter(role => role.roleId !== id)); // Remove deleted role from state
-      })
-        .catch((err) => {
-          console.error("Error deleting role:", err);
-          toast.error("Failed to delete role. ❌");
-        });
-    }
+    Modal.confirm({
+      title: "Are you sure you want to delete this role?",
+      okText: "Yes",
+      okType: "danger",
+      cancelText: "No",
+      onOk: () => {
+        deleteRequest(`/api/Roles/${id}`)
+          .then(() => {
+            message.success("Role deleted successfully!");
+            setRoles(roles.filter((role) => role.roleId !== id));
+            setFilteredData(roles.filter((role) => role.roleId !== id));
+          })
+          .catch((err) => {
+            console.error("Error deleting role:", err);
+            message.error("Failed to delete role.");
+          });
+      },
+    });
   };
 
   const closeModal = () => {
     setRoleData({ id: null, roleName: "" });
-    setShowModal(false);
+    setIsModalOpen(false);
   };
+
+  // **Filter Dropdown with Reset Option**
+  const getColumnFilterDropdown = ({
+    setSelectedKeys,
+    selectedKeys,
+    confirm,
+    clearFilters,
+  }) => (
+    <div style={{ padding: 10, width: 250 }}>
+      {/* Search Input */}
+      <Input
+        placeholder="Search in filters"
+        value={searchText}
+        onChange={(e) => setSearchText(e.target.value)}
+        style={{ marginBottom: 8, width: "100%" }}
+      />
+
+      {/* Select All Option */}
+      <Checkbox
+        onChange={(e) => {
+          if (e.target.checked) {
+            setSelectedRoles(roles.map((role) => role.roleName));
+            setSelectedKeys(roles.map((role) => role.roleName));
+          } else {
+            setSelectedRoles([]);
+            setSelectedKeys([]);
+          }
+        }}
+        checked={selectedRoles.length === roles.length}
+      >
+        Select all
+      </Checkbox>
+
+      {/* Role Checkboxes */}
+      <div
+        style={{
+          maxHeight: 200,
+          overflowY: "auto",
+          marginTop: 8,
+          display: "flex",
+          flexDirection: "column",
+          gap: "6px",
+        }}
+      >
+        {roles
+          .filter((role) =>
+            role.roleName.toLowerCase().includes(searchText.toLowerCase())
+          )
+          .map((role) => (
+            <div
+              key={role.roleId}
+              style={{ display: "flex", alignItems: "center", gap: "8px" }}
+            >
+              <Checkbox
+                checked={selectedRoles.includes(role.roleName)}
+                onChange={(e) => {
+                  const newSelectedRoles = e.target.checked
+                    ? [...selectedRoles, role.roleName]
+                    : selectedRoles.filter((r) => r !== role.roleName);
+                  setSelectedRoles(newSelectedRoles);
+                  setSelectedKeys(newSelectedRoles);
+                }}
+              />
+              <span>{role.roleName}</span>
+            </div>
+          ))}
+      </div>
+
+      {/* Filter Action Buttons */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          marginTop: 10,
+        }}
+      >
+        <Button
+          type="default"
+          onClick={() => {
+            clearFilters();
+            setSelectedRoles([]); // Clear selected checkboxes
+            setSearchText(""); // Clear search text
+          }}
+          style={{ width: "48%" }}
+        >
+          Reset
+        </Button>
+        <Button
+          type="primary"
+          onClick={() => confirm()}
+          style={{ width: "48%" }}
+        >
+          OK
+        </Button>
+      </div>
+    </div>
+  );
+
+  const columns = [
+    {
+      title: "Sr. No",
+      dataIndex: "index",
+      key: "index",
+      render: (_, __, index) => index + 1,
+    },
+    {
+      title: "Role Name",
+      dataIndex: "roleName",
+      key: "roleName",
+      sorter: (a, b) => a.roleName.localeCompare(b.roleName),
+      filterDropdown: getColumnFilterDropdown,
+      onFilter: (value, record) =>
+        record.roleName.toLowerCase().includes(value.toLowerCase()),
+      
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
+        <>
+          <Button
+            type="link"
+            icon={<EditOutlined />}
+            onClick={() => editRole(record)}
+          />
+          <Button
+            type="link"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => deleteRole(record.roleId)}
+          />
+        </>
+      ),
+    },
+  ];
 
   return (
     <div className="container">
-
-<ToastContainer position="top-right" autoClose={3000} hideProgressBar />
-      <div className="d-flex justify-content-between mb-4">
-        <h3>Roles Management</h3>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+      <h3>Roles Management</h3>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          marginBottom: "10px",
+        }}
+      >
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() => setIsModalOpen(true)}
+        >
           Add Role
-        </button>
+        </Button>
       </div>
+      {loading ? (
+        <Loader />
+      ) : (
+        <Table
+          dataSource={filteredData}
+          columns={columns}
+          rowKey="roleId"
+          bordered
+          pagination={{ pageSize: 5 }}
+        />
+      )}
 
-      <table className="table table-bordered">
-        <thead>
-          <tr>
-            <th>Sr.no</th>
-            <th>Role Name</th>
-             <th>Actions</th> 
-          </tr>
-        </thead>
-        <tbody>
-          {roles.length > 0 ? (
-            roles.map((role, index) => (
-              <tr key={role.roleId}>
-                <td>{index + 1}</td>
-                <td>{role.roleName}</td>
-                <td>
-                  <button
-                    className="btn text-primary btn-sm me-2"
-                    onClick={() => editRole(role)}
-                  >
-                    <i className="bi bi-pencil-square"></i>
-                  </button>
-                  <button
-                    className="btn text-danger btn-sm"
-                    onClick={() => deleteRole(role.roleId)}
-                  >
-                    <i className="bi bi-trash"></i>
-                  </button>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="3" className="text-center">
-                No roles found
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-
-      {showModal && (
-  <div className="modal fade show" style={{ display: "block", backgroundColor: "rgba(0, 0, 0, 0.5)" }} tabIndex="-1">
-    <div className="modal-dialog modal-dialog-centered"> 
-      <div className="modal-content">
-        <div className="modal-header">
-          <h5 className="modal-title">
-            {roleData.id ? "Edit Role" : "Add Role"}
-          </h5>
-          <button
-            type="button"
-            className="btn-close"
-            onClick={closeModal}
-          ></button>
-        </div>
-        <div className="modal-body">
-          <div className="mb-3">
-            <label htmlFor="roleName" className="form-label">
-              Role Name
-            </label>
-            <input
-              type="text"
-              className="form-control"
-              id="roleName"
-              value={roleData.roleName}
-              onChange={(e) =>
-                setRoleData({ ...roleData, roleName: e.target.value })
-              }
-              required
-            />
-          </div>
-        </div>
-        <div className="modal-footer">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={closeModal}
-          >
-            Close
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={handleAddOrUpdateRole}
-          >
-            {roleData.id ? "Update" : "Add"} Role
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-
+      <Modal
+        title={roleData.id ? "Edit Role" : "Add Role"}
+        open={isModalOpen}
+        onCancel={closeModal}
+        onOk={handleAddOrUpdateRole}
+      >
+        <Input
+          placeholder="Enter role name"
+          value={roleData.roleName}
+          onChange={(e) =>
+            setRoleData({ ...roleData, roleName: e.target.value })
+          }
+        />
+      </Modal>
     </div>
   );
 }

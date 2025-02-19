@@ -12,7 +12,6 @@ import {
   PointElement,
   LineElement,
 } from "chart.js";
-import axios from "axios";
 import { getRequest } from "../utils/Api";
 
 // Register required Chart.js components
@@ -30,23 +29,33 @@ ChartJS.register(
 
 export default function DashboardCRM() {
   const [leads, setLeads] = useState([]);
-  
+
   // Fetch Leads Data from API
   useEffect(() => {
-    getRequest("api/Leads")
-      .then(response => {
-        setLeads(response.data);
+    getRequest("/api/Leads")
+      .then((response) => {
+        console.log("API Response:", response.data); // Debugging
+        // Ensure response.data contains an array
+        const leadData = response.data?.newLeads || []; // Adjust if API structure differs
+        setLeads(Array.isArray(leadData) ? leadData : []);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error fetching leads:", error);
+        setLeads([]); // Prevent errors
       });
   }, []);
 
-  // Calculate Dashboard Stats
-  const totalLeads = leads.length;
-  const assignedLeads = leads.filter(lead => lead.assignedTo !== null).length;
-  const followUps = leads.filter(lead => lead.status === "Follow-up").length;
-  const closedDeals = leads.filter(lead => lead.status === "Closed").length;
+  // Safe filtering by ensuring leads is an array
+  const totalLeads = Array.isArray(leads) ? leads.length : 0;
+  const assignedLeads = Array.isArray(leads)
+    ? leads.filter((lead) => lead.assignedTo !== null).length
+    : 0;
+  const followUps = Array.isArray(leads)
+    ? leads.filter((lead) => lead.status === "Follow-up").length
+    : 0;
+  const closedDeals = Array.isArray(leads)
+    ? leads.filter((lead) => lead.status === "Closed").length
+    : 0;
 
   // Card Data
   const cardData = [
@@ -56,7 +65,7 @@ export default function DashboardCRM() {
     { title: "Closed Deals", value: closedDeals, icon: "bi bi-handshake", bg: "secondary" },
   ];
 
-  // Dummy chart data
+  // Chart Data
   const barData = {
     labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
     datasets: [
@@ -73,9 +82,9 @@ export default function DashboardCRM() {
     datasets: [
       {
         data: [
-          leads.filter(lead => lead.status === "Not Called").length,
-          leads.filter(lead => lead.status === "In Progress").length,
-          closedDeals
+          Array.isArray(leads) ? leads.filter((lead) => lead.status === "Not Called").length : 0,
+          Array.isArray(leads) ? leads.filter((lead) => lead.status === "In Progress").length : 0,
+          closedDeals,
         ],
         backgroundColor: ["#007bff", "#ffc107", "#28a745"],
       },

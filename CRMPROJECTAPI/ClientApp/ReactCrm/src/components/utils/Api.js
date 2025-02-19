@@ -3,7 +3,7 @@ import axios from "axios";
 const Api = axios.create({
   baseURL:
     process.env.EXPO_PUBLIC_API_URL ||
-    "https://dotnetnm-001-site1.otempurl.com/",
+    "http://dotnetcrm-001-site1.otempurl.com/",
   headers: {
     "Content-Type": "application/json",
   },
