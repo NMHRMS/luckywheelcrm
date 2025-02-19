@@ -39,6 +39,7 @@ namespace Application.Services
 
             var leadList = await _context.Leads
                 .Where(l => l.ExcelName == latestExcelName)
+                .Where(l => l.AssignedTo == null)
                 .Include(l => l.District)
                 .Include(l => l.State)
                 .Include(l => l.LeadSource)
@@ -47,7 +48,9 @@ namespace Application.Services
                 .Include(l => l.AssignedToUser)
                 .ToListAsync();
 
-            var groupedLeads = leadList.GroupBy(l => l.MobileNo).ToList();
+            var groupedLeads = leadList
+                .GroupBy(l => l.MobileNo)
+                .ToList();
 
             var newLeads = groupedLeads
                 .Where(g => g.Count() == 1)
@@ -59,7 +62,7 @@ namespace Application.Services
             var duplicateLeads = groupedLeads
                 .Where(g => g.Count() > 1)
                 .SelectMany(g => g)
-                .Where(l => l.AssignedTo == null && l.Status != "Blocked")
+                .Where(l => l.Status != "Blocked")
                 .OrderBy(l => l.CreateDate)
                 .ToList();
 
@@ -218,7 +221,6 @@ namespace Application.Services
         {
             return await _context.Leads.AnyAsync(l => l.ExcelName == fileName);
         }
-
 
         public async Task UploadLeadsFromExcelAsync(IFormFile file, string fileName)
         {
@@ -447,15 +449,25 @@ namespace Application.Services
 
         public async Task<LeadsByExcelNameResponseDto> GetLeadsByExcelName(string excelName)
         {
-            var leadList = _context.Leads.Where(x=>x.ExcelName==excelName).ToList();
+            var leadList = await _context.Leads
+                .Where(x => x.ExcelName == excelName)
+                .Include(x => x.LeadSource)
+                .Include(x => x.District)
+                .Include(x => x.State)
+                .Include(x => x.Category)
+                .Include(x => x.Product)
+                .Include(x => x.AssignedToUser)
+                .ToListAsync();
+
             int totalLeads = leadList.Count;
             var assignedList = leadList.Where(x=>x.AssignedTo!=null).ToList();
             int assignedCount = assignedList.Count;
             var notAssignedList = leadList.Where(x=>x.AssignedTo==null).ToList();
             int notAssignedCount = notAssignedList.Count;
+
             return new LeadsByExcelNameResponseDto
             {
-                Leads = leadList,
+                Leads = _mapper.Map<IEnumerable<LeadResponseDto>>(leadList),
                 TotalLeadsCount = totalLeads,
                 AssignedLeadsCount=assignedCount,
                 NotAssignedLeadsCount=notAssignedCount,
