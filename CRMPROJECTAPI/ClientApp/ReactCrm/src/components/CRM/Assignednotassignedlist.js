@@ -4,6 +4,7 @@ import { getRequest, postRequest } from "../utils/Api";
 import AssignModal from './AssignModal';
 import { fetchStoredData } from "../utils/UserDataUtils";
 import LeadtrackModal from './LeadtrackModal';
+import Loader from "../utils/Loader";
 
 function AssignedNotAssignedList() {
   const [activeTab, setActiveTab] = useState('assigned');
@@ -17,6 +18,7 @@ function AssignedNotAssignedList() {
   const [isDetailsModalVisible, setIsDetailsModalVisible] = useState(false);
   const [selectedLeads, setSelectedLeads] = useState([]);
   const [assignModalVisible, setAssignModalVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState({ 
     userId: '', 
     companyId: '', 
@@ -26,6 +28,7 @@ function AssignedNotAssignedList() {
   // Fetch initial data
   useEffect(() => {
     const fetchInitialData = async () => {
+      setLoading(true)
       try {
         const storedData = await fetchStoredData();
         if (storedData) setUserData(storedData);
@@ -44,6 +47,7 @@ function AssignedNotAssignedList() {
       }
     };
     fetchInitialData();
+    setLoading(false)
   }, []);
 
   // Table columns configuration
@@ -64,6 +68,80 @@ function AssignedNotAssignedList() {
       filterMode: "tree", 
       
     },
+    {
+      title: "District Name",
+      dataIndex: "districtName",
+      key: "districtName",
+      sorter: (a, b) => a.districtName.localeCompare(b.districtName),
+      filters: [
+        ...new Set(leads.assigned.map((lead) => lead.districtName)),
+      ].map((districtName) => ({
+        text: districtName,
+        value: districtName,
+      })),
+      onFilter: (value, record) => record.districtName.indexOf(value) === 0,
+      filterSearch: true,
+      filterMode: "tree",
+    },
+    {
+      title: "Model Name",
+      dataIndex: "modelName",
+      key: "modelName",
+      sorter: (a, b) => a.modelName.localeCompare(b.modelName),
+      filters: [...new Set(leads.assigned.map((lead) => lead.modelName))].map(
+        (modelName) => ({
+          text: modelName,
+          value: modelName,
+        })
+      ),
+      onFilter: (value, record) => record.modelName.indexOf(value) === 0,
+      filterSearch: true,
+      filterMode: "tree",
+    },
+    {
+      title: "Father Name",
+      dataIndex: "fatherName",
+      key: "fatherName",
+      sorter: (a, b) => a.fatherName.localeCompare(b.fatherName),
+      filters: [
+        ...new Set(leads.assigned.map((lead) => lead.fatherName)),
+      ].map((fatherName) => ({
+        text: fatherName,
+        value: fatherName,
+      })),
+      onFilter: (value, record) => record.fatherName.indexOf(value) === 0,
+      filterSearch: true,
+      filterMode: "tree",
+    },
+    {
+      title: "Current Address",
+      dataIndex: "currentAddress",
+      key: "currentAddress",
+      filters: [...new Set(leads.assigned.map((lead) => lead.currentAddress))].map((currentAddress) => ({
+        text: currentAddress,
+        value: currentAddress,
+      })),
+      
+      onFilter: (value, record) => record.currentAddress.includes(value),
+      filterSearch:true,
+      filterMode: "tree", 
+    },
+    {
+      title: "Mobile No.",
+      dataIndex: "mobileNo",
+      key: "mobileNo",
+      sorter: (a, b) => a.mobileNo.localeCompare(b.mobileNo),
+      filters: [...new Set(leads[activeTab].map((lead) => lead.mobileNo))].map(
+        (mobileNo) => ({
+          text: mobileNo,
+          value: mobileNo,
+        })
+      ),
+      onFilter: (value, record) => record.mobileNo.indexOf(value) === 0,
+      filterSearch: true,
+      filterMode: "tree",
+    },
+    
     { 
       title: 'Mobile', 
       dataIndex: 'mobileNo', 
@@ -130,6 +208,37 @@ function AssignedNotAssignedList() {
       filterMode: "tree", 
 
     },
+    
+    {
+      title: "District Name",
+      dataIndex: "districtName",
+      key: "districtName",
+      sorter: (a, b) => a.districtName.localeCompare(b.districtName),
+      filters: [
+        ...new Set(leads.notAssigned.map((lead) => lead.districtName)),
+      ].map((districtName) => ({
+        text: districtName,
+        value: districtName,
+      })),
+      onFilter: (value, record) => record.districtName.indexOf(value) === 0,
+      filterSearch: true,
+      filterMode: "tree",
+    },
+    {
+      title: "Model Name",
+      dataIndex: "modelName",
+      key: "modelName",
+      sorter: (a, b) => a.modelName.localeCompare(b.modelName),
+      filters: [...new Set(leads.notAssigned.map((lead) => lead.modelName))].map(
+        (modelName) => ({
+          text: modelName,
+          value: modelName,
+        })
+      ),
+      onFilter: (value, record) => record.modelName.indexOf(value) === 0,
+      filterSearch: true,
+      filterMode: "tree",
+    },
     { 
       title: 'Mobile', 
       dataIndex: 'mobileNo', 
@@ -145,6 +254,32 @@ function AssignedNotAssignedList() {
       filterSearch:true,
       filterMode: "tree", 
 
+    },
+    {
+      title: "Current Address",
+      dataIndex: "currentAddress",
+      key: "currentAddress",
+      filters: [...new Set(leads.notAssigned.map((lead) => lead.currentAddress))].map((currentAddress) => ({
+        text: currentAddress,
+        value: currentAddress,
+      })),
+      
+      onFilter: (value, record) => record.currentAddress.includes(value),
+      filterSearch:true,
+      filterMode: "tree", 
+    },
+    {
+      title: "Excel Name",
+      dataIndex: "excelName",
+      key: "excelName",
+      filters: [...new Set(leads.notAssigned.map((lead) => lead.excelName))].map((excelName) => ({
+        text: excelName,
+        value: excelName,
+      })),
+      
+      onFilter: (value, record) => record.excelName.includes(value),
+      filterSearch:true,
+      filterMode: "tree", 
     },
     { 
       title: 'Status', 
@@ -222,80 +357,10 @@ function AssignedNotAssignedList() {
     }
   };
 
-  // Lead details modal component
-//   const LeadDetailsModal = () => (
-//     <Modal
-//       title={`Lead Details - ${selectedLead?.ownerName || 'Unknown'}`}
-//       visible={isDetailsModalVisible}
-//       onCancel={() => setIsDetailsModalVisible(false)}
-//       footer={null}
-//       width={800}
-//     >
-//       <div className="mb-4">
-//         <p><strong>Mobile:</strong> {selectedLead?.mobileNo || 'N/A'}</p>
-//         <p><strong>Vehicle Model:</strong> {selectedLead?.modelName || 'N/A'}</p>
-//         <p><strong>Registration:</strong> {selectedLead?.registrationNo || 'N/A'}</p>
-//       </div>
-
-//       <ul className="nav nav-tabs">
-//         <li className="nav-item">
-//           <button 
-//             className="nav-link active" 
-//             data-bs-toggle="tab" 
-//             data-bs-target="#history"
-//           >
-//             Assignment History
-//           </button>
-//         </li>
-//         <li className="nav-item">
-//           <button 
-//             className="nav-link" 
-//             data-bs-toggle="tab" 
-//             data-bs-target="#reviews"
-//           >
-//             Reviews
-//           </button>
-//         </li>
-//       </ul>
-
-//       <div className="tab-content mt-3">
-//         <div className="tab-pane show active" id="history">
-//           <Table
-//             columns={[
-//               { title: 'Assigned To', dataIndex: 'assignedToName' },
-//               { title: 'Assigned By', dataIndex: 'assignedByName' },
-//               { title: 'Date', dataIndex: 'assignedDate' },
-//               { title: 'Duration', dataIndex: 'leadDurationFormatted' }
-//             ]}
-//             dataSource={history}
-//             rowKey="trackId"
-//             pagination={false}
-//             locale={{ emptyText: 'No assignment history found' }}
-//           />
-//         </div>
-
-//         <div className="tab-pane" id="reviews">
-//           <Table
-//             columns={[
-//               { title: 'Review Date', dataIndex: 'reviewDate' },
-//               { title: 'Follow-up Date', dataIndex: 'followUpDate' },
-//               { title: 'Comments', dataIndex: 'review' }
-//             ]}
-//             dataSource={reviews}
-//             rowKey="leadReviewId"
-//             pagination={false}
-//             locale={{ emptyText: 'No reviews found for this lead' }}
-//           />
-//         </div>
-//       </div>
-//     </Modal>
-//   );
-
   return (
     <div className="container mt-1">
       <h4 className="mb-4">Lead Track</h4>
 
-      {/* Tabs Navigation */}
       <ul className="nav nav-tabs mb-4">
         <li className="nav-item">
           <button
@@ -315,7 +380,6 @@ function AssignedNotAssignedList() {
         </li>
       </ul>
 
-      {/* Assigned Leads Table */}
       {activeTab === 'assigned' && (
         <div className="card shadow">
           <div className="card-body">
@@ -329,12 +393,12 @@ function AssignedNotAssignedList() {
               bordered
               pagination={{ pageSize: 5 }}
               locale={{ emptyText: 'No assigned leads found' }}
+              style={{ overflowX: "auto", whiteSpace: "nowrap" }}
             />
           </div>
         </div>
       )}
 
-      {/* Unassigned Leads Table */}
       {activeTab === 'notAssigned' && (
         <div className="card shadow">
           <div className="card-body">
@@ -347,6 +411,10 @@ function AssignedNotAssignedList() {
                 Assign Selected ({selectedLeads.length})
               </button>
             </div>
+            <>
+            {loading ? (
+        <Loader />
+      ) : (
             <Table
               columns={unassignedColumns}
               dataSource={leads.notAssigned}
@@ -364,6 +432,9 @@ function AssignedNotAssignedList() {
               bordered
 
             />
+          )}
+            </>
+       
           </div>
         </div>
       )}

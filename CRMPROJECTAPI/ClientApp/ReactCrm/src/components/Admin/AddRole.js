@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Table, Button, Modal, Input, message, Checkbox } from "antd";
-import { EditOutlined, DeleteOutlined, PlusOutlined } from "@ant-design/icons";
+import {  PlusOutlined } from "@ant-design/icons";
 import {
   getRequest,
   postRequest,
-  deleteRequest,
   putRequest,
 } from "../utils/Api";
 import { fetchStoredData } from "../utils/UserDataUtils";
@@ -108,31 +107,31 @@ export default function RoleComponent() {
     }
   };
 
-  const editRole = (role) => {
-    setRoleData({ id: role.roleId, roleName: role.roleName });
-    setIsModalOpen(true);
-  };
+  // const editRole = (role) => {
+  //   setRoleData({ id: role.roleId, roleName: role.roleName });
+  //   setIsModalOpen(true);
+  // };
 
-  const deleteRole = (id) => {
-    Modal.confirm({
-      title: "Are you sure you want to delete this role?",
-      okText: "Yes",
-      okType: "danger",
-      cancelText: "No",
-      onOk: () => {
-        deleteRequest(`/api/Roles/${id}`)
-          .then(() => {
-            message.success("Role deleted successfully!");
-            setRoles(roles.filter((role) => role.roleId !== id));
-            setFilteredData(roles.filter((role) => role.roleId !== id));
-          })
-          .catch((err) => {
-            console.error("Error deleting role:", err);
-            message.error("Failed to delete role.");
-          });
-      },
-    });
-  };
+  // const deleteRole = (id) => {
+  //   Modal.confirm({
+  //     title: "Are you sure you want to delete this role?",
+  //     okText: "Yes",
+  //     okType: "danger",
+  //     cancelText: "No",
+  //     onOk: () => {
+  //       deleteRequest(`/api/Roles/${id}`)
+  //         .then(() => {
+  //           message.success("Role deleted successfully!");
+  //           setRoles(roles.filter((role) => role.roleId !== id));
+  //           setFilteredData(roles.filter((role) => role.roleId !== id));
+  //         })
+  //         .catch((err) => {
+  //           console.error("Error deleting role:", err);
+  //           message.error("Failed to delete role.");
+  //         });
+  //     },
+  //   });
+  // };
 
   const closeModal = () => {
     setRoleData({ id: null, roleName: "" });
@@ -253,25 +252,25 @@ export default function RoleComponent() {
         record.roleName.toLowerCase().includes(value.toLowerCase()),
       
     },
-    {
-      title: "Actions",
-      key: "actions",
-      render: (_, record) => (
-        <>
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => editRole(record)}
-          />
-          <Button
-            type="link"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => deleteRole(record.roleId)}
-          />
-        </>
-      ),
-    },
+    // {
+    //   title: "Actions",
+    //   key: "actions",
+    //   render: (_, record) => (
+    //     <>
+    //       <Button
+    //         type="link"
+    //         icon={<EditOutlined />}
+    //         onClick={() => editRole(record)}
+    //       />
+    //       <Button
+    //         type="link"
+    //         danger
+    //         icon={<DeleteOutlined />}
+    //         onClick={() => deleteRole(record.roleId)}
+    //       />
+    //     </>
+    //   ),
+    // },
   ];
 
   return (
@@ -300,7 +299,7 @@ export default function RoleComponent() {
           columns={columns}
           rowKey="roleId"
           bordered
-          pagination={{ pageSize: 5 }}
+          pagination={{ pageSize: 10 }}
         />
       )}
 

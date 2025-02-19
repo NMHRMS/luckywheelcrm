@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Table } from "antd";
 import { getRequest } from "../utils/Api";
+import Loader from "../utils/Loader";
 
 function AllLeads() {
   const [leads, setLeads] = useState({
@@ -9,8 +10,10 @@ function AllLeads() {
     blockedLeads: [],
   });
   const [activeTab, setActiveTab] = useState("new");
+  const [loading, setLoading] = useState(false);
 
   const fetchLeads = async () => {
+    setLoading(true);
     try {
       const response = await getRequest("/api/Leads");
       if (response?.data) {
@@ -23,6 +26,7 @@ function AllLeads() {
     } catch (error) {
       console.error("Error fetching leads:", error);
     }
+    setLoading(false)
   };
 
   useEffect(() => {
@@ -97,6 +101,16 @@ function AllLeads() {
       filterMode: "tree",
     },
     {
+      title: "Excel Name",
+      dataIndex: "excelName",
+      key: "excelName",
+      filters: getUniqueFilters([...leads.newLeads, ...leads.duplicateLeads, ...leads.blockedLeads], "excelName"),
+      onFilter: (value, record) => record.excelName === value,
+      sorter: (a, b) => a.excelName.localeCompare(b.excelName),
+      filterSearch:true,
+      filterMode: "tree",
+    },
+    {
       title: "Status",
       dataIndex: "status",
       key: "status",
@@ -112,7 +126,7 @@ function AllLeads() {
     <div className="container mt-1">
       <h4 className="mb-4">All Leads</h4>
 
-      {/* Bootstrap Tabs */}
+      {/* {/ Bootstrap Tabs /} */}
       <ul className="nav nav-tabs mb-4">
         <li className="nav-item">
           <button
@@ -140,7 +154,7 @@ function AllLeads() {
         </li>
       </ul>
 
-      {/* Tab Content */}
+      {/* {/ Tab Content /} */}
       <div className="tab-content">
         <div className={`tab-pane ${activeTab === "new" ? "show active" : ""}`}>
           <div className="card shadow">
@@ -161,6 +175,10 @@ function AllLeads() {
         <div className={`tab-pane ${activeTab === "duplicate" ? "show active" : ""}`}>
           <div className="card shadow mt-3">
             <div className="card-body">
+              <>
+              {loading ? (
+        <Loader />
+      ) : (
               <Table
                 columns={columns}
                 dataSource={leads.duplicateLeads}
@@ -169,6 +187,9 @@ function AllLeads() {
                 style={{ overflowX: "auto", whiteSpace: "nowrap" }}
 
               />
+            )}
+              </>
+            
             </div>
           </div>
         </div>

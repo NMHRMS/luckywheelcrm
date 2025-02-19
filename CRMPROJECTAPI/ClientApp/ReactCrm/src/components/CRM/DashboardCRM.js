@@ -13,6 +13,7 @@ import {
   LineElement,
 } from "chart.js";
 import { getRequest } from "../utils/Api";
+import Loader from "../utils/Loader";
 
 // Register required Chart.js components
 ChartJS.register(
@@ -50,8 +51,8 @@ export default function DashboardCRM() {
   const assignedLeads = Array.isArray(leads)
     ? leads.filter((lead) => lead.assignedTo !== null).length
     : 0;
-  const followUps = Array.isArray(leads)
-    ? leads.filter((lead) => lead.status === "Follow-up").length
+  const pending = Array.isArray(leads)
+    ? leads.filter((lead) => lead.status === "Pending").length
     : 0;
   const closedDeals = Array.isArray(leads)
     ? leads.filter((lead) => lead.status === "Closed").length
@@ -61,7 +62,7 @@ export default function DashboardCRM() {
   const cardData = [
     { title: "Total Leads", value: totalLeads, icon: "bi bi-people", bg: "primary" },
     { title: "Assigned Leads", value: assignedLeads, icon: "bi bi-person-check", bg: "success" },
-    { title: "Follow-ups", value: followUps, icon: "bi bi-telephone", bg: "warning" },
+    { title: "Pending", value: pending, icon: "bi bi-telephone", bg: "warning" },
     { title: "Closed Deals", value: closedDeals, icon: "bi bi-handshake", bg: "secondary" },
   ];
 
@@ -106,7 +107,7 @@ export default function DashboardCRM() {
 
   return (
     <div className="container mt-0">
-      {/* Page Title */}
+      {/* {/ Page Title /} */}
       <div className="pagetitle mb-4">
         <h1>CRM Dashboard</h1>
         <nav>
@@ -119,7 +120,7 @@ export default function DashboardCRM() {
         </nav>
       </div>
 
-      {/* Cards Section */}
+      {/* {/ Cards Section /} */}
       <div className="row">
         {cardData.map((card, index) => (
           <div key={index} className="col-md-3">
@@ -135,16 +136,16 @@ export default function DashboardCRM() {
         ))}
       </div>
 
-      {/* Charts Section */}
+      {/* {/ Charts Section /} */}
       <div className="row">
-        <div className="col-md-7">
+        {/* <div className="col-md-7">
           <div className="card shadow-sm mb-4">
             <div className="card-body">
               <h5 className="card-title">Leads Overview</h5>
               <Bar data={barData} />
             </div>
           </div>
-        </div>
+        </div> */}
 
         <div className="col-md-5">
           <div className="card shadow-sm mb-4">
@@ -154,7 +155,7 @@ export default function DashboardCRM() {
             </div>
           </div>
         </div>
-
+{/* 
         <div className="col-md-12">
           <div className="card shadow-sm mb-4">
             <div className="card-body">
@@ -162,7 +163,7 @@ export default function DashboardCRM() {
               <Line data={lineData} />
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

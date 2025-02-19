@@ -1,27 +1,42 @@
 import React, { useEffect, useState } from "react";
-import { Table, notification, Checkbox } from "antd";
+import { Table, notification } from "antd";
 import { getRequest, postRequest } from "../utils/Api";
 import AssignModal from "./AssignModal";
+import Loader from "../utils/Loader";
 
 function RejectList() {
   const [rejectedLeads, setRejectedLeads] = useState([]);
   const [assignModalVisible, setAssignModalVisible] = useState(false);
   const [selectedLeads, setSelectedLeads] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState({
     branchId: "",
     companyId: "",
     userId: "",
   });
 
+  const fetchRejectedLeads = async () => {
+    setLoading(true);
+    try {
+      const response = await getRequest("/api/LeadAssign/rejected-leads");
+      setRejectedLeads(response.data);
+    } catch (error) {
+      console.error("Error fetching rejected leads!", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    getRequest("/api/LeadAssign/rejected-leads")
-      .then((response) => {
-        setRejectedLeads(response.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching rejected leads!", error);
-      });
+    fetchRejectedLeads();
   }, []);
+
+  const rowSelection = {
+    selectedRowKeys: selectedLeads,
+    onChange: (selectedRowKeys) => {
+      setSelectedLeads(selectedRowKeys);
+    },
+  };
 
   const handleAssign = async (selectedCRE) => {
     try {
@@ -32,10 +47,9 @@ function RejectList() {
           assignedBy: userData.userId,
           assignedDate: new Date().toISOString(),
         };
-
         await postRequest("/api/LeadAssign/assign", requestBody);
       }
-
+      fetchRejectedLeads();
       notification.success({
         message: "Success",
         description: "Leads assigned successfully!",
@@ -51,29 +65,7 @@ function RejectList() {
     }
   };
 
-  const handleCheckboxChange = (lead, checked) => {
-    console.log("Selected Lead:", lead); // Debugging log
-    setSelectedLeads((prev) => {
-      if (checked) {
-        return [...prev, lead.leadId]; // ✅ Use 'leadId' instead of 'leadID'
-      } else {
-        return prev.filter((id) => id !== lead.leadId);
-      }
-    });
-  };
-
   const columns = [
-    {
-      title: "Select",
-      dataIndex: "leadID",
-      key: "select",
-      render: (leadID) => (
-        <Checkbox
-          onChange={(e) => handleCheckboxChange(leadID, e.target.checked)}
-          checked={selectedLeads.includes(leadID)}
-        />
-      ),
-    },
     {
       title: "Owner Name",
       dataIndex: "ownerName",
@@ -116,13 +108,20 @@ function RejectList() {
       >
         Assign to
       </button>
-      <Table
-        columns={columns}
-        dataSource={rejectedLeads}
-        rowKey="leadId"
-        pagination={{ pageSize: 10 }}
-        bordered
-      />
+
+      {loading ? (
+        <Loader />
+      ) : (
+        <Table
+          rowSelection={rowSelection}
+          columns={columns}
+          dataSource={rejectedLeads}
+          rowKey="leadId"
+          pagination={{ pageSize: 10 }}
+          bordered
+        />
+      )}
+
       <AssignModal
         visible={assignModalVisible}
         onClose={() => setAssignModalVisible(false)}

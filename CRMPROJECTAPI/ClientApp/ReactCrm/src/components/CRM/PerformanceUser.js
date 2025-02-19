@@ -3,31 +3,48 @@ import { getRequest } from "../utils/Api";
 import { Pie } from "react-chartjs-2";
 import "chart.js/auto";
 import ChartDataLabels from "chartjs-plugin-datalabels";
+import Loader from "../utils/Loader";
 
 const PerformanceUser = () => {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState("");
   const [assignedLeads, setAssignedLeads] = useState(null);
+  const [loading, setLoading] = useState(false);
 
+  // Fetch users on mount
   useEffect(() => {
+    setLoading(true);
     getRequest("/api/users")
-      .then((res) => setUsers(res.data))
-      .catch((error) => console.error("Error fetching users: ", error));
+      .then((res) => {
+        const validRoleIds = ["a8c8ea20-7154-4d78-97ea-a4d5cf217a27", "82cf21da-45cd-4fe2-b892-7b5cb2bc8883"];
+        const filteredUsers = res.data.filter(user => validRoleIds.includes(user.roleId));
+        setUsers(filteredUsers);
+
+        // Set the first user as selected by default
+        if (filteredUsers.length > 0) {
+          setSelectedUser(filteredUsers[0].userId);
+        }
+      })
+      .catch((error) => console.error("Error fetching users: ", error))
+      .finally(() => setLoading(false));
   }, []);
 
-  const handleUserChange = (e) => {
-    const userId = e.target.value;
-    setSelectedUser(userId);
-
-    if (userId) {
-      getRequest(`/api/Leads/dashboard_leads_user?userId=${userId}`)
+  useEffect(() => {
+    if (selectedUser) {
+      setLoading(true);
+      getRequest(`/api/Leads/dashboard_leads_user?userId=${selectedUser}`)
         .then((res) => {
           setAssignedLeads(res.data);
         })
-        .catch((error) => console.error("Error fetching assigned leads: ", error));
+        .catch((error) => console.error("Error fetching assigned leads: ", error))
+        .finally(() => setLoading(false));
     } else {
       setAssignedLeads(null);
     }
+  }, [selectedUser]);
+
+  const handleUserChange = (e) => {
+    setSelectedUser(e.target.value);
   };
 
   const leadStatuses = [
@@ -62,43 +79,51 @@ const PerformanceUser = () => {
   return (
     <div className="container mt-3">
       <h3>User Performance</h3>
-      <div className="mb-3 col-sm-3">
-        <label htmlFor="userSelect" className="form-label">Select User:</label>
-        <select id="userSelect" className="form-control" value={selectedUser} onChange={handleUserChange}>
-          <option value="">Select a User</option>
-          {users.map((user) => (
-            <option key={user.userId} value={user.userId}>{user.firstName} {user.lastName}</option>
-          ))}
-        </select>
-      </div>
-      {selectedUser && assignedLeads && (
+
+      {loading && <Loader />} 
+      {/* {/ Show Loader when loading /} */}
+
+      {!loading && (
         <>
-          <h4>Lead Details</h4>
-          <table className="table table-bordered">
-            <thead>
-              <tr>
-                <th>Status</th>
-                <th>Count</th>
-              </tr>
-            </thead>
-            <tbody>
-              {leadStatuses.map((status, index) => (
-                <tr key={index}>
-                  <td>
-                    <span style={{ display: "inline-block", width: "15px", height: "15px", backgroundColor: status.color, marginRight: "5px" }}></span>
-                    {status.label}
-                  </td>
-                  <td>{assignedLeads[status.key] || 0}</td>
-                </tr>
+          <div className="mb-3 col-sm-3">
+            <label htmlFor="userSelect" className="form-label">Select User:</label>
+            <select id="userSelect" className="form-control" value={selectedUser} onChange={handleUserChange}>
+              {users.map((user) => (
+                <option key={user.userId} value={user.userId}>{user.firstName} {user.lastName}</option>
               ))}
-            </tbody>
-          </table>
-          <div className="mt-4">
-            <h4>Lead Distribution</h4>
-            <div style={{ width: "50%", margin: "0 auto" }}>
-              {pieChartData && <Pie data={pieChartData} plugins={[ChartDataLabels]} />}
-            </div>
+            </select>
           </div>
+
+          {selectedUser && assignedLeads && (
+            <>
+              <h4>Lead Details</h4>
+              <table className="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leadStatuses.map((status, index) => (
+                    <tr key={index}>
+                      <td>
+                        <span style={{ display: "inline-block", width: "15px", height: "15px", backgroundColor: status.color, marginRight: "5px" }}></span>
+                        {status.label}
+                      </td>
+                      <td>{assignedLeads[status.key] || 0}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="mt-4">
+                <h4>Lead Distribution</h4>
+                <div style={{ width: "50%", margin: "0 auto" }}>
+                  {pieChartData && <Pie data={pieChartData} plugins={[ChartDataLabels]} />}
+                </div>
+              </div>
+            </>
+          )}
         </>
       )}
     </div>

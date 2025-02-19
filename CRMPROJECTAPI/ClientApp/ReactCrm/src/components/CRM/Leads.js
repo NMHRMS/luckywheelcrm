@@ -3,9 +3,8 @@ import { Table, notification } from "antd";
 import { getRequest, postRequest, deleteRequest } from "../utils/Api";
 import AssignModal from "./AssignModal";
 import { fetchStoredData } from "../utils/UserDataUtils";
-import * as XLSX from "xlsx";
-import AddLeadModal from "./AddLeadModal"
-const LeadsTable = () => {
+import AddLeadModal from "./AddLeadModal";
+const Leads = () => {
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -77,37 +76,43 @@ const LeadsTable = () => {
   };
   const handleUpload = async () => {
     if (!file) {
-      alert("No file selected!")
-      return
+      alert("No file selected!");
+      return;
     }
-  
-    const formData = new FormData()
-    console.log("formData",formData);
-    
-    formData.append("file", file)
-     formData.append("fileName", fileName);
-  
+
+    const formData = new FormData();
+    console.log("formData", formData);
+
+    formData.append("file", file);
+    formData.append("fileName", fileName);
+
     try {
-      const url = `/api/Leads/upload-excel?fileName=${encodeURIComponent(fileName)}`;
+      const url = `/api/Leads/upload-excel?fileName=${encodeURIComponent(
+        fileName
+      )}`;
       const response = await postRequest(url, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-  
-      console.log("File uploaded successfully:", response.data)
+
+      console.log("File uploaded successfully:", response.data);
       // alert("File uploaded successfully!")
       notification.success({
         message: "Success",
         description: "File uploaded successfully!",
       });
-  
-      setShowModal(false)
-      setFile(null)
-      fetchLeads()
+
+      setShowModal(false);
+      setFile(null);
+      fetchLeads();
     } catch (error) {
-      console.error("Error uploading file:", error.response?.data || error)
-      alert(`Failed to upload file: ${error.response?.data?.message || "Unknown error"}`)
+      console.error("Error uploading file:", error.response?.data || error);
+      alert(
+        `Failed to upload file: ${
+          error.response?.data?.message || "Unknown error"
+        }`
+      );
     }
-    }
+  };
 
   const columns = [
     {
@@ -191,21 +196,7 @@ const LeadsTable = () => {
       filterSearch: true,
       filterMode: "tree",
     },
-    {
-      title: "Dealer Name",
-      dataIndex: "dealerName",
-      key: "dealerName",
-      sorter: (a, b) => a.dealerName.localeCompare(b.dealerName),
-      filters: [
-        ...new Set(leads[activeTab].map((lead) => lead.dealerName)),
-      ].map((dealerName) => ({
-        text: dealerName,
-        value: dealerName,
-      })),
-      onFilter: (value, record) => record.dealerName.indexOf(value) === 0,
-      filterSearch: true,
-      filterMode: "tree",
-    },
+
     {
       title: "Registration No.",
       dataIndex: "registrationNo",
@@ -387,11 +378,12 @@ const LeadsTable = () => {
           >
             Delete
           </button>
-          <button className="btn btn-outline-primary"
-       onClick={() => setAddModalVisible(true)}
-      >
-        Add Lead
-      </button>
+          <button
+            className="btn btn-outline-primary"
+            onClick={() => setAddModalVisible(true)}
+          >
+            Add Lead
+          </button>
         </div>
       </div>
 
@@ -484,18 +476,18 @@ const LeadsTable = () => {
         selectedRows={selectedLeads}
         onAssign={handleAssign}
       />
-       <AddLeadModal
-  visible={addModalVisible}
-  onClose={() => setAddModalVisible(false)}
-  onSuccess={(newLead) => {
-    setLeads(prev => ({
-      ...prev,
-      newLeads: [newLead, ...prev.newLeads]
-    }));
-  }}
-/>
+      <AddLeadModal
+        visible={addModalVisible}
+        onClose={() => setAddModalVisible(false)}
+        onSuccess={(newLead) => {
+          setLeads((prev) => ({
+            ...prev,
+            newLeads: [newLead, ...prev.newLeads],
+          }));
+        }}
+      />
     </div>
   );
 };
 
-export default LeadsTable;
+export default Leads;
