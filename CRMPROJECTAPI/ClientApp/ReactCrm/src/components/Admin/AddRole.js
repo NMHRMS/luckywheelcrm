@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Table, Button, Modal, Input, message, Checkbox } from "antd";
-import {  PlusOutlined } from "@ant-design/icons";
+// import {  PlusOutlined } from "@ant-design/icons";
 import {
   getRequest,
   postRequest,
@@ -283,13 +283,13 @@ export default function RoleComponent() {
           marginBottom: "10px",
         }}
       >
-        <Button
+        {/* <Button
           type="primary"
           icon={<PlusOutlined />}
           onClick={() => setIsModalOpen(true)}
         >
           Add Role
-        </Button>
+        </Button> */}
       </div>
       {loading ? (
         <Loader />

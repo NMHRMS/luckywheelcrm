@@ -97,10 +97,6 @@ function App() {
           <Route path="assignmanagement" element={<AssignManagement/>} />
           <Route path="userperformance" element={<UserPerformance/>} />
           <Route path="categories" element={<Categories />} />
-
-
-
-
         </Route>
       </Routes>
     </BrowserRouter>

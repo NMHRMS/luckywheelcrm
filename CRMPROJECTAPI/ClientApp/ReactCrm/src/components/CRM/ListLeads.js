@@ -1,23 +1,36 @@
 import { useEffect, useState } from "react";
-import { getRequest, postRequest } from "../utils/Api";
-import LeadsDisplayExcelRecords from "./LeadsDisplayExcelRecords";
+import { Table, Button, message } from "antd";
+import { getRequest } from "../utils/Api";
 import { useNavigate } from "react-router-dom";
+import Loader from "../utils/Loader";
+
 const ListLeads = () => {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const navigate = useNavigate(); // Navigation hook
+  const navigate = useNavigate();
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return 'N/A';
+    
+    const date = new Date(dateString);
+    if (isNaN(date)) return 'Invalid Date';
+  
+    const day = date.getDate();
+    const month = date.getMonth() + 1; // Months are 0-based
+    const year = date.getFullYear();
+    
+    return `${day}/${month}/${year}`;
+  };
 
   useEffect(() => {
     getRequest("/api/Leads/get_leads_dataList")
       .then((response) => {
-        console.log(response.data); // Log the response to see the structure
         setFiles(response.data);
         setLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching files:", error);
-        setError("Failed to load files. Please try again later.");
+        message.error("Failed to load files. Please try again later.");
         setLoading(false);
       });
   }, []);
@@ -26,63 +39,63 @@ const ListLeads = () => {
     navigate(`/crm/leadsdisplayexcelrecords/${fileName}`);
   };
 
+  const columns = [
+    {
+      title: "Excel Name",
+      dataIndex: "excelName",
+      key: "excelName",
+      render: (text) =>
+        text ? (
+          <Button type="link" onClick={() => handleFileClick(text)}>
+            {text}
+          </Button>
+        ) : (
+          "Invalid Name"
+        ),
+      sorter: (a, b) => a.excelName.localeCompare(b.excelName),
+    },
+    {
+      title: "Total Leads",
+      dataIndex: "totalCount",
+      key: "totalCount",
+      sorter: (a, b) => a.totalCount - b.totalCount,
+    },
+    {
+      title: "Assigned Leads",
+      dataIndex: "assignedCount",
+      key: "assignedCount",
+      sorter: (a, b) => a.assignedCount - b.assignedCount,
+    },
+    {
+      title: "Not Assigned Leads",
+      dataIndex: "notAssignedCount",
+      key: "notAssignedCount",
+      sorter: (a, b) => a.notAssignedCount - b.notAssignedCount,
+    },
+    {
+      title: "Created Date",
+      dataIndex: "createdDate",
+      key: "createdDate",
+      render:formatDateTime,
+      sorter: (a, b) => new Date(a.createdDate) - new Date(b.createdDate),
+    },
+  ];
+
   return (
     <div className="container mt-4">
       <h2 className="mb-3">Leads by Excel File</h2>
       {loading ? (
-        <p>Loading files...</p>
-      ) : error ? (
-        <p className="text-danger">{error}</p>
-      ) : files.length === 0 ? (
-        <p>No files available.</p>
+        <Loader />
       ) : (
-        <table className="table  table-bordered">
-          <thead className="thead-dark">
-            <tr>
-              <th>Excel Name</th>
-              <th>Total Leads</th>
-              <th>Assigned Leads</th>
-              <th>Not Assigned Leads</th>
-              <th>Created Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {files.map((file, index) => (
-              <tr key={index}>
-                <td>
-                  <button
-                    className="btn btn-link"
-                    onClick={() => handleFileClick(file.excelName)}
-                  >
-                    {typeof file.excelName === "string"
-                      ? file.excelName
-                      : "Invalid name"}
-                  </button>
-                </td>
-                <td>
-                  {typeof file.totalCount === "number"
-                    ? file.totalCount
-                    : "N/A"}
-                </td>
-                <td>
-                  {typeof file.assignedCount === "number"
-                    ? file.assignedCount
-                    : "N/A"}
-                </td>
-                <td>
-                  {typeof file.notAssignedCount === "number"
-                    ? file.notAssignedCount
-                    : "N/A"}
-                </td>
-                <td>
-                  {file.createdDate
-                    ? new Date(file.createdDate).toLocaleString()
-                    : "Invalid date"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <Table
+          columns={columns}
+          dataSource={files.map((file, index) => ({
+            ...file,
+            key: index, 
+          }))}
+          pagination={{ pageSize: 10 }}
+          bordered
+        />
       )}
     </div>
   );

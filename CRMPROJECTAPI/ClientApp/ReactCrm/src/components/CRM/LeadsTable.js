@@ -3,8 +3,9 @@ import { Table, notification } from "antd";
 import { getRequest, postRequest, deleteRequest } from "../utils/Api";
 import AssignModal from "./AssignModal";
 import { fetchStoredData } from "../utils/UserDataUtils";
+import * as XLSX from "xlsx";
 import Loader from "../utils/Loader";
-import AddLeadModal from "./AddLeadModal";
+import AddLeadModal from "./AddLeadModal"
 const LeadsTable = () => {
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState("");
@@ -44,6 +45,8 @@ const LeadsTable = () => {
     loadUserData();
   }, []);
 
+
+
   const fetchLeads = async () => {
     setLoading(true);
     try {
@@ -80,44 +83,38 @@ const LeadsTable = () => {
   };
   const handleUpload = async () => {
     if (!file) {
-      alert("No file selected!");
-      return;
+      alert("No file selected!")
+      return
     }
-
-    const formData = new FormData();
-    console.log("formData", formData);
-
-    formData.append("file", file);
-    formData.append("fileName", fileName);
-    setLoading(true);
+  
+    const formData = new FormData()
+    console.log("formData",formData);
+    
+    formData.append("file", file)
+     formData.append("fileName", fileName);
+     setLoading(true);
     try {
-      const url = `/api/Leads/upload-excel?fileName=${encodeURIComponent(
-        fileName
-      )}`;
+      const url = `/api/Leads/upload-excel?fileName=${encodeURIComponent(fileName)}`;
       const response = await postRequest(url, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-
-      console.log("File uploaded successfully:", response.data);
+  
+      console.log("File uploaded successfully:", response.data)
       // alert("File uploaded successfully!")
       notification.success({
         message: "Success",
         description: "File uploaded successfully!",
       });
-
-      setShowModal(false);
-      setFile(null);
-      fetchLeads();
+  
+      setShowModal(false)
+      setFile(null)
+      fetchLeads()
     } catch (error) {
-      console.error("Error uploading file:", error.response?.data || error);
-      alert(
-        `Failed to upload file: ${
-          error.response?.data?.message || "Unknown error"
-        }`
-      );
+      console.error("Error uploading file:", error.response?.data || error)
+      alert(`Failed to upload file: ${error.response?.data?.message || "Unknown error"}`)
     }
     setLoading(false);
-  };
+    }
 
   const columns = [
     {
@@ -397,12 +394,11 @@ const LeadsTable = () => {
           >
             Delete
           </button>
-          <button
-            className="btn btn-outline-primary"
-            onClick={() => setAddModalVisible(true)}
-          >
-            Add Lead
-          </button>
+          <button className="btn btn-outline-primary"
+       onClick={() => setAddModalVisible(true)}
+      >
+        Add Lead
+      </button>
         </div>
       </div>
 
@@ -472,46 +468,44 @@ const LeadsTable = () => {
     >
     Assign to
     </button> */}
-      <>
-        {loading ? (
-          <Loader />
-        ) : (
-          <Table
-            className="table table-border mt-1"
-            rowSelection={rowSelection}
-            columns={columns}
-            dataSource={leads[activeTab]}
-            rowKey="leadId"
-            scroll={{ x: true }}
-            bordered
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: false,
-            }}
-            onChange={(pagination, filters, sorter) => {
-              console.log("Table params:", pagination, filters, sorter);
-            }}
-            style={{ overflowX: "auto", whiteSpace: "nowrap" }}
-          />
-        )}
-      </>
-
+    {loading ? (
+  <Loader />
+) : (
+    <Table
+        className="table table-border mt-1"
+        rowSelection={rowSelection}
+        columns={columns}
+        dataSource={leads[activeTab]}
+        rowKey="leadId"
+        scroll={{ x: true }}
+        bordered
+        pagination={{
+          pageSize: 10,
+          showSizeChanger: false,
+        }}
+        onChange={(pagination, filters, sorter) => {
+          console.log("Table params:", pagination, filters, sorter);
+        }}
+        style={{ overflowX: "auto", whiteSpace: "nowrap" }}
+      />
+    )}
+    
       <AssignModal
         visible={assignModalVisible}
         onClose={() => setAssignModalVisible(false)}
         selectedRows={selectedLeads}
         onAssign={handleAssign}
       />
-      <AddLeadModal
-        visible={addModalVisible}
-        onClose={() => setAddModalVisible(false)}
-        onSuccess={(newLead) => {
-          setLeads((prev) => ({
-            ...prev,
-            newLeads: [newLead, ...prev.newLeads],
-          }));
-        }}
-      />
+       <AddLeadModal
+  visible={addModalVisible}
+  onClose={() => setAddModalVisible(false)}
+  onSuccess={(newLead) => {
+    setLeads(prev => ({
+      ...prev,
+      newLeads: [newLead, ...prev.newLeads]
+    }));
+  }}
+/>
     </div>
   );
 };

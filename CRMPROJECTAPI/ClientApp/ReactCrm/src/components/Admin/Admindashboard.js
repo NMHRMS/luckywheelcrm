@@ -1,53 +1,37 @@
 import React from "react";
-import { Bar, Line } from "react-chartjs-2";
-import "chart.js/auto";
 
-function Dashboard() {
-  // Dummy data for graphs and totals
-  const totalData = {
-    roles: 20,
-    users: 50,
-    branches: 15,
-    dailySales: 30,
-    positiveLeads: 18,
-    totalCalls: 100,
-    dailyCalls: 40,
-  };
+const cardData = [
+  { title: "Total Assigned", value: 20, bgColor: "#007bff" },
+  { title: "Positive", value: 10, bgColor: "#28a745" },
+  { title: "Negative", value: 4, bgColor: "#dc3545" },
+  { title: "Not Called", value: 4, bgColor: "#ffc107" },
+  { title: "Connected", value: 5, bgColor: "#17a2b8" },
+  { title: "Not Connected", value: 1, bgColor: "#6f42c1" },
+  { title: "Pending", value: 3, bgColor: "#fd7e14" },
+  { title: "Closed", value: 1, bgColor: "#6c757d" },
+];
 
-  // Data for the bar chart
-  const barChartData = {
-    labels: ["Daily Sales", "Positive Leads", "Total Calls", "Daily Calls"],
-    datasets: [
-      {
-        label: "Performance Metrics",
-        data: [
-          totalData.dailySales,
-          totalData.positiveLeads,
-          totalData.totalCalls,
-          totalData.dailyCalls,
-        ],
-        backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
-      },
-    ],
-  };
+const cardStyle = {
+  color: "white",
+  padding: "20px",
+  borderRadius: "8px",
+  textAlign: "center",
+  minHeight: "120px",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+};
 
-  // Data for the line chart
-  const lineChartData = {
-    labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-    datasets: [
-      {
-        label: "Sales Performance",
-        data: [10, 20, 15, 30],
-        fill: true,
-        borderColor: "#36A2EB",
-        backgroundColor: "rgba(54,162,235,0.2)",
-      },
-    ],
-  };
+const containerStyle = {
+  padding: "30px",
+  backgroundColor: "#f8f9fa",
+  minHeight: "100vh",
+};
 
+const AdminDashboard = () => {
   return (
-    <div className="container mt-0">
-       <div className="pagetitle mb-4">
+    <div style={containerStyle}>
+     <div className="pagetitle mb-4">
         <h1>Admin Dashboard</h1>
         <nav>
           <ol className="breadcrumb">
@@ -59,86 +43,18 @@ function Dashboard() {
         </nav>
       </div>
 
-      {/* Display total numbers */}
-      {/* <div className="row text-center mt-4">
-        <div className="col-md-3 mb-3">
-          <div
-            className="p-3 rounded"
-            style={{ backgroundColor: "#FFD700", color: "#000" }}
-          >
-            <h4>Roles</h4>
-            <h2>{totalData.roles}</h2>
+      <div className="row">
+        {cardData.map((card, index) => (
+          <div key={index} className="col-md-3 mb-4">
+            <div style={{ ...cardStyle, backgroundColor: card.bgColor }}>
+              <h5>{card.title}</h5>
+              <h2>{card.value}</h2>
+            </div>
           </div>
-        </div>
-        <div className="col-md-3 mb-3">
-          <div
-            className="p-3 rounded"
-            style={{ backgroundColor: "#20B2AA", color: "#fff" }}
-          >
-            <h4>Users</h4>
-            <h2>{totalData.users}</h2>
-          </div>
-        </div>
-        <div className="col-md-3 mb-3">
-          <div
-            className="p-3 rounded"
-            style={{ backgroundColor: "#FF6347", color: "#fff" }}
-          >
-            <h4>Branches</h4>
-            <h2>{totalData.branches}</h2>
-          </div>
-        </div>
-        <div className="col-md-3 mb-3">
-          <div
-            className="p-3 rounded"
-            style={{ backgroundColor: "#4682B4", color: "#fff" }}
-          >
-            <h4>Daily Sales</h4>
-            <h2>{totalData.dailySales}</h2>
-          </div>
-        </div>
-        <div className="col-md-3 mb-3">
-          <div
-            className="p-3 rounded"
-            style={{ backgroundColor: "#32CD32", color: "#fff" }}
-          >
-            <h4>Positive Leads</h4>
-            <h2>{totalData.positiveLeads}</h2>
-          </div>
-        </div>
-        <div className="col-md-3 mb-3">
-          <div
-            className="p-3 rounded"
-            style={{ backgroundColor: "#8A2BE2", color: "#fff" }}
-          >
-            <h4>Total Calls</h4>
-            <h2>{totalData.totalCalls}</h2>
-          </div>
-        </div>
-        <div className="col-md-3 mb-3">
-          <div
-            className="p-3 rounded"
-            style={{ backgroundColor: "#FF4500", color: "#fff" }}
-          >
-            <h4>Daily Calls</h4>
-            <h2>{totalData.dailyCalls}</h2>
-          </div>
-        </div>
-      </div> */}
-
-      {/* Charts */}
-      <div className="row mt-4">
-        <div className="col-md-6">
-          <h4>Performance Metrics (Bar Chart)</h4>
-          <Bar data={barChartData} />
-        </div>
-        <div className="col-md-6">
-          <h4>Sales Performance (Line Chart)</h4>
-          <Line data={lineChartData} />
-        </div>
+        ))}
       </div>
     </div>
   );
-}
+};
 
-export default Dashboard;
+export default AdminDashboard;

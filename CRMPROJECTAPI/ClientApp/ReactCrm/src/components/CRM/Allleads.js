@@ -125,90 +125,88 @@ function AllLeads() {
   return (
     <div className="container mt-1">
       <h4 className="mb-4">All Leads</h4>
-
-      {/* {/ Bootstrap Tabs /} */}
-      <ul className="nav nav-tabs mb-4">
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === "new" ? "active" : ""}`}
-            onClick={() => setActiveTab("new")}
-          >
-            New Leads ({leads.newLeads.length})
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === "duplicate" ? "active" : ""}`}
-            onClick={() => setActiveTab("duplicate")}
-          >
-            Duplicate Leads ({leads.duplicateLeads.length})
-          </button>
-        </li>
-        <li className="nav-item">
-          <button
-            className={`nav-link ${activeTab === "blocked" ? "active" : ""}`}
-            onClick={() => setActiveTab("blocked")}
-          >
-            Blocked Leads ({leads.blockedLeads.length})
-          </button>
-        </li>
-      </ul>
-
-      {/* {/ Tab Content /} */}
-      <div className="tab-content">
-        <div className={`tab-pane ${activeTab === "new" ? "show active" : ""}`}>
-          <div className="card shadow">
-            <div className="card-body">
-              <Table
-                columns={columns}
-                dataSource={leads.newLeads}
-                rowKey="leadId"
-                pagination={{ pageSize: 10 }}
-                style={{ overflowX: "auto", whiteSpace: "nowrap" }}
-                bordered
-
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className={`tab-pane ${activeTab === "duplicate" ? "show active" : ""}`}>
-          <div className="card shadow mt-3">
-            <div className="card-body">
-              <>
-              {loading ? (
+  
+      {loading ? (
         <Loader />
       ) : (
-              <Table
-                columns={columns}
-                dataSource={leads.duplicateLeads}
-                rowKey="leadId"
-                pagination={{ pageSize: 5 }}
-                style={{ overflowX: "auto", whiteSpace: "nowrap" }}
-
-              />
-            )}
-              </>
-            
+        <>
+          {/* {/ Bootstrap Tabs /} */}
+          <ul className="nav nav-tabs mb-4">
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === "new" ? "active" : ""}`}
+                onClick={() => setActiveTab("new")}
+              >
+                New Leads ({leads.newLeads.length})
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === "duplicate" ? "active" : ""}`}
+                onClick={() => setActiveTab("duplicate")}
+              >
+                Duplicate Leads ({leads.duplicateLeads.length})
+              </button>
+            </li>
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === "blocked" ? "active" : ""}`}
+                onClick={() => setActiveTab("blocked")}
+              >
+                Blocked Leads ({leads.blockedLeads.length})
+              </button>
+            </li>
+          </ul>
+  
+          {/* {/ Tab Content /} */}
+          <div className="tab-content">
+            <div className={`tab-pane ${activeTab === "new" ? "show active" : ""}`}>
+              <div className="card shadow">
+                <div className="card-body">
+                  <Table
+                    columns={columns}
+                    dataSource={leads.newLeads}
+                    rowKey="leadId"
+                    pagination={{ pageSize: 10 }}
+                    style={{ overflowX: "auto", whiteSpace: "nowrap" }}
+                    bordered
+                  />
+                </div>
+              </div>
+            </div>
+  
+            <div className={`tab-pane ${activeTab === "duplicate" ? "show active" : ""}`}>
+              <div className="card shadow mt-3">
+                <div className="card-body">
+                  <Table
+                    columns={columns}
+                    dataSource={leads.duplicateLeads}
+                    rowKey="leadId"
+                    pagination={{ pageSize: 5 }}
+                    style={{ overflowX: "auto", whiteSpace: "nowrap" }}
+                  />
+                </div>
+              </div>
+            </div>
+  
+            <div className={`tab-pane ${activeTab === "blocked" ? "show active" : ""}`}>
+              <div className="card shadow mt-3">
+                <div className="card-body">
+                  <Table
+                    columns={columns}
+                    dataSource={leads.blockedLeads}
+                    rowKey="leadId"
+                    pagination={{ pageSize: 5 }}
+                  />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div className={`tab-pane ${activeTab === "blocked" ? "show active" : ""}`}>
-          <div className="card shadow mt-3">
-            <div className="card-body">
-              <Table
-                columns={columns}
-                dataSource={leads.blockedLeads}
-                rowKey="leadId"
-                pagination={{ pageSize: 5 }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
+  
 }
 
 export default AllLeads;

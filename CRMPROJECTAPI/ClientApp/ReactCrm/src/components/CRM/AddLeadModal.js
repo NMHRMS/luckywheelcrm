@@ -11,6 +11,7 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
     const [products, setProducts] = useState([]);
     const [leadSources, setLeadSources] = useState([]);
     const [Assignedusers, setAssignedusers] = useState([]);
+    const [Districts, setDistricts] = useState([]);
     const [showCategoryModal, setShowCategoryModal] = useState(false);
     const [showProductModal, setShowProductModal] = useState(false);
     const [showSourceModal, setShowSourceModal] = useState(false);
@@ -30,33 +31,71 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
         setUserData(storedData)
       }
       }
+      console.log("Districts",Districts);
+      
       loadUserData()
     }, [])
 
-    useEffect(() => {
-        const loadData = async () => {
-          const storedData = await fetchStoredData();
-          if (storedData) setUserData(storedData);
+    // useEffect(() => {
+    //     const loadData = async () => {
+    //       const storedData = await fetchStoredData();
+    //       if (storedData) setUserData(storedData);
           
-          // Fetch initial data
-          try {
-            const [cats, prods, sources,users] = await Promise.all([
-              getRequest("/api/Categories"),
-              getRequest("/api/Products"),
-              getRequest("/api/LeadSources"),
-              getRequest("/api/Users")
-            ]);
+    //       // Fetch initial data
+    //       try {
+    //         const [cats, prods, sources,users,District] = await Promise.all([
+    //           getRequest("/api/Categories"),
+    //           getRequest("/api/Products"),
+    //           getRequest("/api/LeadSources"),
+    //           getRequest("/api/Users"),
+    //           getRequest(`/api/states/districts/statename/${'Maharashtra'}`)
+    //         ]);
             
-            setCategories(cats.data || []);
-            setProducts(prods.data || []);
-            setLeadSources(sources.data || []);
-            setAssignedusers(users.data || []);
-          } catch (error) {
-            console.error("Error fetching data:", error);
-          }
-        };
-        loadData();
-      }, []);
+    //         setCategories(cats.data || []);
+    //         setProducts(prods.data || []);
+    //         setLeadSources(sources.data || []);
+    //         setAssignedusers(users.data || []);
+    //         setDistricts(District.data || []);
+    //       } catch (error) {
+    //         console.error("Error fetching data:", error);
+    //       }
+    //     };
+    //     loadData();
+    //   }, []);
+
+    useEffect(() => {
+      const loadData = async () => {
+        const storedData = await fetchStoredData();
+        if (storedData) setUserData(storedData);
+    
+        try {
+          const [cats, prods, sources, users, District] = await Promise.all([
+            getRequest("/api/Categories"),
+            getRequest("/api/Products"),
+            getRequest("/api/LeadSources"),
+            getRequest("/api/Users"),
+            getRequest(`/api/states/districts/statename/${'Maharashtra'}`)
+          ]);
+    
+          setCategories(cats.data || []);
+          setProducts(prods.data || []);
+          setLeadSources(sources.data || []);
+    
+          // Filter users with roleId "a8c8ea20-7154-4d78-97ea-a4d5cf217a27"
+          const filteredUsers = (users.data || []).filter(
+            (user) => user.roleId === "a8c8ea20-7154-4d78-97ea-a4d5cf217a27"
+          );
+    
+          setAssignedusers(filteredUsers);
+          setDistricts(District.data || []);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      };
+    
+      loadData();
+    }, []);
+    
 
       const handleAddCategory = async () => {
         try {
@@ -100,40 +139,101 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
         }
       };
 
-  const handleSubmit = async (values) => {
-    console.log("values",values);
+      const handleSubmit = async (values) => {
+        console.log("values", values);
+      
+        try {
+          setLoading(true);
+      
+          const data = {
+            companyId: userData.companyId,
+            leadSourceName: values.ownerName,
+            OwnerName: values.ownerName,
+            MobileNo: values.mobileNo,
+            DistrictName: values.districtName,
+            CurrentAddress: values.currentAddress,
+            currentVehicle: values.currentVehicle,
+            categoryName: values.categoryName,
+            productName: values.productName,
+            assignedToName: values.assignedToName,
+            Status: "Not Called",
+          };
+      
+          console.log("data", data);
+          const response = await postRequest("/api/Leads", data);
+          console.log("response", response);
+      
+          const leadID = response?.data?.leadId || null;
+          const assignedTo = response?.data?.assignedTo || null;
+          const assignedDate=Date.now()
+      
+          if (!leadID || !assignedTo ||assignedDate) {
+            console.error("Missing leadID or assignedTo in response", response);
+            alert("Error: Missing lead assignment details.");
+            return;
+          }
+      
+          const assigndata = {leadID, assignedTo,assignedDate};
+          console.log("assigndata", assigndata);
+      
+          const assignresponse = await postRequest("/api/LeadAssign/assign", assigndata);
+          console.log("assignresponse", assignresponse);
+      
+          onSuccess(response.data);
+          form.resetFields();
+          onClose();
+          alert("Lead added successfully!");
+        } catch (error) {
+          console.error("Error saving lead:", error);
+          alert(`Error: ${error.response?.data?.message || "Failed to save lead"}`);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+
+  // const handleSubmit = async (values) => {
+  //   console.log("values",values);
     
-    try {
-      setLoading(true);
+  //   try {
+  //     setLoading(true);
 
-      const data=
-      {
-        companyId:userData.companyId,
-        leadSourceName:values.ownerName,
-        OwnerName: values.ownerName,
-        MobileNo: values.mobileNo,
-        DistrictName: values.districtName,
-        CurrentAddress: values.currentAddress,
-        currentVehicle: values.currentVehicle,
-        categoryName: values.categoryName,
-        productName: values.productName,
-        assignedToName: values.assignedToName,
-        Status:"Not Called",
-      }
-    //   const response = await postRequest("/api/Leads", );
-console.log("data",data);
+  //     const data=
+  //     {
+  //       companyId:userData.companyId,
+  //       leadSourceName:values.ownerName,
+  //       OwnerName: values.ownerName,
+  //       MobileNo: values.mobileNo,
+  //       DistrictName: values.districtName,
+  //       CurrentAddress: values.currentAddress,
+  //       currentVehicle: values.currentVehicle,
+  //       categoryName: values.categoryName,
+  //       productName: values.productName,
+  //       assignedToName: values.assignedToName,
+  //       Status:"Not Called",
+  //     }
+     
+  //     console.log("data",data);
+  //     const response = await postRequest("/api/Leads",data );
 
-    //   onSuccess(response.data);
-      form.resetFields();
-      onClose();
-      alert("Lead added successfully!");
-    } catch (error) {
-      console.error("Error saving lead:", error);
-      alert(`Error: ${error.response?.data?.message || "Failed to save lead"}`);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     const assigndata={
+  //       leadID:response.leadId,
+  //       assignedTo:response.assignedTo
+  //     }
+  //     console.log("assigndata",assigndata);
+      
+  //     const assignresponse = await postRequest("/api/LeadAssign/assign",assigndata)
+  //     onSuccess(response.data);
+  //     form.resetFields();
+  //     onClose();
+  //     alert("Lead added successfully!");
+  //   } catch (error) {
+  //     console.error("Error saving lead:", error);
+  //     alert(`Error: ${error.response?.data?.message || "Failed to save lead"}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   return (
     <Modal
@@ -171,13 +271,42 @@ console.log("data",data);
           <Input placeholder="Enter mobile number" />
         </Form.Item>
 
-        <Form.Item
+        {/* <Form.Item
           label="District Name"
           name="districtName"
           rules={[{ required: true, message: 'Please input district name!' }]}
         >
           <Input placeholder="Enter district name" />
-        </Form.Item>
+        </Form.Item> */}
+         <Form.Item
+            label="District Name"
+            name="districtName"
+            rules={[{ required: true, message: 'Please select District Name!' }]}
+          >
+            <Select
+              placeholder="Select District Name"
+              dropdownRender={menu => (
+                <>
+                  {menu}
+                  {/* <div style={{ padding: '8px', display: 'flex', gap: '8px' }}>
+                    <Input
+                      value={newSourceName}
+                      onChange={(e) => setNewSourceName(e.target.value)}
+                      placeholder="New source name"
+                    />
+                    <Button onClick={handleAddSource}>+ Add</Button>
+                  </div> */}
+                </>
+              )}
+            >
+              {Districts.map(district => (
+                <Select.Option key={district.districtId} value={district.districtName}>
+                  {district.districtName}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+        
 
         <Form.Item
           label="Current Address"

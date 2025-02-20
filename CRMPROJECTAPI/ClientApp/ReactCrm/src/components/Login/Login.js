@@ -134,9 +134,9 @@ function Login() {
 
               <div className="d-flex justify-content-between">
                 <div></div>
-                <a href="#" className="text-primary text-decoration-none">
+                {/* <a href="#" className="text-primary text-decoration-none">
                   Forgot Password
-                </a>
+                </a> */}
               </div>
 
               <button
@@ -148,12 +148,12 @@ function Login() {
               </button>
             </form>
 
-            <p className="text-center mt-3">
+            {/* <p className="text-center mt-3">
               Not a member yet?{" "}
               <a href="#" className="text-primary text-decoration-none fw-bold">
                 Sign Up
               </a>
-            </p>
+            </p> */}
           </div>
         </div>
       </div>
