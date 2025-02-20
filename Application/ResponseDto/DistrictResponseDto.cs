@@ -10,7 +10,6 @@ namespace Application.ResponseDto
     public class DistrictResponseDto
     {
         public Guid DistrictId { get; set; }
-        public Guid StateId { get; set; }
         public string DistrictName { get; set; }
     }
 }
