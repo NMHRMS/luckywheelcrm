@@ -121,7 +121,6 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(assignedLeads);
         }
 
-
         [HttpGet("filter")]
         public async Task<IActionResult> GetLeadsByAssignment([FromQuery] bool assigned)
         {
@@ -177,7 +176,6 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(leads);
         }
 
-
         [HttpGet("get_leads_dataList")]
         public async Task<IActionResult> GetLeadsDataList()
         {
@@ -191,5 +189,45 @@ namespace CRMPROJECTAPI.Controllers
             var leads = await _leadService.GetDashboardListByUserId(userId, date);
             return Ok(leads);
         }
+
+        [HttpGet("by_followUpDate")]
+        public async Task<IActionResult> GetLeadsByFollowUpDate([FromQuery] DateTime followUpDate)
+        {
+            var leads = await _leadService.GetLeadsByFollowUpDateAsync(followUpDate);
+
+            if (!leads.Any())
+                return NotFound("No leads found for the selected follow-up date.");
+
+            return Ok(leads);
+        }
+
+        [HttpGet("leads_by_followUpDate")]
+        public async Task<IActionResult> GetAssignedLeadsByFollowUpDate(Guid userId, DateTime followUpDate)
+        {
+            var leads = await _leadService.GetAssignedLeadsByFollowUpDateAsync(userId, followUpDate);
+            return Ok(leads);
+        }
+
+        [HttpGet("assigned-leads-by-assigned-daterange")]
+        public async Task<IActionResult> GetAssignedLeadsByAssignedDateRange(Guid userId, DateTime startDate, DateTime endDate)
+        {
+            var leads = await _leadService.GetAssignedLeadsByAssignedDateRangeAsync(userId, startDate, endDate);
+            return Ok(leads);
+        }
+
+        [HttpGet("assigned-leads-by-followup-daterange")]
+        public async Task<IActionResult> GetAssignedLeadsByFollowUpDateRange(Guid userId, DateTime startDate, DateTime endDate)
+        {
+            var leads = await _leadService.GetAssignedLeadsByFollowUpDateRangeAsync(userId, startDate, endDate);
+            return Ok(leads);
+        }
+
+        [HttpGet("leads-by-timeframe")]
+        public async Task<IActionResult> GetLeadsByTimeFrame(Guid userId, string timeframe)
+        {
+            var leads = await _leadService.GetLeadsByTimeFrameAsync(userId, timeframe);
+            return Ok(leads);
+        }
+
     }
 }

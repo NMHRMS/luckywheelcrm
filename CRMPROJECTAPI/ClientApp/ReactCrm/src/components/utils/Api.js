@@ -1,7 +1,9 @@
 import axios from "axios";
 
 const Api = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL || "https://localhost:7258/",
+  baseURL:
+    process.env.EXPO_PUBLIC_API_URL ||
+    "https://crmdemotest-001-site1.anytempurl.com/",
   headers: {
     "Content-Type": "application/json",
   },

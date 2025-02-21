@@ -86,7 +86,6 @@ namespace Application.Services
         {
             var leads = await _context.Leads.ToListAsync();
 
-
             var leadList = await _context.Leads
                 .Include(l => l.District)
                 .Include(l => l.State)
@@ -102,7 +101,7 @@ namespace Application.Services
                 .Select(g => g.First())
                 .Where(l => l.Status != "Blocked")
                 .OrderBy(l => l.CreateDate)
-                .ToList(); 
+                .ToList();
 
             var duplicateLeads = groupedLeads
                 .Where(g => g.Count() > 1)
@@ -129,7 +128,14 @@ namespace Application.Services
 
         public async Task<LeadResponseDto?> GetLeadByIdAsync(Guid id)
         {
-            var lead = await _context.Leads.FindAsync(id);
+            var lead = await _context.Leads
+                .Include(l => l.District)
+                .Include(l => l.State)
+                .Include(l => l.LeadSource)
+                .Include(l => l.Category)
+                .Include(l => l.Product)
+                .Include(l => l.AssignedToUser) 
+                .FirstOrDefaultAsync(l => l.LeadId == id);
             return lead == null ? null : _mapper.Map<LeadResponseDto>(lead);
         }
 
@@ -193,28 +199,36 @@ namespace Application.Services
 
             existingLead.StateId = !string.IsNullOrWhiteSpace(leadDto.StateName) && states.ContainsKey(leadDto.StateName)
                 ? states[leadDto.StateName]
-                : null;
+                : existingLead.StateId;
             existingLead.DistrictId = !string.IsNullOrWhiteSpace(leadDto.DistrictName) && districts.ContainsKey(leadDto.DistrictName)
                 ? districts[leadDto.DistrictName]
-                : null;
+                : existingLead.DistrictId;
             existingLead.LeadSourceId = !string.IsNullOrWhiteSpace(leadDto.LeadSourceName) && leadSources.ContainsKey(leadDto.LeadSourceName)
                 ? leadSources[leadDto.LeadSourceName]
-                : null;
+                : existingLead.LeadSourceId;
             existingLead.CategoryId = !string.IsNullOrWhiteSpace(leadDto.CategoryName) && categories.ContainsKey(leadDto.CategoryName)
                 ? categories[leadDto.CategoryName]
-                : null;
+                : existingLead.CategoryId;
             existingLead.ProductId = !string.IsNullOrWhiteSpace(leadDto.ProductName) && products.ContainsKey(leadDto.ProductName)
                 ? products[leadDto.ProductName]
-                : null;
-            existingLead.AssignedTo = !string.IsNullOrWhiteSpace(leadDto.AssignedToName) && users.ContainsKey(leadDto.AssignedToName)
-                ? users[leadDto.AssignedToName]
-                : null;
+                : existingLead.ProductId;
+
+            if (!string.IsNullOrWhiteSpace(leadDto.AssignedToName) && users.ContainsKey(leadDto.AssignedToName))
+            {
+                existingLead.AssignedTo = users[leadDto.AssignedToName];
+            }
 
             existingLead.UpdateDate = DateTime.UtcNow;
             _context.Leads.Update(existingLead);
             await _context.SaveChangesAsync();
 
-            return _mapper.Map<LeadResponseDto>(existingLead);
+            var response = _mapper.Map<LeadResponseDto>(existingLead);
+
+            response.AssignedToName = existingLead.AssignedTo.HasValue && users.ContainsValue(existingLead.AssignedTo.Value)
+                ? users.FirstOrDefault(x => x.Value == existingLead.AssignedTo.Value).Key
+                : null;
+
+            return response;
         }
 
         public async Task<bool> CheckIfFileExists(string fileName)
@@ -255,12 +269,13 @@ namespace Application.Services
                 var mobileNo = worksheet.Cells[row, 6].Value?.ToString();
                 var currentAddress = worksheet.Cells[row, 7].Value?.ToString();
                 var currentVehicle = worksheet.Cells[row, 8].Value?.ToString();
-                var chasisNo = worksheet.Cells[row, 9].Value?.ToString();
+                var chasisNoStr = worksheet.Cells[row, 9].Value?.ToString();
                 var registrationNo = worksheet.Cells[row, 10].Value?.ToString();
                 var registrationDateStr = worksheet.Cells[row, 11].Value?.ToString();
                 var productName = worksheet.Cells[row, 12].Value?.ToString();
                 var modelName = worksheet.Cells[row, 13].Value?.ToString();
 
+                int? chasisNo = int.TryParse(chasisNoStr, out int parsedChasisNo) ? parsedChasisNo : (int?)null;
                 DateTime? registrationDate = DateTime.TryParse(registrationDateStr, out DateTime regDate) ? regDate : (DateTime?)null;
 
                 var lead = new Lead
@@ -273,10 +288,10 @@ namespace Application.Services
                     DistrictId = districts.ContainsKey(districtName) ? districts[districtName] : null,
                     CurrentAddress = currentAddress ?? "N/A",
                     CurrentVehicle = currentVehicle ?? "None",
-                    ChasisNo = null,
+                    ChasisNo = chasisNo ?? null,
                     RegistrationNo = registrationNo ?? null,
                     RegistrationDate = registrationDate ?? null,
-                    ModelName = modelName,
+                    ModelName = modelName ?? null,
                     ProductId = products.ContainsKey(productName) ? products[productName] : null,
                     LeadType = "N/A",
                     Status = "Not Called",
@@ -342,8 +357,29 @@ namespace Application.Services
         public async Task<IEnumerable<LeadResponseDto>> GetLeadsByAssignmentAsync(bool assigned)
         {
             var leads = await _context.Leads
+                .Include(l => l.District)
+                .Include(l => l.State)
+                .Include(l => l.LeadSource)
+                .Include(l => l.Category)
+                .Include(l => l.Product)
+                .Include(l => l.AssignedToUser)
                 .Where(l => assigned ? l.AssignedTo != null : l.AssignedTo == null)
                 .ToListAsync();
+            return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
+        }
+
+        public async Task<IEnumerable<LeadResponseDto>> GetAssignedLeadsAsync(Guid userId)
+        {
+            var leads = await _context.Leads
+                .Include(l => l.District)
+                .Include(l => l.State)
+                .Include(l => l.LeadSource)
+                .Include(l => l.Category)
+                .Include(l => l.Product)
+                .Include(l => l.AssignedToUser)
+                .Where(lt => lt.AssignedTo == userId)
+                .ToListAsync();
+
             return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
         }
 
@@ -367,19 +403,16 @@ namespace Application.Services
             return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
         }
 
-        public async Task<IEnumerable<LeadResponseDto>> GetAssignedLeadsAsync(Guid userId)
-        {
-            var leads = await _context.Leads
-                .Where(lt => lt.AssignedTo == userId)
-                .ToListAsync();
-
-            return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
-        }
-    
         public async Task<IEnumerable<LeadResponseDto>> GetTodaysAssignedLeadsAsync(Guid userId)
         {
             var today = DateTime.UtcNow.Date;
             var leads = await _context.Leads
+                .Include(l => l.District)
+                .Include(l => l.State)
+                .Include(l => l.LeadSource)
+                .Include(l => l.Category)
+                .Include(l => l.Product)
+                .Include(l => l.AssignedToUser)
                 .Where(l => l.AssignedTo == userId && l.AssignedDate.HasValue && l.AssignedDate.Value.Date == today)
                 .ToListAsync();
             return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
@@ -397,14 +430,21 @@ namespace Application.Services
 
         public async Task<DashboardLeadResponseDto> GetDashboardLeads()
         {
-            var leadList = _context.Leads.ToList();
+            var leadList = _context.Leads
+                .Include(l => l.District)
+                .Include(l => l.State)
+                .Include(l => l.LeadSource)
+                .Include(l => l.Category)
+                .Include(l => l.Product)
+                .Include(l => l.AssignedToUser)
+                .ToList();
             int totalLeads = leadList.Count;
             return new DashboardLeadResponseDto
             {
-                leads = leadList,
+                leads = _mapper.Map<IEnumerable<LeadResponseDto>>(leadList),
                 totalLeadsCount = totalLeads
             };
-        }
+        } 
 
         public async Task<UserLeadsStatusResponseDto> GetDashboardLeads(Guid userId)
         {
@@ -505,12 +545,48 @@ namespace Application.Services
             return responseList;
         }
 
+        public async Task<IEnumerable<LeadResponseDto>> GetLeadsByFollowUpDateAsync(DateTime followUpDate)
+        {
+            var leads = await _context.Leads
+                .Include(l => l.District)
+                .Include(l => l.State)
+                .Include(l => l.LeadSource)
+                .Include(l => l.Category)
+                .Include(l => l.Product)
+                .Include(l => l.AssignedToUser)
+                .Where(l => l.FollowUpDate.HasValue && l.FollowUpDate.Value.Date == followUpDate.Date)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
+        }
+
         public async Task<IEnumerable<LeadResponseDto>> GetTodaysFollowUpLeadsAsync(Guid userId)
         {
             var today = DateTime.UtcNow.Date;
             var leads = await _context.Leads
+                .Include(l => l.District)
+                .Include(l => l.State)
+                .Include(l => l.LeadSource)
+                .Include(l => l.Category)
+                .Include(l => l.Product)
+                .Include(l => l.AssignedToUser)
                 .Where(l => l.AssignedTo == userId && l.FollowUpDate.HasValue && l.FollowUpDate.Value.Date == today)
                 .ToListAsync();
+            return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
+        }
+
+        public async Task<IEnumerable<LeadResponseDto>> GetAssignedLeadsByFollowUpDateAsync(Guid userId, DateTime followUpDate)
+        {
+            var leads = await _context.Leads
+                .Include(l => l.District)
+                .Include(l => l.State)
+                .Include(l => l.LeadSource)
+                .Include(l => l.Category)
+                .Include(l => l.Product)
+                .Include(l => l.AssignedToUser)
+                .Where(l => l.AssignedTo == userId && l.FollowUpDate.Value.Date == followUpDate.Date) 
+                .ToListAsync();
+
             return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
         }
 
@@ -531,5 +607,70 @@ namespace Application.Services
             };
         }
 
+        public async Task<IEnumerable<LeadResponseDto>> GetAssignedLeadsByAssignedDateRangeAsync(Guid userId, DateTime startDate, DateTime endDate)
+        {
+            var leads = await _context.Leads
+                .Include(l => l.District)
+                .Include(l => l.State)
+                .Include(l => l.LeadSource)
+                .Include(l => l.Category)
+                .Include(l => l.Product)
+                .Include(l => l.AssignedToUser)
+                .Where(l => l.AssignedTo == userId && l.AssignedDate.Value.Date >= startDate.Date && l.AssignedDate.Value.Date <= endDate.Date)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
+        }
+
+        public async Task<IEnumerable<LeadResponseDto>> GetAssignedLeadsByFollowUpDateRangeAsync(Guid userId, DateTime startDate, DateTime endDate)
+        {
+            var leads = await _context.Leads
+                .Include(l => l.District)
+                .Include(l => l.State)
+                .Include(l => l.LeadSource)
+                .Include(l => l.Category)
+                .Include(l => l.Product)
+                .Include(l => l.AssignedToUser)
+                .Where(l => l.AssignedTo == userId && l.FollowUpDate.Value.Date >= startDate.Date && l.FollowUpDate.Value.Date <= endDate.Date)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
+        }
+
+        public async Task<IEnumerable<LeadResponseDto>> GetLeadsByTimeFrameAsync(Guid userId, string timeframe)
+        {
+            DateTime startDate = DateTime.UtcNow.Date;
+            DateTime endDate = DateTime.UtcNow.Date;
+
+            switch (timeframe.ToLower())
+            {
+                case "day":
+                    // Today’s leads
+                    break;
+                case "week":
+                    startDate = startDate.AddDays(-7); // Last 7 days
+                    break;
+                case "month":
+                    startDate = startDate.AddMonths(-1); // Last 30 days
+                    break;
+                case "year":
+                    startDate = startDate.AddYears(-1); // Last year
+                    break;
+                default:
+                    throw new ArgumentException("Invalid timeframe. Use 'day', 'week', 'month', or 'year'.");
+            }
+
+            var leads = await _context.Leads
+                .Include(l => l.District)
+                .Include(l => l.State)
+                .Include(l => l.LeadSource)
+                .Include(l => l.Category)
+                .Include(l => l.Product)
+                .Include(l => l.AssignedToUser)
+                .Where(l => l.AssignedTo == userId && l.AssignedDate.Value.Date >= startDate && l.AssignedDate.Value.Date <= endDate)
+                .ToListAsync();
+
+            return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
+        }
     }
 }

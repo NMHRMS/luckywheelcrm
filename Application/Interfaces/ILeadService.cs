@@ -25,5 +25,10 @@ namespace Application.Interfaces
         Task<List<LeadListResponseDto>> GetLeadsDataList();
         Task<GetDashboardStatusRespDto> GetDashboardListByUserId(Guid userId, DateTime date);
         Task<IEnumerable<LeadResponseDto>> GetTodaysFollowUpLeadsAsync(Guid userId);
+        Task<IEnumerable<LeadResponseDto>> GetLeadsByFollowUpDateAsync(DateTime followUpDate);
+        Task<IEnumerable<LeadResponseDto>> GetAssignedLeadsByFollowUpDateAsync(Guid userId, DateTime followUpDate);
+        Task<IEnumerable<LeadResponseDto>> GetAssignedLeadsByAssignedDateRangeAsync(Guid userId, DateTime startDate, DateTime endDate);
+        Task<IEnumerable<LeadResponseDto>> GetAssignedLeadsByFollowUpDateRangeAsync(Guid userId, DateTime startDate, DateTime endDate);
+        Task<IEnumerable<LeadResponseDto>> GetLeadsByTimeFrameAsync(Guid userId, string timeframe);
     }
 }
