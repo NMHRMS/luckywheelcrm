@@ -124,7 +124,7 @@ public class LeadsAssignService : ILeadAssignService
         return _mapper.Map<IEnumerable<LeadResponseDto>>(revertedLeads);
     }
 
-    public async Task<IEnumerable<LeadTrackingResponseDto>> GetClosedLeadsAsync()
+    public async Task<IEnumerable<ClosedLeadResponseDto>> GetClosedLeadsAsync()
     {
         var closedLeads = await _context.Leads
             .Where(l => l.Status == "Closed")
@@ -156,19 +156,33 @@ public class LeadsAssignService : ILeadAssignService
             dto.LeadStatus = "Closed";
         }
 
-        for (int i = 0; i < responseDtos.Count(); i++)
-        {
-            var currentRecord = responseDtos.ElementAt(i);
-            DateTime assignedDate = currentRecord.AssignedDate;
-            DateTime nextAssignedDate = (i > 0) ? responseDtos.ElementAt(i - 1).AssignedDate : DateTime.UtcNow;
+        var groupedLeadTrackings = responseDtos
+            .GroupBy(dto => dto.LeadId)
+            .Select(group =>
+            {
+                var leadTrackings = group.OrderByDescending(g => g.AssignedDate).ToList();
 
-            TimeSpan duration = nextAssignedDate - assignedDate;
+                for (int i = 0; i < responseDtos.Count(); i++)
+                {
+                    var currentRecord = responseDtos.ElementAt(i);
+                    DateTime assignedDate = currentRecord.AssignedDate;
+                    DateTime nextAssignedDate = (i > 0) ? responseDtos.ElementAt(i - 1).AssignedDate : DateTime.UtcNow;
 
-            currentRecord.LeadDuration = $"{(int)duration.TotalMinutes} minutes";
-            currentRecord.LeadDurationFormatted = $"{(int)duration.TotalDays} days {duration.Hours} hours";
-        }
+                    TimeSpan duration = nextAssignedDate - assignedDate;
 
-        return responseDtos;
+                    currentRecord.LeadDuration = $"{(int)duration.TotalMinutes} minutes";
+                    currentRecord.LeadDurationFormatted = $"{(int)duration.TotalDays} days {duration.Hours} hours";
+                }
+                return new ClosedLeadResponseDto
+                {
+                    LeadId = group.Key,
+                    LeadTrackingRecords = leadTrackings
+                };
+            })
+            .ToList();
+
+        return groupedLeadTrackings;
+
     }
 
     public async Task<IEnumerable<LeadTrackingResponseDto>> GetLeadHistoryAsync(Guid leadId)
@@ -215,4 +229,4 @@ public class LeadsAssignService : ILeadAssignService
         }
         return responseDtos;
     }
-}
+}   

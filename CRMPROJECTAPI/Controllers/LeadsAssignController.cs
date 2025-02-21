@@ -63,8 +63,9 @@ namespace CRMPROJECTAPI.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-        [HttpGet("rejected-leads")]
-        public async Task<IActionResult> GetRejectedLeadsForCRM()
+
+        [HttpGet("reverted-leads")]
+        public async Task<IActionResult> GetRevertedLeads()
         {
             var revertedLeads = await _leadAssignService.GetRevertedLeadsAsync();
             return Ok(revertedLeads);

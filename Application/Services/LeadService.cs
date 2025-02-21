@@ -213,9 +213,40 @@ namespace Application.Services
                 ? products[leadDto.ProductName]
                 : existingLead.ProductId;
 
+            var assignedByUserId = _jwtTokenService.GetUserIdFromToken();
+
+            // Handle Lead Assignment with Permission Check
             if (!string.IsNullOrWhiteSpace(leadDto.AssignedToName) && users.ContainsKey(leadDto.AssignedToName))
             {
-                existingLead.AssignedTo = users[leadDto.AssignedToName];
+                var newAssignedTo = users[leadDto.AssignedToName];
+
+                if (existingLead.AssignedTo != newAssignedTo) // Lead is being reassigned
+                {
+                    var assignerUser = await _context.Users
+                        .Include(u => u.AssignedUsers)
+                        .FirstOrDefaultAsync(u => u.UserId == assignedByUserId);
+
+                    bool hasPermission = assignerUser?.AssignedUsers
+                        .Any(u => u.UserId == newAssignedTo) ?? false;
+
+                    if (!hasPermission)
+                    {
+                        throw new UnauthorizedAccessException("You do not have permission to assign this lead.");
+                    }
+
+                    existingLead.AssignedTo = newAssignedTo;
+                    existingLead.AssignedDate = DateTime.UtcNow;
+
+                    // Add an entry in the LeadTracking table
+                    var leadTracking = new LeadTracking
+                    {
+                        LeadId = existingLead.LeadId,
+                        AssignedTo = newAssignedTo,
+                        AssignedBy = (Guid)assignedByUserId,
+                        AssignedDate = DateTime.UtcNow
+                    };
+                    await _context.LeadsTracking.AddAsync(leadTracking);
+                }
             }
 
             existingLead.UpdateDate = DateTime.UtcNow;
@@ -224,12 +255,64 @@ namespace Application.Services
 
             var response = _mapper.Map<LeadResponseDto>(existingLead);
 
+            // Ensure AssignedToName is included in the response
             response.AssignedToName = existingLead.AssignedTo.HasValue && users.ContainsValue(existingLead.AssignedTo.Value)
                 ? users.FirstOrDefault(x => x.Value == existingLead.AssignedTo.Value).Key
                 : null;
 
             return response;
         }
+
+        //public async Task<LeadResponseDto?> UpdateLeadAsync(Guid id, LeadDto leadDto)
+        //{
+        //    var existingLead = await _context.Leads.FindAsync(id);
+        //    if (existingLead == null) return null;
+
+        //    var states = await _context.States.ToDictionaryAsync(s => s.StateName, s => s.StateId);
+        //    var districts = await _context.Districts.ToDictionaryAsync(d => d.DistrictName, d => d.DistrictId);
+        //    var leadSources = await _context.LeadSources.ToDictionaryAsync(ls => ls.SourceName, ls => ls.SourceId);
+        //    var categories = await _context.Categories.ToDictionaryAsync(c => c.CategoryName, c => c.CategoryId);
+        //    var products = await _context.Products.ToDictionaryAsync(p => p.ProductName, p => p.ProductId);
+
+        //    var users = await _context.Users
+        //        .Select(u => new { FullName = (u.FirstName ?? "") + " " + (u.LastName ?? ""), u.UserId })
+        //        .ToDictionaryAsync(u => u.FullName.Trim(), u => u.UserId);
+
+        //    _mapper.Map(leadDto, existingLead);
+
+        //    existingLead.StateId = !string.IsNullOrWhiteSpace(leadDto.StateName) && states.ContainsKey(leadDto.StateName)
+        //        ? states[leadDto.StateName]
+        //        : existingLead.StateId;
+        //    existingLead.DistrictId = !string.IsNullOrWhiteSpace(leadDto.DistrictName) && districts.ContainsKey(leadDto.DistrictName)
+        //        ? districts[leadDto.DistrictName]
+        //        : existingLead.DistrictId;
+        //    existingLead.LeadSourceId = !string.IsNullOrWhiteSpace(leadDto.LeadSourceName) && leadSources.ContainsKey(leadDto.LeadSourceName)
+        //        ? leadSources[leadDto.LeadSourceName]
+        //        : existingLead.LeadSourceId;
+        //    existingLead.CategoryId = !string.IsNullOrWhiteSpace(leadDto.CategoryName) && categories.ContainsKey(leadDto.CategoryName)
+        //        ? categories[leadDto.CategoryName]
+        //        : existingLead.CategoryId;
+        //    existingLead.ProductId = !string.IsNullOrWhiteSpace(leadDto.ProductName) && products.ContainsKey(leadDto.ProductName)
+        //        ? products[leadDto.ProductName]
+        //        : existingLead.ProductId;
+
+        //    if (!string.IsNullOrWhiteSpace(leadDto.AssignedToName) && users.ContainsKey(leadDto.AssignedToName))
+        //    {
+        //        existingLead.AssignedTo = users[leadDto.AssignedToName];
+        //    }
+
+        //    existingLead.UpdateDate = DateTime.UtcNow;
+        //    _context.Leads.Update(existingLead);
+        //    await _context.SaveChangesAsync();
+
+        //    var response = _mapper.Map<LeadResponseDto>(existingLead);
+
+        //    response.AssignedToName = existingLead.AssignedTo.HasValue && users.ContainsValue(existingLead.AssignedTo.Value)
+        //        ? users.FirstOrDefault(x => x.Value == existingLead.AssignedTo.Value).Key
+        //        : null;
+
+        //    return response;
+        //}
 
         public async Task<bool> CheckIfFileExists(string fileName)
         {

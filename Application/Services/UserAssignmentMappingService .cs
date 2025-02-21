@@ -25,7 +25,6 @@ public class UserAssignmentMappingService : IUserAssignmentMappingService
             throw new Exception("Assigner not found.");
         }
 
-        // Filter out already assigned users
         var newAssignees = await _context.Users
             .Where(u => mappingDto.AssigneeUserIds.Contains(u.UserId) && !assigner.AssignedUsers.Contains(u))
             .ToListAsync();
@@ -55,4 +54,48 @@ public class UserAssignmentMappingService : IUserAssignmentMappingService
             .Where(u => u.UserId == assignerUserId)
             .AnyAsync(u => u.AssignedUsers.Any(a => a.UserId == assigneeUserId));
     }
+
+    public async Task UpdateUserAssignmentMappingAsync(UserAssignmentMappingDto mappingDto)
+    {
+        var assigner = await _context.Users
+            .Include(u => u.AssignedUsers)
+            .FirstOrDefaultAsync(u => u.UserId == mappingDto.AssignerUserId);
+
+        if (assigner == null)
+        {
+            throw new Exception("Assigner not found.");
+        }
+
+        // Remove existing assignments
+        assigner.AssignedUsers.Clear();
+        await _context.SaveChangesAsync();
+
+        // Add new assignments
+        var newAssignees = await _context.Users
+            .Where(u => mappingDto.AssigneeUserIds.Contains(u.UserId))
+            .ToListAsync();
+
+        if (newAssignees.Any())
+        {
+            assigner.AssignedUsers.AddRange(newAssignees);
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task DeleteUserAssignmentMappingAsync(Guid assignerUserId)
+    {
+        var assigner = await _context.Users
+            .Include(u => u.AssignedUsers)
+            .FirstOrDefaultAsync(u => u.UserId == assignerUserId);
+
+        if (assigner == null)
+        {
+            throw new Exception("Assigner not found.");
+        }
+
+        // Remove all assigned users
+        assigner.AssignedUsers.Clear();
+        await _context.SaveChangesAsync();
+    }
+
 }
