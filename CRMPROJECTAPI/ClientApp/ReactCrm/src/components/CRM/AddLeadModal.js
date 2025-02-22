@@ -17,6 +17,7 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
     const [showSourceModal, setShowSourceModal] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
     const [newProductName, setNewProductName] = useState('');
+    
     const [newSourceName, setNewSourceName] = useState('');
   const [userData, setUserData] = useState({
     branchId: "",
@@ -36,33 +37,6 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
       loadUserData()
     }, [])
 
-    // useEffect(() => {
-    //     const loadData = async () => {
-    //       const storedData = await fetchStoredData();
-    //       if (storedData) setUserData(storedData);
-          
-    //       // Fetch initial data
-    //       try {
-    //         const [cats, prods, sources,users,District] = await Promise.all([
-    //           getRequest("/api/Categories"),
-    //           getRequest("/api/Products"),
-    //           getRequest("/api/LeadSources"),
-    //           getRequest("/api/Users"),
-    //           getRequest(`/api/states/districts/statename/${'Maharashtra'}`)
-    //         ]);
-            
-    //         setCategories(cats.data || []);
-    //         setProducts(prods.data || []);
-    //         setLeadSources(sources.data || []);
-    //         setAssignedusers(users.data || []);
-    //         setDistricts(District.data || []);
-    //       } catch (error) {
-    //         console.error("Error fetching data:", error);
-    //       }
-    //     };
-    //     loadData();
-    //   }, []);
-
     useEffect(() => {
       const loadData = async () => {
         const storedData = await fetchStoredData();
@@ -76,28 +50,28 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
             getRequest("/api/Users"),
             getRequest(`/api/states/districts/statename/${'Maharashtra'}`)
           ]);
-    
           setCategories(cats.data || []);
           setProducts(prods.data || []);
           setLeadSources(sources.data || []);
-    
           // Filter users with roleId "a8c8ea20-7154-4d78-97ea-a4d5cf217a27"
           const filteredUsers = (users.data || []).filter(
             (user) => user.roleId === "a8c8ea20-7154-4d78-97ea-a4d5cf217a27"
           );
-    
           setAssignedusers(filteredUsers);
           setDistricts(District.data || []);
         } catch (error) {
           console.error("Error fetching data:", error);
         }
       };
-    
       loadData();
     }, []);
     
 
       const handleAddCategory = async () => {
+        if (!newCategoryName.trim()) {
+          alert("Source name cannot be empty!");
+          return;
+        }
         try {
           const response = await postRequest("/api/Categories", {
             companyId: userData.companyId,
@@ -112,6 +86,10 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
       };
     
       const handleAddProduct = async () => {
+        if (!newProductName.trim()) {
+          alert("Source name cannot be empty!");
+          return;
+        }
         try {
           const response = await postRequest("/api/Products", {
             companyId: userData.companyId,
@@ -126,6 +104,10 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
       };
     
       const handleAddSource = async () => {
+        if (!newSourceName.trim()) {
+          alert("Source name cannot be empty!");
+          return;
+        }
         try {
           const response = await postRequest("/api/LeadSources", {
             companyId: userData.companyId,
@@ -156,6 +138,7 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
             categoryName: values.categoryName,
             productName: values.productName,
             assignedToName: values.assignedToName,
+            excelName:'Walking',
             Status: "Not Called",
           };
       
@@ -165,17 +148,18 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
       
           const leadID = response?.data?.leadId || null;
           const assignedTo = response?.data?.assignedTo || null;
-          const assignedDate=Date.now()
+          const assignedBy=userData.userId;
+          const assignedDate=new Date().toISOString()
       
-          if (!leadID || !assignedTo ||assignedDate) {
-            console.error("Missing leadID or assignedTo in response", response);
-            alert("Error: Missing lead assignment details.");
-            return;
-          }
-      
-          const assigndata = {leadID, assignedTo,assignedDate};
+          // if (!leadID || !assignedTo ||assignedDate) {
+          //   console.error("Missing leadID or assignedTo in response", response);
+          //   alert("Error: Missing lead assignment details.");
+          //   return;
+          // }
+         
+          
+          const assigndata = {leadID, assignedTo,assignedDate,assignedBy};
           console.log("assigndata", assigndata);
-      
           const assignresponse = await postRequest("/api/LeadAssign/assign", assigndata);
           console.log("assignresponse", assignresponse);
       
@@ -190,51 +174,6 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
           setLoading(false);
         }
       };
-      
-
-  // const handleSubmit = async (values) => {
-  //   console.log("values",values);
-    
-  //   try {
-  //     setLoading(true);
-
-  //     const data=
-  //     {
-  //       companyId:userData.companyId,
-  //       leadSourceName:values.ownerName,
-  //       OwnerName: values.ownerName,
-  //       MobileNo: values.mobileNo,
-  //       DistrictName: values.districtName,
-  //       CurrentAddress: values.currentAddress,
-  //       currentVehicle: values.currentVehicle,
-  //       categoryName: values.categoryName,
-  //       productName: values.productName,
-  //       assignedToName: values.assignedToName,
-  //       Status:"Not Called",
-  //     }
-     
-  //     console.log("data",data);
-  //     const response = await postRequest("/api/Leads",data );
-
-  //     const assigndata={
-  //       leadID:response.leadId,
-  //       assignedTo:response.assignedTo
-  //     }
-  //     console.log("assigndata",assigndata);
-      
-  //     const assignresponse = await postRequest("/api/LeadAssign/assign",assigndata)
-  //     onSuccess(response.data);
-  //     form.resetFields();
-  //     onClose();
-  //     alert("Lead added successfully!");
-  //   } catch (error) {
-  //     console.error("Error saving lead:", error);
-  //     alert(`Error: ${error.response?.data?.message || "Failed to save lead"}`);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   return (
     <Modal
       title="Add New Lead"
@@ -330,6 +269,7 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
             rules={[{ required: true, message: 'Please select category!' }]}
           >
             <Select
+            showSearch
               placeholder="Select Category"
               dropdownRender={menu => (
                 <>
@@ -359,6 +299,7 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
             rules={[{ required: true, message: 'Please select product!' }]}
           >
             <Select
+            showSearch
               placeholder="Select Product"
               dropdownRender={menu => (
                 <>
@@ -382,33 +323,39 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
             </Select>
           </Form.Item>
           <Form.Item
-            label="Lead Source"
-            name="leadSourceName"
-            rules={[{ required: true, message: 'Please select lead source!' }]}
-          >
-            <Select
-              placeholder="Select Lead Source"
-              dropdownRender={menu => (
-                <>
-                  {menu}
-                  <div style={{ padding: '8px', display: 'flex', gap: '8px' }}>
-                    <Input
-                      value={newSourceName}
-                      onChange={(e) => setNewSourceName(e.target.value)}
-                      placeholder="New source name"
-                    />
-                    <Button onClick={handleAddSource}>+ Add</Button>
-                  </div>
-                </>
-              )}
-            >
-              {leadSources.map(source => (
-                <Select.Option key={source.sourceId} value={source.sourceName}>
-                  {source.sourceName}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+  label="Lead Source"
+  name="leadSourceName"
+  rules={[{ required: true, message: "Please select a lead source!" }]}
+>
+  <Select
+    showSearch
+    placeholder="Select Lead Source"
+    optionFilterProp="children"
+    filterOption={(input, option) =>
+      option.children.toLowerCase().includes(input.toLowerCase())
+    }
+    dropdownRender={(menu) => (
+      <>
+        {menu}
+        <div style={{ padding: "8px", display: "flex", gap: "8px" }}>
+          <Input
+            value={newSourceName}
+            onChange={(e) => setNewSourceName(e.target.value)}
+            placeholder="New source name"
+          />
+          <Button onClick={handleAddSource}>+ Add</Button>
+        </div>
+      </>
+    )}
+  >
+    {leadSources.map((source) => (
+      <Select.Option key={source.sourceId} value={source.sourceName}>
+        {source.sourceName}
+      </Select.Option>
+    ))}
+  </Select>
+</Form.Item>
+
 
         <Form.Item
           label="assignedTo Name"

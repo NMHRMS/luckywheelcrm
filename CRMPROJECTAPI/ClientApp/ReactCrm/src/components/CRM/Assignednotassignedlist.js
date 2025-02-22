@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { Table,notification } from 'antd';
+import React, { useState, useEffect } from "react";
+import { Table, notification } from "antd";
 import { getRequest, postRequest } from "../utils/Api";
-import AssignModal from './AssignModal';
+import AssignModal from "./AssignModal";
 import { fetchStoredData } from "../utils/UserDataUtils";
-import LeadtrackModal from './LeadtrackModal';
+import LeadtrackModal from "./LeadtrackModal";
 import Loader from "../utils/Loader";
 
 function AssignedNotAssignedList() {
-  const [activeTab, setActiveTab] = useState('assigned');
-  const [leads, setLeads] = useState({ 
-    assigned: [], 
-    notAssigned: [] 
+  const [activeTab, setActiveTab] = useState("assigned");
+  const [leads, setLeads] = useState({
+    assigned: [],
+    notAssigned: [],
   });
   const [selectedLead, setSelectedLead] = useState(null);
   const [history, setHistory] = useState([]);
@@ -19,54 +19,57 @@ function AssignedNotAssignedList() {
   const [selectedLeads, setSelectedLeads] = useState([]);
   const [assignModalVisible, setAssignModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [userData, setUserData] = useState({ 
-    userId: '', 
-    companyId: '', 
-    branchId: '' 
+  const [userData, setUserData] = useState({
+    userId: "",
+    companyId: "",
+    branchId: "",
   });
 
   // Fetch initial data
   useEffect(() => {
     const fetchInitialData = async () => {
-      setLoading(true)
+      setLoading(true);
       try {
         const storedData = await fetchStoredData();
         if (storedData) setUserData(storedData);
-        
+
         const [assignedRes, notAssignedRes] = await Promise.all([
           getRequest("/api/Leads/filter?assigned=true"),
-          getRequest("/api/Leads/filter?assigned=false")
+          getRequest("/api/Leads/filter?assigned=false"),
         ]);
 
         setLeads({
           assigned: Array.isArray(assignedRes?.data) ? assignedRes.data : [],
-          notAssigned: Array.isArray(notAssignedRes?.data) ? notAssignedRes.data : []
+          notAssigned: Array.isArray(notAssignedRes?.data)
+            ? notAssignedRes.data
+            : [],
         });
       } catch (error) {
         console.error("Initial data fetch error:", error);
       }
     };
     fetchInitialData();
-    setLoading(false)
+    setLoading(false);
   }, []);
 
   // Table columns configuration
   const assignedColumns = [
-    { 
-      title: 'Owner', 
-      dataIndex: 'ownerName', 
-      key: 'ownerName',
-      render: (text) => text || 'N/A',
+    {
+      title: "Owner",
+      dataIndex: "ownerName",
+      key: "ownerName",
+      render: (text) => text || "N/A",
       sorter: (a, b) => a.ownerName.localeCompare(b.ownerName),
-      filters: [...new Set(leads.assigned.map((lead) => lead.ownerName))].map((ownerName) => ({
-        text: ownerName,
-        value: ownerName,
-      })),
-      
+      filters: [...new Set(leads.assigned.map((lead) => lead.ownerName))].map(
+        (ownerName) => ({
+          text: ownerName,
+          value: ownerName,
+        })
+      ),
+
       onFilter: (value, record) => record.ownerName.includes(value),
-      filterSearch:true,
-      filterMode: "tree", 
-      
+      filterSearch: true,
+      filterMode: "tree",
     },
     {
       title: "District Name",
@@ -103,12 +106,12 @@ function AssignedNotAssignedList() {
       dataIndex: "fatherName",
       key: "fatherName",
       sorter: (a, b) => a.fatherName.localeCompare(b.fatherName),
-      filters: [
-        ...new Set(leads.assigned.map((lead) => lead.fatherName)),
-      ].map((fatherName) => ({
-        text: fatherName,
-        value: fatherName,
-      })),
+      filters: [...new Set(leads.assigned.map((lead) => lead.fatherName))].map(
+        (fatherName) => ({
+          text: fatherName,
+          value: fatherName,
+        })
+      ),
       onFilter: (value, record) => record.fatherName.indexOf(value) === 0,
       filterSearch: true,
       filterMode: "tree",
@@ -117,14 +120,16 @@ function AssignedNotAssignedList() {
       title: "Current Address",
       dataIndex: "currentAddress",
       key: "currentAddress",
-      filters: [...new Set(leads.assigned.map((lead) => lead.currentAddress))].map((currentAddress) => ({
+      filters: [
+        ...new Set(leads.assigned.map((lead) => lead.currentAddress)),
+      ].map((currentAddress) => ({
         text: currentAddress,
         value: currentAddress,
       })),
-      
+
       onFilter: (value, record) => record.currentAddress.includes(value),
-      filterSearch:true,
-      filterMode: "tree", 
+      filterSearch: true,
+      filterMode: "tree",
     },
     {
       title: "Mobile No.",
@@ -141,74 +146,74 @@ function AssignedNotAssignedList() {
       filterSearch: true,
       filterMode: "tree",
     },
-    
-    { 
-      title: 'Mobile', 
-      dataIndex: 'mobileNo', 
-      key: 'mobileNo',
-      render: (text) => text === 'N/A' ? 'Not Available' : text,
-      sorter: (a, b) => a.mobileNo.localeCompare(b.mobileNo),
-      filters: [...new Set(leads.assigned.map((lead) => lead.mobileNo))].map((mobileNo) => ({
-        text: mobileNo,
-        value: mobileNo,
-      })),
-      
-      onFilter: (value, record) => record.mobileNo.includes(value),
-      filterSearch:true,
-      filterMode: "tree", 
-      
 
-    },
-    { 
-      title: 'Assigned To', 
-      dataIndex: 'assignedToName', 
-      key: 'assignedToName',
-      render: (text) => text || 'Not Assigned',
+    // {
+    //   title: 'chasis No',
+    //   dataIndex: 'chasisNo',
+    //   key: 'chasisNo',
+    //   render: (text) => text === 'N/A' ? 'Not Available' : text,
+    //   sorter: (a, b) => a.chasisNo.localeCompare(b.chasisNo),
+    //   filters: [...new Set(leads.assigned.map((lead) => lead.chasisNo))].map((chasisNo) => ({
+    //     text: chasisNo,
+    //     value: chasisNo,
+    //   })),
+
+    //   onFilter: (value, record) => record.chasisNo.includes(value),
+    //   filterSearch:true,
+    //   filterMode: "tree",
+    // },
+    {
+      title: "Assigned To",
+      dataIndex: "assignedToName",
+      key: "assignedToName",
+      render: (text) => text || "Not Assigned",
       sorter: (a, b) => a.ownerName.localeCompare(b.ownerName),
       // filters: [...new Set(leads.assigned.map((lead) => lead.assignedToName))].map((name) => ({
       //   text: name,
       //   value: name,
       // })),
-      
+
       // onFilter: (value, record) => record.assignedToName.includes(value),
-      filterSearch:true,
+      filterSearch: true,
       filterMode: "tree",
     },
-    { 
-      title: 'Status', 
-      dataIndex: 'status', 
-      key: 'status' ,
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
       sorter: (a, b) => a.status.localeCompare(b.status),
-      filters: [...new Set(leads.assigned.map((lead) => lead.status))].map((status) => ({
-        text: status,
-        value: status,
-      })),
-      
-      onFilter: (value, record) => record.status.includes(value),
-      filterSearch:true,
-      filterMode: "tree", 
+      filters: [...new Set(leads.assigned.map((lead) => lead.status))].map(
+        (status) => ({
+          text: status,
+          value: status,
+        })
+      ),
 
-    }
+      onFilter: (value, record) => record.status.includes(value),
+      filterSearch: true,
+      filterMode: "tree",
+    },
   ];
 
   const unassignedColumns = [
-    { 
-      title: 'Owner', 
-      dataIndex: 'ownerName', 
-      key: 'ownerName',
-      render: (text) => text || 'N/A',
+    {
+      title: "Owner",
+      dataIndex: "ownerName",
+      key: "ownerName",
+      render: (text) => text || "N/A",
       sorter: (a, b) => a.ownerName.localeCompare(b.ownerName),
-      filters: [...new Set(leads.notAssigned.map((lead) => lead.ownerName))].map((ownerName) => ({
+      filters: [
+        ...new Set(leads.notAssigned.map((lead) => lead.ownerName)),
+      ].map((ownerName) => ({
         text: ownerName,
         value: ownerName,
       })),
-      
-      onFilter: (value, record) => record.ownerName.includes(value),
-      filterSearch:true,
-      filterMode: "tree", 
 
+      onFilter: (value, record) => record.ownerName.includes(value),
+      filterSearch: true,
+      filterMode: "tree",
     },
-    
+
     {
       title: "District Name",
       dataIndex: "districtName",
@@ -229,88 +234,94 @@ function AssignedNotAssignedList() {
       dataIndex: "modelName",
       key: "modelName",
       sorter: (a, b) => a.modelName.localeCompare(b.modelName),
-      filters: [...new Set(leads.notAssigned.map((lead) => lead.modelName))].map(
-        (modelName) => ({
-          text: modelName,
-          value: modelName,
-        })
-      ),
+      filters: [
+        ...new Set(leads.notAssigned.map((lead) => lead.modelName)),
+      ].map((modelName) => ({
+        text: modelName,
+        value: modelName,
+      })),
       onFilter: (value, record) => record.modelName.indexOf(value) === 0,
       filterSearch: true,
       filterMode: "tree",
     },
-    { 
-      title: 'Mobile', 
-      dataIndex: 'mobileNo', 
-      key: 'mobileNo',
-      render: (text) => text === 'N/A' ? 'Not Available' : text,
+    {
+      title: "Mobile",
+      dataIndex: "mobileNo",
+      key: "mobileNo",
+      render: (text) => (text === "N/A" ? "Not Available" : text),
       sorter: (a, b) => a.mobileNo.localeCompare(b.mobileNo),
-      filters: [...new Set(leads.notAssigned.map((lead) => lead.mobileNo))].map((mobileNo) => ({
-        text: mobileNo,
-        value: mobileNo,
-      })),
-      
-      onFilter: (value, record) => record.mobileNo.includes(value),
-      filterSearch:true,
-      filterMode: "tree", 
+      filters: [...new Set(leads.notAssigned.map((lead) => lead.mobileNo))].map(
+        (mobileNo) => ({
+          text: mobileNo,
+          value: mobileNo,
+        })
+      ),
 
+      onFilter: (value, record) => record.mobileNo.includes(value),
+      filterSearch: true,
+      filterMode: "tree",
     },
     {
       title: "Current Address",
       dataIndex: "currentAddress",
       key: "currentAddress",
-      filters: [...new Set(leads.notAssigned.map((lead) => lead.currentAddress))].map((currentAddress) => ({
+      filters: [
+        ...new Set(leads.notAssigned.map((lead) => lead.currentAddress)),
+      ].map((currentAddress) => ({
         text: currentAddress,
         value: currentAddress,
       })),
-      
+
       onFilter: (value, record) => record.currentAddress.includes(value),
-      filterSearch:true,
-      filterMode: "tree", 
+      filterSearch: true,
+      filterMode: "tree",
     },
     {
       title: "Excel Name",
       dataIndex: "excelName",
       key: "excelName",
-      filters: [...new Set(leads.notAssigned.map((lead) => lead.excelName))].map((excelName) => ({
+      filters: [
+        ...new Set(leads.notAssigned.map((lead) => lead.excelName)),
+      ].map((excelName) => ({
         text: excelName,
         value: excelName,
       })),
-      
-      onFilter: (value, record) => record.excelName.includes(value),
-      filterSearch:true,
-      filterMode: "tree", 
-    },
-    { 
-      title: 'Status', 
-      dataIndex: 'status', 
-      key: 'status' ,
-      sorter: (a, b) => a.status.localeCompare(b.status),
-      filters: [...new Set(leads.notAssigned.map((lead) => lead.status))].map((status) => ({
-        text: status,
-        value: status,
-      })),
-      
-      onFilter: (value, record) => record.status.includes(value),
-      filterSearch:true,
-      filterMode: "tree", 
 
-    }
+      onFilter: (value, record) => record.excelName.includes(value),
+      filterSearch: true,
+      filterMode: "tree",
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      sorter: (a, b) => a.status.localeCompare(b.status),
+      filters: [...new Set(leads.notAssigned.map((lead) => lead.status))].map(
+        (status) => ({
+          text: status,
+          value: status,
+        })
+      ),
+
+      onFilter: (value, record) => record.status.includes(value),
+      filterSearch: true,
+      filterMode: "tree",
+    },
   ];
 
   // Handle lead details click
   const handleShowDetails = async (lead) => {
-    console.log("leadhistory",lead.leadId);
-    
+    console.log("leadhistory", lead.leadId);
+
     try {
       const [historyRes, reviewsRes] = await Promise.all([
         getRequest(`/api/LeadAssign/lead-history/${lead.leadId}`),
-        getRequest('/api/LeadsReview')
+        getRequest("/api/LeadsReview"),
       ]);
 
       // Filter reviews for this lead
-      const leadReviews = Array.isArray(reviewsRes?.data) 
-        ? reviewsRes.data.filter(r => r.leadId === lead.leadId)
+      const leadReviews = Array.isArray(reviewsRes?.data)
+        ? reviewsRes.data.filter((r) => r.leadId === lead.leadId)
         : [];
 
       setSelectedLead(lead);
@@ -326,30 +337,35 @@ function AssignedNotAssignedList() {
   // Handle lead assignment
   const handleAssignLeads = async (selectedCRE) => {
     try {
-      const assignments = selectedLeads.map(leadId => 
+      const assignments = selectedLeads.map((leadId) =>
         postRequest("/api/LeadAssign/assign", {
           leadID: leadId,
           assignedTo: selectedCRE,
           assignedBy: userData.userId,
-          assignedDate: new Date().toISOString()
+          assignedDate: new Date().toISOString(),
         })
       );
-
+      setSelectedLeads([]);
       await Promise.all(assignments);
       // alert("Leads assigned successfully!");
-      notification.success({ message: "Success", description: "Lead assigned successfully!" });
+      notification.success({
+        message: "Success",
+        description: "Lead assigned successfully!",
+      });
 
       setAssignModalVisible(false);
-      
+
       // Refresh leads data
       const [assignedRes, notAssignedRes] = await Promise.all([
         getRequest("/api/Leads/filter?assigned=true"),
-        getRequest("/api/Leads/filter?assigned=false")
+        getRequest("/api/Leads/filter?assigned=false"),
       ]);
-      
+
       setLeads({
         assigned: Array.isArray(assignedRes?.data) ? assignedRes.data : [],
-        notAssigned: Array.isArray(notAssignedRes?.data) ? notAssignedRes.data : []
+        notAssigned: Array.isArray(notAssignedRes?.data)
+          ? notAssignedRes.data
+          : [],
       });
     } catch (error) {
       console.error("Assignment error:", error);
@@ -364,23 +380,25 @@ function AssignedNotAssignedList() {
       <ul className="nav nav-tabs mb-4">
         <li className="nav-item">
           <button
-            className={`nav-link ${activeTab === 'assigned' ? 'active' : ''}`}
-            onClick={() => setActiveTab('assigned')}
+            className={`nav-link ${activeTab === "assigned" ? "active" : ""}`}
+            onClick={() => setActiveTab("assigned")}
           >
             Assigned Leads ({leads.assigned.length})
           </button>
         </li>
         <li className="nav-item">
           <button
-            className={`nav-link ${activeTab === 'notAssigned' ? 'active' : ''}`}
-            onClick={() => setActiveTab('notAssigned')}
+            className={`nav-link ${
+              activeTab === "notAssigned" ? "active" : ""
+            }`}
+            onClick={() => setActiveTab("notAssigned")}
           >
             Unassigned Leads ({leads.notAssigned.length})
           </button>
         </li>
       </ul>
 
-      {activeTab === 'assigned' && (
+      {activeTab === "assigned" && (
         <div className="card shadow">
           <div className="card-body">
             <Table
@@ -388,18 +406,19 @@ function AssignedNotAssignedList() {
               dataSource={leads.assigned}
               rowKey="leadId"
               onRow={(record) => ({
-                onClick: () => handleShowDetails(record)
+                onClick: () => handleShowDetails(record),
               })}
-              bordered
-              pagination={{ pageSize: 5 }}
-              locale={{ emptyText: 'No assigned leads found' }}
+              // bordered
+              pagination={{ pageSize: 50 }}
+              // scroll={{ x: "max-content", y: 500 }}
+              locale={{ emptyText: "No assigned leads found" }}
               style={{ overflowX: "auto", whiteSpace: "nowrap" }}
             />
           </div>
         </div>
       )}
 
-      {activeTab === 'notAssigned' && (
+      {activeTab === "notAssigned" && (
         <div className="card shadow">
           <div className="card-body">
             <div className="mb-3">
@@ -412,41 +431,40 @@ function AssignedNotAssignedList() {
               </button>
             </div>
             <>
-            {loading ? (
-        <Loader />
-      ) : (
-            <Table
-              columns={unassignedColumns}
-              dataSource={leads.notAssigned}
-              rowKey="leadId"
-              rowSelection={{
-                type: 'checkbox',
-                
-                onChange: (selectedRowKeys, selectedRows) => {
-                  setSelectedLeads(selectedRows.map(row => row.leadId));
-                }
-              }}
-               pagination={{ pageSize: 10 }}
-              locale={{ emptyText: 'No unassigned leads found' }}
-              style={{ overflowX: "auto", whiteSpace: "nowrap" }}
-              bordered
+              {loading ? (
+                <Loader />
+              ) : (
+                <Table
+                  columns={unassignedColumns}
+                  dataSource={leads.notAssigned}
+                  rowKey="leadId"
+                  rowSelection={{
+                    type: "checkbox",
 
-            />
-          )}
+                    onChange: (selectedRowKeys, selectedRows) => {
+                      setSelectedLeads(selectedRows.map((row) => row.leadId));
+                    },
+                  }}
+                  pagination={{ pageSize: 50 }}
+                  // scroll={{ x: "max-content", y: 500 }}
+                  locale={{ emptyText: "No unassigned leads found" }}
+                  style={{ overflowX: "auto", whiteSpace: "nowrap" }}
+                  bordered
+                />
+              )}
             </>
-       
           </div>
         </div>
       )}
 
-<LeadtrackModal
+      <LeadtrackModal
         visible={isDetailsModalVisible}
         onClose={() => setIsDetailsModalVisible(false)}
         lead={selectedLead}
         history={history}
         reviews={reviews}
       />
-      
+
       <AssignModal
         visible={assignModalVisible}
         onClose={() => setAssignModalVisible(false)}

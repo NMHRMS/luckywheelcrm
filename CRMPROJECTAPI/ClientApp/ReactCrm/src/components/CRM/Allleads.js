@@ -130,7 +130,7 @@ function AllLeads() {
         <Loader />
       ) : (
         <>
-          {/* {/ Bootstrap Tabs /} */}
+          {/* Bootstrap Tabs */}
           <ul className="nav nav-tabs mb-4">
             <li className="nav-item">
               <button
@@ -158,7 +158,7 @@ function AllLeads() {
             </li>
           </ul>
   
-          {/* {/ Tab Content /} */}
+          {/* Tab Content */}
           <div className="tab-content">
             <div className={`tab-pane ${activeTab === "new" ? "show active" : ""}`}>
               <div className="card shadow">
@@ -167,7 +167,8 @@ function AllLeads() {
                     columns={columns}
                     dataSource={leads.newLeads}
                     rowKey="leadId"
-                    pagination={{ pageSize: 10 }}
+                    pagination={{ pageSize: 50 }}
+                    scroll={{ x: "max-content", y: 500 }}
                     style={{ overflowX: "auto", whiteSpace: "nowrap" }}
                     bordered
                   />
@@ -182,7 +183,8 @@ function AllLeads() {
                     columns={columns}
                     dataSource={leads.duplicateLeads}
                     rowKey="leadId"
-                    pagination={{ pageSize: 5 }}
+                    pagination={{ pageSize: 50 }}
+                    scroll={{ x: "max-content", y: 500 }}
                     style={{ overflowX: "auto", whiteSpace: "nowrap" }}
                   />
                 </div>
@@ -196,7 +198,8 @@ function AllLeads() {
                     columns={columns}
                     dataSource={leads.blockedLeads}
                     rowKey="leadId"
-                    pagination={{ pageSize: 5 }}
+                    pagination={{ pageSize: 50 }}
+                    scroll={{ x: "max-content", y: 500 }}
                   />
                 </div>
               </div>

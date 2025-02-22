@@ -80,8 +80,7 @@ const PerformanceUser = () => {
     <div className="container mt-3">
       <h3>User Performance</h3>
 
-      {loading && <Loader />} 
-      {/* {/ Show Loader when loading /} */}
+      {loading && <Loader />} {/* Show Loader when loading */}
 
       {!loading && (
         <>

@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Table, Button, Modal, Input, message, Checkbox } from "antd";
 // import {  PlusOutlined } from "@ant-design/icons";
-import {
-  getRequest,
-  postRequest,
-  putRequest,
-} from "../utils/Api";
+import { getRequest, postRequest, putRequest } from "../utils/Api";
 import { fetchStoredData } from "../utils/UserDataUtils";
 import Loader from "../utils/Loader";
 
@@ -250,7 +246,6 @@ export default function RoleComponent() {
       filterDropdown: getColumnFilterDropdown,
       onFilter: (value, record) =>
         record.roleName.toLowerCase().includes(value.toLowerCase()),
-      
     },
     // {
     //   title: "Actions",

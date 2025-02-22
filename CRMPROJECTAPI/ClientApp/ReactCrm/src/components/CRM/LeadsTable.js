@@ -1,513 +1,109 @@
-import { useState, useEffect } from "react";
-import { Table, notification } from "antd";
-import { getRequest, postRequest, deleteRequest } from "../utils/Api";
-import AssignModal from "./AssignModal";
-import { fetchStoredData } from "../utils/UserDataUtils";
-import * as XLSX from "xlsx";
-import Loader from "../utils/Loader";
-import AddLeadModal from "./AddLeadModal"
-const LeadsTable = () => {
-  const [file, setFile] = useState(null);
-  const [fileName, setFileName] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [assignModalVisible, setAssignModalVisible] = useState(false);
-  const [addModalVisible, setAddModalVisible] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [userData, setUserData] = useState({
-    branchId: "",
-    companyId: "",
-    userId: "",
-  });
-  const [leads, setLeads] = useState({
-    newLeads: [],
-    duplicateLeads: [],
-    blockedLeads: [],
-  });
-  const [activeTab, setActiveTab] = useState("newLeads");
-  const [selectedLeads, setSelectedLeads] = useState([]);
+import React, { useState, useEffect } from "react";
 
-  const handleDownload = () => {
-    const link = document.createElement("a");
-    link.href = "/CRMtemplete.xlsx"; // Path to your Excel file
-    link.download = "CRMtemplete.xlsx"; // File name when downloaded
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+export default function LeadsTable({ leadsData, setFilteredLeads }) {
+  const [filters, setFilters] = useState({});
+  const [uniqueColumnValues, setUniqueColumnValues] = useState({});
+  const [activeFilter, setActiveFilter] = useState(null);
+  const [filterSearch, setFilterSearch] = useState("");
 
+  // Extract Unique Values for Filtering
   useEffect(() => {
-    const loadUserData = async () => {
-      const storedData = await fetchStoredData();
-      if (storedData) {
-        setUserData(storedData);
-      }
-    };
-    loadUserData();
-  }, []);
+    const uniqueValues = {};
+    leadsData.forEach((lead) => {
+      Object.keys(lead).forEach((key) => {
+        if (!uniqueValues[key]) uniqueValues[key] = new Set();
+        uniqueValues[key].add(lead[key]);
+      });
+    });
 
+    // Convert Sets to Arrays
+    Object.keys(uniqueValues).forEach(
+      (key) => (uniqueValues[key] = Array.from(uniqueValues[key]))
+    );
 
+    setUniqueColumnValues(uniqueValues);
+  }, [leadsData]);
 
-  const fetchLeads = async () => {
-    setLoading(true);
-    try {
-      const response = await getRequest("/api/Leads/latest-leads");
-      if (response && response.data) {
-        setLeads({
-          newLeads: response.data.newLeads || [],
-          duplicateLeads: response.data.duplicateLeads || [],
-          blockedLeads: response.data.blockedLeads || [],
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching leads:", error);
-    }
-    setLoading(false);
-  };
-
+  // Apply Filters
   useEffect(() => {
-    fetchLeads();
-  }, []);
-
-  // const handleFileChange = (event) => {
-  // const selectedFile = event.target.files[0]
-  // setFile(selectedFile)
-  // setFileName(selectedFile?.name || "")
-  // setShowModal(true)
-  // }
-
-  const handleFileChange = (event) => {
-    const selectedFile = event.target.files[0];
-    setFile(selectedFile);
-    setFileName(selectedFile?.name || ""); // Initialize with original filename
-    setShowModal(true);
-  };
-  const handleUpload = async () => {
-    if (!file) {
-      alert("No file selected!")
-      return
-    }
-  
-    const formData = new FormData()
-    console.log("formData",formData);
-    
-    formData.append("file", file)
-     formData.append("fileName", fileName);
-     setLoading(true);
-    try {
-      const url = `/api/Leads/upload-excel?fileName=${encodeURIComponent(fileName)}`;
-      const response = await postRequest(url, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-  
-      console.log("File uploaded successfully:", response.data)
-      // alert("File uploaded successfully!")
-      notification.success({
-        message: "Success",
-        description: "File uploaded successfully!",
-      });
-  
-      setShowModal(false)
-      setFile(null)
-      fetchLeads()
-    } catch (error) {
-      console.error("Error uploading file:", error.response?.data || error)
-      alert(`Failed to upload file: ${error.response?.data?.message || "Unknown error"}`)
-    }
-    setLoading(false);
-    }
-
-  const columns = [
-    {
-      title: "District Name",
-      dataIndex: "districtName",
-      key: "districtName",
-      sorter: (a, b) => a.districtName.localeCompare(b.districtName),
-      filters: [
-        ...new Set(leads[activeTab].map((lead) => lead.districtName)),
-      ].map((districtName) => ({
-        text: districtName,
-        value: districtName,
-      })),
-      onFilter: (value, record) => record.districtName.indexOf(value) === 0,
-      filterSearch: true,
-      filterMode: "tree",
-    },
-
-    {
-      title: "Model Name",
-      dataIndex: "modelName",
-      key: "modelName",
-      sorter: (a, b) => a.modelName.localeCompare(b.modelName),
-      filters: [...new Set(leads[activeTab].map((lead) => lead.modelName))].map(
-        (modelName) => ({
-          text: modelName,
-          value: modelName,
-        })
-      ),
-      onFilter: (value, record) => record.modelName.indexOf(value) === 0,
-      filterSearch: true,
-      filterMode: "tree",
-    },
-    {
-      title: "Owner Name",
-      dataIndex: "ownerName",
-      key: "ownerName",
-      sorter: (a, b) => a.ownerName.localeCompare(b.ownerName),
-      filters: [...new Set(leads[activeTab].map((lead) => lead.ownerName))].map(
-        (ownerName) => ({
-          text: ownerName,
-          value: ownerName,
-        })
-      ),
-      onFilter: (value, record) => record.ownerName.indexOf(value) === 0,
-      filterSearch: true,
-      filterMode: "tree",
-    },
-    {
-      title: "Father Name",
-      dataIndex: "fatherName",
-      key: "fatherName",
-      sorter: (a, b) => a.fatherName.localeCompare(b.fatherName),
-      filters: [
-        ...new Set(leads[activeTab].map((lead) => lead.fatherName)),
-      ].map((fatherName) => ({
-        text: fatherName,
-        value: fatherName,
-      })),
-      onFilter: (value, record) => record.fatherName.indexOf(value) === 0,
-      filterSearch: true,
-      filterMode: "tree",
-    },
-    {
-      title: "Current Address",
-      dataIndex: "currentAddress",
-      key: "currentAddress",
-    },
-    {
-      title: "Mobile No.",
-      dataIndex: "mobileNo",
-      key: "mobileNo",
-      sorter: (a, b) => a.mobileNo.localeCompare(b.mobileNo),
-      filters: [...new Set(leads[activeTab].map((lead) => lead.mobileNo))].map(
-        (mobileNo) => ({
-          text: mobileNo,
-          value: mobileNo,
-        })
-      ),
-      onFilter: (value, record) => record.mobileNo.indexOf(value) === 0,
-      filterSearch: true,
-      filterMode: "tree",
-    },
-    {
-      title: "Dealer Name",
-      dataIndex: "dealerName",
-      key: "dealerName",
-      sorter: (a, b) => a.dealerName.localeCompare(b.dealerName),
-      filters: [
-        ...new Set(leads[activeTab].map((lead) => lead.dealerName)),
-      ].map((dealerName) => ({
-        text: dealerName,
-        value: dealerName,
-      })),
-      onFilter: (value, record) => record.dealerName.indexOf(value) === 0,
-      filterSearch: true,
-      filterMode: "tree",
-    },
-    {
-      title: "Registration No.",
-      dataIndex: "registrationNo",
-      key: "registrationNo",
-      sorter: (a, b) => a.registrationNo.localeCompare(b.registrationNo),
-      filters: [
-        ...new Set(leads[activeTab].map((lead) => lead.registrationNo)),
-      ].map((registrationNo) => ({
-        text: registrationNo,
-        value: registrationNo,
-      })),
-      onFilter: (value, record) => record.registrationNo.indexOf(value) === 0,
-      filterSearch: true,
-      filterMode: "tree",
-    },
-    {
-      title: "Registration Date",
-      dataIndex: "registrationDate",
-      key: "registrationDate",
-      sorter: (a, b) =>
-        new Date(a.registrationDate) - new Date(b.registrationDate),
-      filters: [
-        ...new Set(leads[activeTab].map((lead) => lead.registrationDate)),
-      ].map((registrationDate) => ({
-        text: registrationDate,
-        value: registrationDate,
-      })),
-      onFilter: (value, record) => record.registrationDate.indexOf(value) === 0,
-      filterSearch: true,
-      filterMode: "tree",
-    },
-    {
-      title: "State Name",
-      dataIndex: "stateName",
-      key: "stateName",
-      sorter: (a, b) => a.stateName.localeCompare(b.stateName),
-      filters: [...new Set(leads[activeTab].map((lead) => lead.stateName))].map(
-        (stateName) => ({
-          text: stateName,
-          value: stateName,
-        })
-      ),
-      onFilter: (value, record) => record.stateName.indexOf(value) === 0,
-      filterSearch: true,
-      filterMode: "tree",
-    },
-  ];
-
-  const rowSelection = {
-    selectedRowKeys: selectedLeads,
-    onChange: (selectedRowKeys) => {
-      setSelectedLeads(selectedRowKeys);
-    },
-  };
-
-  const handleAssign = async (selectedCRE) => {
-    console.log("selectedLeadsdd", selectedLeads);
-
-    try {
-      for (const leadId of selectedLeads) {
-        const requestBody = {
-          leadID: leadId,
-          assignedTo: selectedCRE,
-          assignedBy: userData.userId,
-          assignedDate: new Date().toISOString(),
-        };
-
-        console.log("Request Payload:", JSON.stringify(requestBody, null, 2));
-
-        const response = await postRequest(
-          "/api/LeadAssign/assign",
-          requestBody
-        );
-
-        // if (!response || response.status !== 200) {
-        //   throw new Error(response.data?.message || "Failed to assign CRE")
-        // }
+    let filtered = [...leadsData];
+    Object.keys(filters).forEach((column) => {
+      if (filters[column].length > 0) {
+        filtered = filtered.filter((lead) => filters[column].includes(lead[column]));
       }
-      // alert("Leads assigned successfully!");
-      notification.success({
-        message: "Success",
-        description: "Leads assigned successfully!",
-      });
-      setAssignModalVisible(false);
-      fetchLeads(); // Refresh the leads list
-    } catch (error) {
-      console.error("Error assigning leads:", error);
-      notification.error({
-        message: "assigning leads Failed",
-        description: error.response?.data?.message || "Unknown error occurred.",
-      });
-    }
+    });
+    setFilteredLeads(filtered);
+  }, [filters, leadsData]);
+
+  // Handle Filter Changes
+  const handleFilterChange = (column, value) => {
+    setFilters((prevFilters) => {
+      const updatedFilters = { ...prevFilters };
+      if (!updatedFilters[column]) updatedFilters[column] = [];
+      if (updatedFilters[column].includes(value)) {
+        updatedFilters[column] = updatedFilters[column].filter((item) => item !== value);
+      } else {
+        updatedFilters[column].push(value);
+      }
+      return updatedFilters;
+    });
   };
 
-  const handleDelete = async () => {
-    try {
-      const deletePromises = selectedLeads.map((leadId) =>
-        deleteRequest(`/api/Leads/${leadId}`)
-      );
-      await Promise.all(deletePromises);
-      // alert("Leads deleted successfully!");
-      notification.success({
-        message: "Success",
-        description: "Lead deleted successfully!",
-      });
-
-      fetchLeads();
-    } catch (error) {
-      console.error("Error deleting leads:", error);
-      alert("Failed to delete leads. Please try again.");
-    }
+  // Toggle Filter Dropdown
+  const toggleFilterDropdown = (column) => {
+    setActiveFilter(activeFilter === column ? null : column);
+    setFilterSearch("");
   };
-
-  // const handleDelete = async (leadId) => {
-  // if (!window.confirm("Are you sure you want to delete this lead?")) {
-  //   return;
-  // }
-  // try {
-  //   await deleteRequest(`/api/Leads/${leadId}`); // Ensure correct API endpoint
-  //   alert("Lead deleted successfully");
-  //   fetchLeads(); // Refresh the table
-  // } catch (error) {
-  //   console.error("Error deleting lead:", error);
-  //   alert("Failed to delete lead.");
-  // }
-  // };
 
   return (
-    <div className="container ">
-      {/* <h5 className="card-title text-left" style={{ fontSize: 25 }}>
-    Leads 
-    </h5> */}
-      <div className="d-flex justify-content-between align-items-center">
-        {/* {/ Heading (Left) /} */}
-        <h5 className="card-title" style={{ fontSize: 20 }}>
-          Leads Management
-        </h5>
-
-        {/* {/ Buttons (Right) /} */}
-        <div className="d-flex align-items-center">
-          <i
-            className="bi bi-file-earmark-arrow-up me-2"
-            style={{
-              cursor: "pointer",
-              color: "blue",
-              fontSize: "1.5rem",
-            }}
-            onClick={() => document.getElementById("fileUploadInput").click()}
-            data-bs-toggle="tooltip"
-            data-bs-placement="top"
-            title="Upload File"
-          ></i>
-
-          <input
-            id="fileUploadInput"
-            type="file"
-            accept=".xls,.xlsx"
-            onChange={handleFileChange}
-            style={{ display: "none" }}
-          />
-
-          <button
-            className="btn btn-outline-success me-2"
-            onClick={handleDownload}
-          >
-            Download xlsx template
-          </button>
-          <button
-            className="btn btn-outline-info me-2"
-            onClick={() => setAssignModalVisible(true)}
-            disabled={selectedLeads.length === 0}
-          >
-            Assign to
-          </button>
-          <button
-            className="btn btn-outline-danger me-2"
-            onClick={handleDelete}
-            disabled={selectedLeads.length === 0}
-          >
-            Delete
-          </button>
-          <button className="btn btn-outline-primary"
-       onClick={() => setAddModalVisible(true)}
-      >
-        Add Lead
-      </button>
-        </div>
-      </div>
-
-      {showModal && (
-        <div
-          className="modal fade show d-block"
-          style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}
-        >
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Save File Name</h5>
-                <button
-                  type="button"
-                  className="btn-close"
-                  onClick={() => setShowModal(false)}
-                ></button>
-              </div>
-              <div className="modal-body">
-                <label className="form-label">File Name</label>
+    <table className="table table-bordered">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>
+            Name
+            <button className="btn btn-sm btn-light ms-2" onClick={() => toggleFilterDropdown("name")}>
+              <i className="bi bi-funnel"></i>
+            </button>
+            {activeFilter === "name" && (
+              <div className="filter-dropdown">
                 <input
                   type="text"
-                  className="form-control"
-                  name="fileName"
-                  value={fileName}
-                  onChange={(e) => setFileName(e.target.value)}
+                  className="form-control form-control-sm"
+                  placeholder="Search..."
+                  value={filterSearch}
+                  onChange={(e) => setFilterSearch(e.target.value)}
                 />
+                {uniqueColumnValues["name"]
+                  ?.filter((val) => val.toLowerCase().includes(filterSearch.toLowerCase()))
+                  .map((value) => (
+                    <div key={value} className="form-check">
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        checked={filters["name"]?.includes(value) || false}
+                        onChange={() => handleFilterChange("name", value)}
+                      />
+                      <label className="form-check-label">{value}</label>
+                    </div>
+                  ))}
               </div>
-              <div className="modal-footer">
-                <button className="btn btn-primary" onClick={handleUpload}>
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <ul className="nav nav-tabs mb-3">
-        {Object.keys(leads).map((key) => (
-          <li className="nav-item" key={key}>
-            <button
-              className={`nav-link ${activeTab === key ? "active" : ""}`}
-              onClick={() => {
-                setActiveTab(key);
-                setSelectedLeads([]);
-              }}
-            >
-              {key === "newLeads"
-                ? "New Leads"
-                : key === "duplicateLeads"
-                ? "Duplicate Leads"
-                : "Blocked Leads"}{" "}
-              ({leads[key].length})
-            </button>
-          </li>
+            )}
+          </th>
+          <th>Email</th>
+          <th>Phone</th>
+        </tr>
+      </thead>
+      <tbody>
+        {leadsData.map((lead) => (
+          <tr key={lead.id}>
+            <td>{lead.id}</td>
+            <td>{lead.name}</td>
+            <td>{lead.email}</td>
+            <td>{lead.phone}</td>
+          </tr>
         ))}
-      </ul>
-
-      {/* <h6 className="mt-2 mb-3">
-    {activeTab === "newLeads" ? "New Leads" : activeTab === "duplicateLeads" ? "Duplicate Leads" : "Blocked Leads"}
-    </h6> */}
-      {/* <button
-    className="btn btn-info me-2"
-    onClick={() => setAssignModalVisible(true)}
-    disabled={selectedLeads.length === 0}
-    >
-    Assign to
-    </button> */}
-    {loading ? (
-  <Loader />
-) : (
-    <Table
-        className="table table-border mt-1"
-        rowSelection={rowSelection}
-        columns={columns}
-        dataSource={leads[activeTab]}
-        rowKey="leadId"
-        scroll={{ x: true }}
-        bordered
-        pagination={{
-          pageSize: 10,
-          showSizeChanger: false,
-        }}
-        onChange={(pagination, filters, sorter) => {
-          console.log("Table params:", pagination, filters, sorter);
-        }}
-        style={{ overflowX: "auto", whiteSpace: "nowrap" }}
-      />
-    )}
-    
-      <AssignModal
-        visible={assignModalVisible}
-        onClose={() => setAssignModalVisible(false)}
-        selectedRows={selectedLeads}
-        onAssign={handleAssign}
-      />
-       <AddLeadModal
-  visible={addModalVisible}
-  onClose={() => setAddModalVisible(false)}
-  onSuccess={(newLead) => {
-    setLeads(prev => ({
-      ...prev,
-      newLeads: [newLead, ...prev.newLeads]
-    }));
-  }}
-/>
-    </div>
+      </tbody>
+    </table>
   );
-};
-
-export default LeadsTable;
+}
