@@ -29,7 +29,7 @@ const AddUsers = () => {
 
   const [newUser, setNewUser] = useState({
     firstName: "",
-    lastName: "",
+    // lastName: "",
     emailId: "",
     password: "",
     contactNumber: "",
@@ -49,9 +49,9 @@ const AddUsers = () => {
     }
 
     // Last Name validation
-    if (!newUser.lastName.trim()) {
-      newErrors.lastName = "Last name is required";
-    }
+    // if (!newUser.lastName.trim()) {
+    //   newErrors.lastName = "Last name is required";
+    // }
 
     // Email validation
     if (!newUser.emailId) {
@@ -336,8 +336,8 @@ const AddUsers = () => {
       <table className="table table-bordered mt-3">
         <thead>
           <tr>
-            <th>First Name</th>
-            <th>Last Name</th>
+            <th>Full Name</th>
+            {/* <th>Last Name</th> */}
             <th>Email</th>
             <th>Password</th>
             <th>Contact Number</th>
@@ -354,7 +354,7 @@ const AddUsers = () => {
             return (
               <tr key={user.userId}>
                 <td>{user.firstName}</td>
-                <td>{user.lastName}</td>
+                {/* <td>{user.lastName}</td> */}
                 <td>{user.emailId}</td>
                 <td>{user.password}</td>
                 <td>{user.contactNumber}</td>
@@ -406,8 +406,10 @@ const AddUsers = () => {
                     </label>
                     <input
                       type="text"
-                      // className={`form-control ${errors.firstName ? "is-invalid" : ""} `}
-                      className="d-none"
+                      className={`form-control ${
+                        errors.firstName ? "is-invalid" : ""
+                      } `}
+                      // className="d-none"
                       id="firstName"
                       name="firstName"
                       value={newUser.firstName}
@@ -417,7 +419,7 @@ const AddUsers = () => {
                       <div className="invalid-feedback">{errors.firstName}</div>
                     )}
                   </div>
-                  <div className="mb-3">
+                  {/* <div className="mb-3">
                     <label htmlFor="lastName" className="form-label">
                       Last Name
                     </label>
@@ -434,7 +436,7 @@ const AddUsers = () => {
                     {errors.lastName && (
                       <div className="invalid-feedback">{errors.lastName}</div>
                     )}
-                  </div>
+                  </div> */}
                   <div className="mb-3">
                     <label htmlFor="emailId" className="form-label">
                       Email

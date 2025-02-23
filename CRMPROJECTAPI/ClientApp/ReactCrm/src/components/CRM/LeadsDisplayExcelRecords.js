@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, Select, Button } from "antd";
-import { FilterOutlined, DownOutlined, UpOutlined } from "@ant-design/icons";
+import { Table, Select, Pagination } from "antd";
 import { useParams } from "react-router-dom";
 import { getRequest } from "../utils/Api";
 
@@ -41,18 +40,18 @@ const LeadsDisplayExcelRecords = () => {
     }
   };
 
-  // Handle filter changes
-  const handleFilterChange = (value, column) => {
-    setFilters({
-      ...filters,
-      [column]: value,
-    });
-  };
+  // // Handle filter changes
+  // const handleFilterChange = (value, column) => {
+  //   setFilters({
+  //     ...filters,
+  //     [column]: value,
+  //   });
+  // };
 
-  // Reset filters
-  const handleResetFilters = () => {
-    setFilters({});
-  };
+  // // Reset filters
+  // const handleResetFilters = () => {
+  //   setFilters({});
+  // };
 
   // Filtering logic
   const filteredLeads = leads.filter((lead) => {
@@ -88,19 +87,7 @@ const LeadsDisplayExcelRecords = () => {
 
   // Ant Design Table columns configuration
   const columns = [
-    {
-      title: (
-        <>
-          Sr. No.
-          {sortColumn === "srNo" && (sortOrder === "asc" ? <UpOutlined /> : <DownOutlined />)}
-        </>
-      ),
-      dataIndex: "srNo",
-      key: "srNo",
-      sorter: () => handleSort("srNo"),
-      render: (text) => text || "N/A",
-      
-    },
+    
     {
       title: "Owner Name",
       dataIndex: "ownerName",
@@ -108,6 +95,7 @@ const LeadsDisplayExcelRecords = () => {
       filters: [...new Set(leads.map((lead) => ({ text: lead.ownerName, value: lead.ownerName })))],
       onFilter: (value, record) => record.ownerName === value,
       filterSearch: true,
+      filterMode: "tree",
     },
     {
       title: "Mobile No",
@@ -116,23 +104,26 @@ const LeadsDisplayExcelRecords = () => {
       filters: [...new Set(leads.map((lead) => ({ text: lead.mobileNo, value: lead.mobileNo })))],
       onFilter: (value, record) => record.mobileNo === value,
       filterSearch: true,
+      filterMode: "tree",
     },
 
     {
       title: "District",
-      dataIndex: "district",
-      sorter: (a, b) => a.district.localeCompare(b.district),
-      filters: [...new Set(leads.map((lead) => ({ text: lead.district, value: lead.district })))],
-      onFilter: (value, record) => record.district === value,
+      dataIndex: "districtName",
+      sorter: (a, b) => a.districtName.localeCompare(b.districtName),
+      filters: [...new Set(leads.map((lead) => ({ text: lead.districtName, value: lead.districtName })))],
+      onFilter: (value, record) => record.districtName === value,
       filterSearch: true,
+      filterMode: "tree",
     },
     {
       title: "State",
-      dataIndex: "state",
-      sorter: (a, b) => a.state.localeCompare(b.state),
-      filters: [...new Set(leads.map((lead) => ({ text: lead.state, value: lead.state })))],
-      onFilter: (value, record) => record.state === value,
+      dataIndex: "stateName",
+      sorter: (a, b) => a.stateName.localeCompare(b.stateName),
+      filters: [...new Set(leads.map((lead) => ({ text: lead.stateName, value: lead.stateName })))],
+      onFilter: (value, record) => record.stateName === value,
       filterSearch: true,
+      filterMode: "tree",
     },
     {
       title: "Registration No",
@@ -141,15 +132,9 @@ const LeadsDisplayExcelRecords = () => {
       filters: [...new Set(leads.map((lead) => ({ text: lead.registrationNo, value: lead.registrationNo })))],
       onFilter: (value, record) => record.registrationNo === value,
       filterSearch: true,
+      filterMode: "tree",
     },
-    {
-      title: "Vehicle Class",
-      dataIndex: "vehicleClass",
-      sorter: (a, b) => a.vehicleClass.localeCompare(b.vehicleClass),
-      filters: [...new Set(leads.map((lead) => ({ text: lead.vehicleClass, value: lead.vehicleClass })))],
-      onFilter: (value, record) => record.vehicleClass === value,
-      filterSearch: true,
-    },
+   
     {
       title: "Model Name",
       dataIndex: "modelName",
@@ -157,24 +142,11 @@ const LeadsDisplayExcelRecords = () => {
       filters: [...new Set(leads.map((lead) => ({ text: lead.modelName, value: lead.modelName })))],
       onFilter: (value, record) => record.modelName === value,
       filterSearch: true,
+      filterMode: "tree",
     },
-    {
-      title: "Dealer Name",
-      dataIndex: "dealerName",
-      sorter: (a, b) => a.dealerName.localeCompare(b.dealerName),
-      filters: [...new Set(leads.map((lead) => ({ text: lead.dealerName, value: lead.dealerName })))],
-      onFilter: (value, record) => record.dealerName === value,
-      filterSearch: true,
-    },
+    
 
-    {
-      title: "Office Name",
-      dataIndex: "officeName",
-      sorter: (a, b) => a.officeName.localeCompare(b.officeName),
-      filters: [...new Set(leads.map((lead) => ({ text: lead.officeName, value: lead.officeName })))],
-      onFilter: (value, record) => record.officeName === value,
-      filterSearch: true,
-    },
+   
     {
       title: "Status",
       dataIndex: "status",
@@ -182,6 +154,7 @@ const LeadsDisplayExcelRecords = () => {
       filters: [...new Set(leads.map((lead) => ({ text: lead.status, value: lead.status })))],
       onFilter: (value, record) => record.status === value,
       filterSearch: true,
+      filterMode: "tree",
     }
 
   ];
@@ -210,23 +183,15 @@ const LeadsDisplayExcelRecords = () => {
           />
 
           {/* Pagination Controls */}
-          <div className="pagination">
-            <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1}>
-              Previous
-            </button>
-            {Array.from({ length: totalPages }, (_, index) => (
-              <button
-                key={index}
-                onClick={() => handlePageChange(index + 1)}
-                className={currentPage === index + 1 ? "active" : ""}
-              >
-                {index + 1}
-              </button>
-            ))}
-            <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages}>
-              Next
-            </button>
-          </div>
+          <div className="pagination-container" style={{ textAlign: "center", marginTop: "20px" }}>
+      <Pagination
+        current={currentPage}
+        total={totalPages * 10} // AntD uses total items, so multiply by page size if needed
+        pageSize={10}
+        onChange={handlePageChange}
+        showSizeChanger={false}
+      />
+    </div>
         </>
       )}
     </div>

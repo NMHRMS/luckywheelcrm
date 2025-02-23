@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 import { Link } from "react-router-dom";
 
 export default function SidebarCRM() {
@@ -7,7 +7,6 @@ export default function SidebarCRM() {
       {/* {/ <!-- Sidebar --> /} */}
       <aside id="sidebar" className="sidebar">
         <ul className="sidebar-nav" id="sidebar-nav">
-          
           <li className="nav-item">
             <Link to="/crm/dashboard" className="nav-link">
               <i className="bi bi-speedometer2"></i>
@@ -17,7 +16,7 @@ export default function SidebarCRM() {
 
           <li className="nav-item">
             <Link to="/crm/leads" className="nav-link collapsed">
-              <i className="bi bi-upload"></i> 
+              <i className="bi bi-upload"></i>
               <span>Upload Excel</span>
             </Link>
           </li>
@@ -31,18 +30,18 @@ export default function SidebarCRM() {
 
           <li className="nav-item">
             <Link to="/crm/allleads" className="nav-link collapsed">
-              <i className="bi bi-people"></i> 
+              <i className="bi bi-people"></i>
               <span>All Leads</span>
             </Link>
           </li>
 
           <li className="nav-item">
             <Link to="/crm/asiignedleads" className="nav-link collapsed">
-              <i className="bi bi-search"></i> 
+              <i className="bi bi-search"></i>
               <span>Track Leads</span>
             </Link>
           </li>
-            
+
           <li className="nav-item">
             <Link to="/crm/performance" className="nav-link collapsed">
               <i className="bi bi-bar-chart-line"></i>
@@ -50,7 +49,7 @@ export default function SidebarCRM() {
             </Link>
           </li>
           <li className="nav-item">
-            <Link to="/crm/rejectleads" className="nav-link collapsed">
+            <Link to="/crm/revertleads" className="nav-link collapsed">
               <i className="bi bi-x-circle"></i>
               <span>Reject Leads</span>
             </Link>
@@ -65,14 +64,13 @@ export default function SidebarCRM() {
 
           <li className="nav-item">
             <Link to="/" className="nav-link collapsed">
-              <i className="bi bi-box-arrow-right"></i> 
+              <i className="bi bi-box-arrow-right"></i>
               <span>Logout</span>
             </Link>
           </li>
-
         </ul>
       </aside>
       {/* {/ <!-- End Sidebar--> /} */}
     </div>
-  )
+  );
 }

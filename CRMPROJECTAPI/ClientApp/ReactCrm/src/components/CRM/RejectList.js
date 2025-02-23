@@ -18,7 +18,7 @@ function RejectList() {
   const fetchRejectedLeads = async () => {
     setLoading(true);
     try {
-      const response = await getRequest("/api/LeadAssign/rejected-leads");
+      const response = await getRequest("/api/LeadAssign/reverted-leads");
       setRejectedLeads(response.data);
     } catch (error) {
       console.error("Error fetching rejected leads!", error);
@@ -90,6 +90,11 @@ function RejectList() {
       title: "State",
       dataIndex: "stateName",
       key: "stateName",
+    },
+    {
+      title: "Remark",
+      dataIndex: "remark",
+      key: "remark",
     },
     {
       title: "Status",

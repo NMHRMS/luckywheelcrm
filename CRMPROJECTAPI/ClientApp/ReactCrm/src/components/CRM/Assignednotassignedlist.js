@@ -5,7 +5,7 @@ import AssignModal from "./AssignModal";
 import { fetchStoredData } from "../utils/UserDataUtils";
 import LeadtrackModal from "./LeadtrackModal";
 import Loader from "../utils/Loader";
-
+import { Tooltip } from "antd";
 function AssignedNotAssignedList() {
   const [activeTab, setActiveTab] = useState("assigned");
   const [leads, setLeads] = useState({
@@ -413,6 +413,15 @@ function AssignedNotAssignedList() {
               // scroll={{ x: "max-content", y: 500 }}
               locale={{ emptyText: "No assigned leads found" }}
               style={{ overflowX: "auto", whiteSpace: "nowrap" }}
+              components={{
+                body: {
+                  row: (props) => (
+                    <Tooltip title="Click to view lead details">
+                      <tr {...props} style={{ cursor: "pointer" }} />
+                    </Tooltip>
+                  ),
+                },
+              }}
             />
           </div>
         </div>
