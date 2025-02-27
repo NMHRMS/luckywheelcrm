@@ -32,6 +32,14 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(mappings);
         }
 
+        [HttpGet("assignees/names")]
+        public async Task<ActionResult<IEnumerable<string>>> GetAssigneeNames()
+        {
+            var assigneeNames = await _mappingService.GetAssigneeNamesForAssignerAsync();
+            return Ok(assigneeNames);
+        }
+
+
         [HttpPut("update-mapping")]
         public async Task<IActionResult> UpdateMapping([FromBody] UserAssignmentMappingDto mappingDto)
         {

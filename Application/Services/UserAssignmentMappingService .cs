@@ -51,6 +51,19 @@ public class UserAssignmentMappingService : IUserAssignmentMappingService
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<string>> GetAssigneeNamesForAssignerAsync()
+    {
+        var assignerUserId = _jwtTokenService.GetUserIdFromToken();
+
+        var assignees = await _context.Users
+            .Where(u => u.UserId == assignerUserId)
+            .SelectMany(u => u.AssignedUsers)
+            .Select(a => a.FirstName)
+            .ToListAsync();
+
+        return assignees;
+    }
+
     public async Task<bool> CanAssignAsync(Guid assignerUserId, Guid assigneeUserId)
     {
         return await _context.Users

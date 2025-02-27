@@ -12,6 +12,7 @@ namespace Application.Interfaces
     {
         Task SetUserAssignmentMappingAsync(UserAssignmentMappingDto mappingDto);
         Task<IEnumerable<UserAssignmentMappingResponseDto>> GetUserAssignmentMappingsAsync();
+        Task<IEnumerable<string>> GetAssigneeNamesForAssignerAsync();
         Task<bool> CanAssignAsync(Guid assignerUserId, Guid assigneeUserId);
         Task UpdateUserAssignmentMappingAsync(UserAssignmentMappingDto mappingDto);
         Task DeleteUserAssignmentMappingAsync(Guid assignerUserId);
