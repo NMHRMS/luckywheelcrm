@@ -131,7 +131,7 @@ export default function AdminDashboard() {
     <div className="container mt-0">
       {/* {/ Page Title /} */}
       <div className="pagetitle mb-4">
-        <h1>CRM Dashboard</h1>
+        <h1>Admin Dashboard</h1>
         <nav>
           <ol className="breadcrumb">
             <li className="breadcrumb-item">
@@ -161,11 +161,9 @@ export default function AdminDashboard() {
               </div>
             ))}
           </div>
-
-       
         </>
       )}
- <UserPerformance />
+      <UserPerformance />
     </div>
   );
 }

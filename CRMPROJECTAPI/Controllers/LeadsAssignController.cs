@@ -1,5 +1,6 @@
 ﻿using Application.Dtos;
 using Application.Interfaces;
+using Application.ResponseDto;
 using Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -71,13 +72,28 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(revertedLeads);
         }
 
-        [HttpGet("closed-leads")]
-        public async Task<IActionResult> GetClosedLeads()
+        [HttpGet("closed")]
+        public async Task<ActionResult<ClosedLeadResponseDto>> GetClosedLeads()
         {
-            var leads = await _leadAssignService.GetClosedLeadsAsync();
-            return Ok(leads);
+            return Ok(await _leadAssignService.GetClosedLeadsAsync());
         }
 
+        [HttpGet("closed/user")]
+        public async Task<ActionResult<ClosedLeadResponseDto>> GetClosedLeadsByUser()
+        {
+            return Ok(await _leadAssignService.GetClosedLeadsByUserAsync());
+        }
 
+        [HttpPost("closed/date")]
+        public async Task<ActionResult<ClosedLeadResponseDto>> GetClosedLeadsByDate(DateTime date)
+        {
+            return Ok(await _leadAssignService.GetClosedLeadsByDateAsync(date));
+        }
+
+        [HttpPost("closed/daterange")]
+        public async Task<ActionResult<ClosedLeadResponseDto>> GetClosedLeadsBetweenDates(DateTime startDate,DateTime endDate)
+        {
+           return Ok(await _leadAssignService.GetClosedLeadsByDateRangeAsync(startDate, endDate));
+        }
     }
 }

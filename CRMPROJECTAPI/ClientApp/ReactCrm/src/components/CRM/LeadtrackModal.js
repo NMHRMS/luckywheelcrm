@@ -31,17 +31,18 @@ const LeadtrackModal = ({
   // History table columns
   const historyColumns = [
     {
-      title: 'Assigned To',
-      dataIndex: 'assignedToName',
-      key: 'assignedToName',
-      render: (text) => text || 'N/A'
-    },
-    {
       title: 'Assigned By',
       dataIndex: 'assignedByName',
       key: 'assignedByName',
       render: (text) => text || 'N/A'
     },
+    {
+      title: 'Assigned To',
+      dataIndex: 'assignedToName',
+      key: 'assignedToName',
+      render: (text) => text || 'N/A'
+    },
+  
     {
       title: 'Date',
       dataIndex: 'assignedDate',

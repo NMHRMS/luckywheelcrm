@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 // import { getRequest } from "../utils/Api";
 import { getRequest } from "./utils/Api";
 import { jwtDecode } from "jwt-decode"; // Correct import
@@ -26,6 +26,7 @@ function Header() {
       sidebar.classList.add("collapsed");
     }
   };
+  const navigate = useNavigate();
   useEffect(() => {
     const token = localStorage.getItem("token");
 
@@ -51,6 +52,12 @@ function Header() {
       console.log("No token found in localStorage.");
     }
   }, [localStorage.getItem("token")]); // ✅ Added dependency for updates
+
+  const signout=()=>{
+    localStorage.clear();
+    navigate('/');
+  
+  }
 
 
 
@@ -106,7 +113,7 @@ function Header() {
             </div>
             {/* <!-- End Search Icon--> */}
 
-            <li className="nav-item dropdown">
+            {/* <li className="nav-item dropdown">
               <a
                 className="nav-link nav-icon"
                 href="#"
@@ -115,7 +122,7 @@ function Header() {
                 <i className="bi bi-bell"></i>
                 <span className="badge bg-primary badge-number">4</span>
               </a>
-              {/* <!-- End Notification Icon --> */}
+         
 
               <ul className="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications">
                 <li className="dropdown-header">
@@ -185,11 +192,11 @@ function Header() {
                   <a href="#">Show all notifications</a>
                 </li>
               </ul>
-              {/* <!-- End Notification Dropdown Items --> */}
-            </li>
-            {/* <!-- End Notification Nav --> */}
+              
+            </li> */}
+         
 
-            <li className="nav-item dropdown">
+            {/* <li className="nav-item dropdown">
               <a
                 className="nav-link nav-icon"
                 href="#"
@@ -198,7 +205,7 @@ function Header() {
                 <i className="bi bi-chat-left-text"></i>
                 <span className="badge bg-success badge-number">3</span>
               </a>
-              {/* <!-- End Messages Icon --> */}
+          
 
               <ul className="dropdown-menu dropdown-menu-end dropdown-menu-arrow messages">
                 <li className="dropdown-header">
@@ -280,8 +287,8 @@ function Header() {
                   <a href="#">Show all messages</a>
                 </li>
               </ul>
-              {/* <!-- End Messages Dropdown Items --> */}
-            </li>
+           
+            </li> */}
             {/* <!-- End Messages Nav --> */}
 
             <li className="nav-item dropdown pe-3">
@@ -312,7 +319,6 @@ function Header() {
 
                 <li>
                   <Link
-                    to="/users-profile"
                     className="dropdown-item d-flex align-items-center"
                   >
                     <i className="bi bi-person"></i>
@@ -325,7 +331,7 @@ function Header() {
 
                 <li>
                   <Link
-                    to="/account-settings"
+                  
                     className="dropdown-item d-flex align-items-center"
                   >
                     <i className="bi bi-gear"></i>
@@ -338,7 +344,6 @@ function Header() {
 
                 <li>
                   <Link
-                    to="/faq"
                     className="dropdown-item d-flex align-items-center"
                   >
                     <i className="bi bi-question-circle"></i>
@@ -349,14 +354,13 @@ function Header() {
                   <hr className="dropdown-divider" />
                 </li>
 
-                <li>
-                  <Link
-                    to="/"
-                    className="dropdown-item d-flex align-items-center"
+                <li onClick={signout}>
+                      <Link className="dropdown-item d-flex align-items-center"
                   >
                     <i className="bi bi-box-arrow-right"></i>
+          
                     <span>Sign Out</span>
-                  </Link>
+                    </Link>
                 </li>
               </ul>
 

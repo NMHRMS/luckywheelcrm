@@ -14,7 +14,7 @@ public partial class Lead
     public string CurrentAddress { get; set; }
     public string? RegistrationNo { get; set; }
     public DateTime? RegistrationDate { get; set; }
-    public int? ChasisNo { get; set; }
+    public string? ChasisNo { get; set; }
     public string? CurrentVehicle { get; set; }
     public Guid? CategoryId { get; set; }
     public Guid? ProductId { get; set; }

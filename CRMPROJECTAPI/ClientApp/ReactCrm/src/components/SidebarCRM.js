@@ -54,6 +54,12 @@ export default function SidebarCRM() {
               <span>Reject Leads</span>
             </Link>
           </li>
+          <li className="nav-item">
+            <Link to="/crm/reports" className="nav-link collapsed">
+              <i className="bi bi-x-circle"></i>
+              <span>Reports</span>
+            </Link>
+          </li>
 
           <li className="nav-item">
             <Link to="/crm/vehiclecheck" className="nav-link collapsed">

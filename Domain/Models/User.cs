@@ -24,6 +24,7 @@ public partial class User
 
     //Colection Properties
     public virtual ICollection<Lead> Leads { get; set; } = new List<Lead>();
+    public virtual ICollection<LeadReview> LeadsReview { get; set; } = new List<LeadReview>();
     public virtual ICollection<LeadTracking> AssignedToLeadTrackings { get; set; }
     public virtual ICollection<LeadTracking> AssignedByLeadTrackings { get; set; }
     public virtual ICollection<CallRecord> CallRecords { get; set; } = new List<CallRecord>();

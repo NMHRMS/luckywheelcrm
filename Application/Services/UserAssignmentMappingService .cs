@@ -1,16 +1,19 @@
 ﻿using Application.Dtos;
 using Application.Interfaces;
 using Application.ResponseDto;
+using Application.Services;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 public class UserAssignmentMappingService : IUserAssignmentMappingService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IJwtTokenService _jwtTokenService;
 
-    public UserAssignmentMappingService(ApplicationDbContext context)
+    public UserAssignmentMappingService(ApplicationDbContext context, IJwtTokenService jwtTokenService)
     {
         _context = context;
+        _jwtTokenService = jwtTokenService;
     }
 
 

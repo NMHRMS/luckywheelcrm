@@ -55,7 +55,7 @@ function AssignedNotAssignedList() {
   // Table columns configuration
   const assignedColumns = [
     {
-      title: "Owner",
+      title: "Owner Name",
       dataIndex: "ownerName",
       key: "ownerName",
       render: (text) => text || "N/A",
@@ -119,17 +119,7 @@ function AssignedNotAssignedList() {
     {
       title: "Current Address",
       dataIndex: "currentAddress",
-      key: "currentAddress",
-      filters: [
-        ...new Set(leads.assigned.map((lead) => lead.currentAddress)),
-      ].map((currentAddress) => ({
-        text: currentAddress,
-        value: currentAddress,
-      })),
-
-      onFilter: (value, record) => record.currentAddress.includes(value),
-      filterSearch: true,
-      filterMode: "tree",
+      key: "currentAddress"
     },
     {
       title: "Mobile No.",

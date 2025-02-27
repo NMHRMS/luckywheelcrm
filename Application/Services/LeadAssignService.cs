@@ -1,4 +1,5 @@
-﻿using Application.Dtos;
+﻿using System.Linq.Expressions;
+using Application.Dtos;
 using Application.Interfaces;
 using Application.ResponseDto;
 using AutoMapper;
@@ -113,7 +114,7 @@ public class LeadsAssignService : ILeadAssignService
               .Include(l => l.Category)
               .Include(l => l.Product)
               .Include(l => l.AssignedToUser)
-              .Include(l =>l.RevertedByUser)
+              .Include(l => l.RevertedByUser)
               .ToListAsync();
 
         var revertedLeads = await _context.Leads
@@ -124,7 +125,7 @@ public class LeadsAssignService : ILeadAssignService
         return _mapper.Map<IEnumerable<LeadResponseDto>>(revertedLeads);
     }
 
-    public async Task<IEnumerable<ClosedLeadResponseDto>> GetClosedLeadsAsync()
+    public async Task<ClosedLeadResponseDto> GetClosedLeadsAsync()
     {
         var closedLeads = await _context.Leads
             .Where(l => l.Status == "Closed")
@@ -133,11 +134,68 @@ public class LeadsAssignService : ILeadAssignService
             .ToListAsync();
 
         var leadTrackingRecords = await _context.LeadsTracking
-              .Where(lt => closedLeads.Contains(lt.LeadId))
-              .OrderByDescending(lt => lt.AssignedDate) 
-              .ToListAsync();
+            .Where(lt => closedLeads.Contains(lt.LeadId))
+            .OrderByDescending(lt => lt.AssignedDate)
+            .ToListAsync();
 
-        var responseDtos = _mapper.Map<IEnumerable<LeadTrackingResponseDto>>(leadTrackingRecords);
+        return await MapLeadTrackingRecords(leadTrackingRecords);
+    }
+
+    public async Task<ClosedLeadResponseDto> GetClosedLeadsByUserAsync()
+    {
+        var userId = _jwtTokenService.GetUserIdFromToken();
+
+        var closedLeads = await _context.LeadsTracking
+            .Where(lt => lt.AssignedTo == userId && lt.Lead.Status == "Closed")
+            .Select(lt => lt.LeadId)
+            .Distinct()
+            .ToListAsync();
+
+        var leadTrackingRecords = await _context.LeadsTracking
+            .Where(lt => closedLeads.Contains(lt.LeadId))
+            .OrderByDescending(lt => lt.AssignedDate)
+            .ToListAsync();
+
+        return await MapLeadTrackingRecords(leadTrackingRecords);
+    }
+
+    public async Task<ClosedLeadResponseDto> GetClosedLeadsByDateAsync(DateTime date)
+    {
+        var userId = _jwtTokenService.GetUserIdFromToken();
+        var closedLeads = await _context.LeadsTracking
+            .Where(lt => lt.AssignedTo == userId && lt.AssignedDate.Date == date.Date && lt.Lead.Status == "Closed")
+            .Select(lt => lt.LeadId)
+            .Distinct()
+            .ToListAsync();
+
+        var leadTrackingRecords = await _context.LeadsTracking
+            .Where(lt => closedLeads.Contains(lt.LeadId))
+            .OrderByDescending(lt => lt.AssignedDate)
+            .ToListAsync();
+
+        return await MapLeadTrackingRecords(leadTrackingRecords);
+    }
+
+    public async Task<ClosedLeadResponseDto> GetClosedLeadsByDateRangeAsync(DateTime startDate, DateTime endDate)
+    {
+        var userId = _jwtTokenService.GetUserIdFromToken();
+        var closedLeads = await _context.LeadsTracking
+            .Where(lt => lt.AssignedTo == userId && lt.AssignedDate.Date >= startDate.Date && lt.AssignedDate.Date <= endDate.Date && lt.Lead.Status == "Closed")
+            .Select(lt => lt.LeadId)
+            .Distinct()
+            .ToListAsync();
+
+        var leadTrackingRecords = await _context.LeadsTracking
+            .Where(lt => closedLeads.Contains(lt.LeadId))
+            .OrderByDescending(lt => lt.AssignedDate)
+            .ToListAsync();
+
+        return await MapLeadTrackingRecords(leadTrackingRecords);
+    }
+
+    private async Task<ClosedLeadResponseDto> MapLeadTrackingRecords(List<LeadTracking> leadTrackingRecords)
+    {
+        var responseDtos = _mapper.Map<List<LeadTrackingResponseDto>>(leadTrackingRecords);
 
         var userIds = leadTrackingRecords
             .SelectMany(lt => new[] { lt.AssignedTo, lt.AssignedBy })
@@ -162,18 +220,19 @@ public class LeadsAssignService : ILeadAssignService
             {
                 var leadTrackings = group.OrderByDescending(g => g.AssignedDate).ToList();
 
-                for (int i = 0; i < responseDtos.Count(); i++)
+                for (int i = 0; i < leadTrackings.Count; i++)
                 {
-                    var currentRecord = responseDtos.ElementAt(i);
+                    var currentRecord = leadTrackings[i];
                     DateTime assignedDate = currentRecord.AssignedDate;
-                    DateTime nextAssignedDate = (i > 0) ? responseDtos.ElementAt(i - 1).AssignedDate : DateTime.UtcNow;
+                    DateTime nextAssignedDate = (i > 0) ? leadTrackings[i - 1].AssignedDate : DateTime.UtcNow;
 
                     TimeSpan duration = nextAssignedDate - assignedDate;
 
                     currentRecord.LeadDuration = $"{(int)duration.TotalMinutes} minutes";
                     currentRecord.LeadDurationFormatted = $"{(int)duration.TotalDays} days {duration.Hours} hours";
                 }
-                return new ClosedLeadResponseDto
+
+                return new ClosedLeadDto
                 {
                     LeadId = group.Key,
                     LeadTrackingRecords = leadTrackings
@@ -181,8 +240,11 @@ public class LeadsAssignService : ILeadAssignService
             })
             .ToList();
 
-        return groupedLeadTrackings;
-
+        return new ClosedLeadResponseDto
+        {
+            TotalClosedLeads = groupedLeadTrackings.Count,
+            Leads = groupedLeadTrackings
+        };
     }
 
     public async Task<IEnumerable<LeadTrackingResponseDto>> GetLeadHistoryAsync(Guid leadId)
@@ -229,4 +291,4 @@ public class LeadsAssignService : ILeadAssignService
         }
         return responseDtos;
     }
-}   
+}

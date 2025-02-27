@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Table, Select, Pagination } from "antd";
+import { Table, Select, Pagination, Button } from "antd";
 import { useParams } from "react-router-dom";
 import { getRequest } from "../utils/Api";
+import { Link } from "react-router-dom";
 
 const { Option } = Select;
 
@@ -161,7 +162,14 @@ const LeadsDisplayExcelRecords = () => {
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-3 text-left">Leads from: {excelName}</h2>
+        <Link to="/crm/listleads" className="nav-link collapsed">
+        <Button>
+        <i className="bi bi-arrow-left-short" size={26} ></i>
+        </Button>
+                  
+                   {/* <span>Upload Excel</span> */}
+                 </Link>
+      <h5 className="mb-3 text-left">Leads from: {excelName}</h5>
       {loading ? (
         <p>Loading leads...</p>
       ) : error ? (

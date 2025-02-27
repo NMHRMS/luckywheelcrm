@@ -148,7 +148,7 @@ namespace Application.Services
             var products = await _context.Products.ToDictionaryAsync(p => p.ProductName, p => p.ProductId);
 
             var users = await _context.Users
-                .Select(u => new { FullName = (u.FirstName ?? "") + " " + (u.LastName ?? ""), u.UserId })
+                .Select(u => new { FullName = (u.FirstName ?? ""), u.UserId })
                 .ToDictionaryAsync(u => u.FullName.Trim(), u => u.UserId);
 
             var lead = _mapper.Map<Lead>(leadDto);
@@ -263,57 +263,6 @@ namespace Application.Services
             return response;
         }
 
-        //public async Task<LeadResponseDto?> UpdateLeadAsync(Guid id, LeadDto leadDto)
-        //{
-        //    var existingLead = await _context.Leads.FindAsync(id);
-        //    if (existingLead == null) return null;
-
-        //    var states = await _context.States.ToDictionaryAsync(s => s.StateName, s => s.StateId);
-        //    var districts = await _context.Districts.ToDictionaryAsync(d => d.DistrictName, d => d.DistrictId);
-        //    var leadSources = await _context.LeadSources.ToDictionaryAsync(ls => ls.SourceName, ls => ls.SourceId);
-        //    var categories = await _context.Categories.ToDictionaryAsync(c => c.CategoryName, c => c.CategoryId);
-        //    var products = await _context.Products.ToDictionaryAsync(p => p.ProductName, p => p.ProductId);
-
-        //    var users = await _context.Users
-        //        .Select(u => new { FullName = (u.FirstName ?? "") + " " + (u.LastName ?? ""), u.UserId })
-        //        .ToDictionaryAsync(u => u.FullName.Trim(), u => u.UserId);
-
-        //    _mapper.Map(leadDto, existingLead);
-
-        //    existingLead.StateId = !string.IsNullOrWhiteSpace(leadDto.StateName) && states.ContainsKey(leadDto.StateName)
-        //        ? states[leadDto.StateName]
-        //        : existingLead.StateId;
-        //    existingLead.DistrictId = !string.IsNullOrWhiteSpace(leadDto.DistrictName) && districts.ContainsKey(leadDto.DistrictName)
-        //        ? districts[leadDto.DistrictName]
-        //        : existingLead.DistrictId;
-        //    existingLead.LeadSourceId = !string.IsNullOrWhiteSpace(leadDto.LeadSourceName) && leadSources.ContainsKey(leadDto.LeadSourceName)
-        //        ? leadSources[leadDto.LeadSourceName]
-        //        : existingLead.LeadSourceId;
-        //    existingLead.CategoryId = !string.IsNullOrWhiteSpace(leadDto.CategoryName) && categories.ContainsKey(leadDto.CategoryName)
-        //        ? categories[leadDto.CategoryName]
-        //        : existingLead.CategoryId;
-        //    existingLead.ProductId = !string.IsNullOrWhiteSpace(leadDto.ProductName) && products.ContainsKey(leadDto.ProductName)
-        //        ? products[leadDto.ProductName]
-        //        : existingLead.ProductId;
-
-        //    if (!string.IsNullOrWhiteSpace(leadDto.AssignedToName) && users.ContainsKey(leadDto.AssignedToName))
-        //    {
-        //        existingLead.AssignedTo = users[leadDto.AssignedToName];
-        //    }
-
-        //    existingLead.UpdateDate = DateTime.UtcNow;
-        //    _context.Leads.Update(existingLead);
-        //    await _context.SaveChangesAsync();
-
-        //    var response = _mapper.Map<LeadResponseDto>(existingLead);
-
-        //    response.AssignedToName = existingLead.AssignedTo.HasValue && users.ContainsValue(existingLead.AssignedTo.Value)
-        //        ? users.FirstOrDefault(x => x.Value == existingLead.AssignedTo.Value).Key
-        //        : null;
-
-        //    return response;
-        //}
-
         public async Task<bool> CheckIfFileExists(string fileName)
         {
             return await _context.Leads.AnyAsync(l => l.ExcelName == fileName);
@@ -352,13 +301,13 @@ namespace Application.Services
                 var mobileNo = worksheet.Cells[row, 6].Value?.ToString();
                 var currentAddress = worksheet.Cells[row, 7].Value?.ToString();
                 var currentVehicle = worksheet.Cells[row, 8].Value?.ToString();
-                var chasisNoStr = worksheet.Cells[row, 9].Value?.ToString();
+                var chasisNo = worksheet.Cells[row, 9].Value?.ToString();
                 var registrationNo = worksheet.Cells[row, 10].Value?.ToString();
                 var registrationDateStr = worksheet.Cells[row, 11].Value?.ToString();
                 var productName = worksheet.Cells[row, 12].Value?.ToString();
                 var modelName = worksheet.Cells[row, 13].Value?.ToString();
 
-                int? chasisNo = int.TryParse(chasisNoStr, out int parsedChasisNo) ? parsedChasisNo : (int?)null;
+                //int? chasisNo = int.TryParse(chasisNoStr, out int parsedChasisNo) ? parsedChasisNo : (int?)null;
                 DateTime? registrationDate = DateTime.TryParse(registrationDateStr, out DateTime regDate) ? regDate : (DateTime?)null;
 
                 var lead = new Lead
@@ -367,16 +316,16 @@ namespace Application.Services
                     OwnerName = ownerName ?? "Unknown",
                     FatherName = fatherName ?? "N/A",
                     MobileNo = mobileNo ?? "N/A",
-                    StateId = states.ContainsKey(stateName) ? states[stateName] : null,
-                    DistrictId = districts.ContainsKey(districtName) ? districts[districtName] : null,
+                    StateId = !string.IsNullOrWhiteSpace(stateName) && states.ContainsKey(stateName) ? states[stateName] : (Guid?)null,
+                    DistrictId = !string.IsNullOrWhiteSpace(districtName) && districts.ContainsKey(districtName) ? districts[districtName] : (Guid?)null,
                     CurrentAddress = currentAddress ?? "N/A",
                     CurrentVehicle = currentVehicle ?? "None",
                     ChasisNo = chasisNo ?? null,
                     RegistrationNo = registrationNo ?? null,
                     RegistrationDate = registrationDate ?? null,
                     ModelName = modelName ?? null,
-                    ProductId = products.ContainsKey(productName) ? products[productName] : null,
-                    LeadType = "N/A",
+                    ProductId = !string.IsNullOrWhiteSpace(productName) && products.ContainsKey(productName) ? products[productName] : null,
+                    LeadType = "N/A",   
                     Status = "Not Called",
                     CreateDate = DateTime.UtcNow,
                     UpdateDate = DateTime.UtcNow,
@@ -460,6 +409,7 @@ namespace Application.Services
                 .Include(l => l.Category)
                 .Include(l => l.Product)
                 .Include(l => l.AssignedToUser)
+                .OrderBy( l => l.AssignedDate)
                 .Where(lt => lt.AssignedTo == userId)
                 .ToListAsync();
 

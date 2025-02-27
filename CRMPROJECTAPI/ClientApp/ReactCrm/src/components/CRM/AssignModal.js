@@ -6,12 +6,16 @@ import { fetchStoredData } from "../utils/UserDataUtils"
 
 function AssignModal({ visible, onClose, selectedRows, onAssign }) {
   const [creOptions, setCreOptions] = useState([])
+  const [assignUsers, setAssignUsers] = useState([])
   const [selectedCRE, setSelectedCRE] = useState("")
   const [userData, setUserData] = useState({
     branchId: "",
     companyId: "",
     userId: "",
   })
+
+  console.log("assignUsers",assignUsers);
+  
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -27,8 +31,19 @@ function AssignModal({ visible, onClose, selectedRows, onAssign }) {
     console.log("selectedRows", selectedRows)
     if (visible) {
       fetchCreUsers()
+      fetchAssignments()
     }
   }, [visible, selectedRows]) // Added selectedRows to dependencies
+
+    const fetchAssignments = () => {
+      getRequest("/api/UserAssignmentMapping/get-mappings")
+        .then((response) => setAssignUsers({
+          ...response.data.map((item)=>{
+            return { ...item, key: item.userId }
+          })
+        }))
+        .catch((error) => console.error("Error fetching assignments:", error));
+    };
 
   const fetchCreUsers = async () => {
     try {
@@ -65,7 +80,7 @@ function AssignModal({ visible, onClose, selectedRows, onAssign }) {
           <div className="modal-body">
             <select className="form-select" value={selectedCRE} onChange={(e) => setSelectedCRE(e.target.value)}>
               <option value="">Select CRE</option>
-              {creOptions.map((cre) => (
+              {assignUsers.map((cre) => (
                 <option key={cre.userId} value={cre.userId}>
                   {cre.firstName} {cre.lastName}
                 </option>

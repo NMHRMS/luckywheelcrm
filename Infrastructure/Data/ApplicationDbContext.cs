@@ -182,7 +182,7 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.RegistrationNo).HasMaxLength(50);
             entity.Property(e => e.RegistrationDate).HasColumnType("datetime2(7)");
             entity.Property(e => e.CurrentVehicle).HasMaxLength(100);
-            entity.Property(e => e.ChasisNo).HasColumnType("int");
+            entity.Property(e => e.ChasisNo).HasMaxLength(30);
             entity.Property(e => e.ModelName).HasMaxLength(100);
             entity.Property(e => e.LeadType).HasMaxLength(50);
             entity.Property(e => e.AssignedDate).HasColumnType("datetime");
@@ -243,9 +243,12 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.LeadReviewId).HasColumnName("LeadReviewID");
             entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
             entity.Property(e => e.CreateDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+            entity.Property(e => e.ReviewBy).HasColumnName("ReviewBy");
             entity.Property(e => e.LeadId).HasColumnName("LeadID");
             entity.Property(e => e.UpdateDate).HasColumnType("datetime");
             entity.HasOne(d => d.Company).WithMany(p => p.LeadsReview).HasForeignKey(d => d.CompanyId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_LeadsReview_Companies");
+            entity.HasOne(d => d.ReviewByUser).WithMany(p => p.LeadsReview).HasForeignKey(d => d.ReviewBy).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_LeadsReview_Users");
+
         });
 
         modelBuilder.Entity<LeadTracking>(entity =>
