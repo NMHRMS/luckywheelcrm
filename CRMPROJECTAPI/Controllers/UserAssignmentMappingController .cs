@@ -1,5 +1,6 @@
 ﻿using Application.Dtos;
 using Application.Interfaces;
+using Application.ResponseDto;
 using Application.Services;
 using Azure.Core;
 using Microsoft.AspNetCore.Http;
@@ -32,8 +33,8 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(mappings);
         }
 
-        [HttpGet("assignees/names")]
-        public async Task<ActionResult<IEnumerable<string>>> GetAssigneeNames()
+        [HttpGet("assignees")]
+        public async Task<ActionResult<List<AssigneeResponseDto>>> GetAssigneeNames()
         {
             var assigneeNames = await _mappingService.GetAssigneeNamesForAssignerAsync();
             return Ok(assigneeNames);
