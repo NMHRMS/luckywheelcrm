@@ -1,23 +1,43 @@
 import { useEffect, useState } from "react";
-import { getRequest, postRequest } from "../utils/Api";
-import LeadsDisplayExcelRecords from "./LeadsDisplayExcelRecords";
+import { Table, Button, message, DatePicker } from "antd";
+import { getRequest } from "../utils/Api";
 import { useNavigate } from "react-router-dom";
+import Loader from "../utils/Loader";
+import dayjs from "dayjs";
+
+const { RangePicker } = DatePicker;
+
 const ListLeads = () => {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const navigate = useNavigate(); // Navigation hook
+  const [filteredFiles, setFilteredFiles] = useState([]);
+  const [searchText, setSearchText] = useState("");
+  const [selectedDates, setSelectedDates] = useState(null);
+  const navigate = useNavigate();
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "N/A";
+
+    const date = new Date(dateString);
+    if (isNaN(date)) return "Invalid Date";
+
+    const day = date.getDate();
+    const month = date.getMonth() + 1; // Months are 0-based
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  };
 
   useEffect(() => {
     getRequest("/api/Leads/get_leads_dataList")
       .then((response) => {
-        console.log(response.data); // Log the response to see the structure
         setFiles(response.data);
+        setFilteredFiles(response.data);
         setLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching files:", error);
-        setError("Failed to load files. Please try again later.");
+        message.error("Failed to load files. Please try again later.");
         setLoading(false);
       });
   }, []);
@@ -26,63 +46,105 @@ const ListLeads = () => {
     navigate(`/crm/leadsdisplayexcelrecords/${fileName}`);
   };
 
+  // Filtering based on Excel Name & Date Range
+  useEffect(() => {
+    let filtered = files;
+
+    if (searchText) {
+      filtered = filtered.filter((file) =>
+        file.excelName.toLowerCase().includes(searchText.toLowerCase())
+      );
+    }
+
+    if (selectedDates) {
+      filtered = filtered.filter((file) => {
+        const fileDate = dayjs(file.createdDate);
+        return fileDate.isBetween(selectedDates[0], selectedDates[1], "day", "[]");
+      });
+    }
+
+    setFilteredFiles(filtered);
+  }, [searchText, selectedDates, files]);
+
+  const columns = [
+    {
+      title: "Excel Name",
+      dataIndex: "excelName",
+      key: "excelName",
+      render: (text) =>
+        text ? (
+          <Button type="link" onClick={() => handleFileClick(text)}>
+            {text}
+          </Button>
+        ) : (
+          "Invalid Name"
+        ),
+      sorter: (a, b) => a.excelName.localeCompare(b.excelName),
+      filters: [...new Set(files.map((lead) => lead.excelName))].map((excelName) => ({
+        text: excelName,
+        value: excelName,
+      })),
+      onFilter: (value, record) => record.excelName === value,
+    },
+    {
+      title: "Total Leads",
+      dataIndex: "totalCount",
+      key: "totalCount",
+      sorter: (a, b) => a.totalCount - b.totalCount,
+    },
+    {
+      title: "Assigned Leads",
+      dataIndex: "assignedCount",
+      key: "assignedCount",
+      sorter: (a, b) => a.assignedCount - b.assignedCount,
+    },
+    {
+      title: "Not Assigned Leads",
+      dataIndex: "notAssignedCount",
+      key: "notAssignedCount",
+      sorter: (a, b) => a.notAssignedCount - b.notAssignedCount,
+    },
+    {
+      title: "Created Date",
+      dataIndex: "createdDate",
+      key: "createdDate",
+      render: formatDateTime,
+      sorter: (a, b) => new Date(a.createdDate) - new Date(b.createdDate),
+    },
+  ];
+
   return (
     <div className="container mt-4">
       <h2 className="mb-3">Leads by Excel File</h2>
+
+      {/* Filters */}
+      {/* <div className="mb-3 d-flex gap-3">
+        <input
+          type="text"
+          placeholder="Search by Excel Name"
+          className="form-control"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+        />
+
+        <RangePicker
+          onChange={(dates) => setSelectedDates(dates)}
+          format="DD/MM/YYYY"
+        />
+      </div> */}
+
       {loading ? (
-        <p>Loading files...</p>
-      ) : error ? (
-        <p className="text-danger">{error}</p>
-      ) : files.length === 0 ? (
-        <p>No files available.</p>
+        <Loader />
       ) : (
-        <table className="table  table-bordered">
-          <thead className="thead-dark">
-            <tr>
-              <th>Excel Name</th>
-              <th>Total Leads</th>
-              <th>Assigned Leads</th>
-              <th>Not Assigned Leads</th>
-              <th>Created Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {files.map((file, index) => (
-              <tr key={index}>
-                <td>
-                  <button
-                    className="btn btn-link"
-                    onClick={() => handleFileClick(file.excelName)}
-                  >
-                    {typeof file.excelName === "string"
-                      ? file.excelName
-                      : "Invalid name"}
-                  </button>
-                </td>
-                <td>
-                  {typeof file.totalCount === "number"
-                    ? file.totalCount
-                    : "N/A"}
-                </td>
-                <td>
-                  {typeof file.assignedCount === "number"
-                    ? file.assignedCount
-                    : "N/A"}
-                </td>
-                <td>
-                  {typeof file.notAssignedCount === "number"
-                    ? file.notAssignedCount
-                    : "N/A"}
-                </td>
-                <td>
-                  {file.createdDate
-                    ? new Date(file.createdDate).toLocaleString()
-                    : "Invalid date"}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <Table
+          columns={columns}
+          dataSource={filteredFiles.map((file, index) => ({
+            ...file,
+            key: index,
+          }))}
+          pagination={{ pageSize: 10 }}
+          bordered
+        />
       )}
     </div>
   );

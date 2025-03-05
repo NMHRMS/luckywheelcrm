@@ -23,13 +23,6 @@ function Sidebar() {
           </li>
 
           <li className="nav-item">
-            <Link to="/admin/userperformance" className="nav-link">
-              <i className="bi bi-bar-chart"></i> {/* Performance Icon */}
-              <span className="ms-2">User Performance</span>
-            </Link>
-          </li>
-
-          <li className="nav-item">
             <Link to="/admin/addrole" className="nav-link">
               <i className="bi bi-person-plus"></i> {/* Add Role Icon */}
               <span className="ms-2">Add Role</span>
@@ -49,7 +42,18 @@ function Sidebar() {
               <span className="ms-2">Add User</span>
             </Link>
           </li>
-
+          <li className="nav-item">
+            <Link to="/admin/categories" className="nav-link">
+              <i className="bi bi-people"></i> {/* Add User Icon */}
+              <span className="ms-2">Add Categories</span>
+            </Link>
+          </li>
+          <li className="nav-item">
+            <Link to="/admin/userperformance" className="nav-link">
+              <i className="bi bi-bar-chart"></i> {/* Performance Icon */}
+              <span className="ms-2">User Performance</span>
+            </Link>
+          </li>
           {/* <li className="nav-item">
             <a
               className="nav-link collapsed"

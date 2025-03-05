@@ -25,7 +25,9 @@ namespace Application.Services
         }
         public async Task<IEnumerable<LeadReviewResponseDto>> GetAllLeadsReviewAsync()
         {
-            var leadReviews = await _context.LeadsReview.ToListAsync();
+            var leadReviews = await _context.LeadsReview
+                .Include(l=> l.ReviewByUser)
+                .ToListAsync();
             return _mapper.Map<IEnumerable<LeadReviewResponseDto>>(leadReviews);
         }
         public async Task<LeadReviewResponseDto?> GetLeadReviewByIdAsync(Guid id)

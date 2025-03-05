@@ -28,6 +28,7 @@ builder.Services.AddScoped<ILeadSourceService, LeadSourceService>();
 builder.Services.AddScoped<ILeadReviewService, LeadReviewService>();
 builder.Services.AddScoped<ICallRecordService, CallRecordService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IStateDistrictService, StateDistrictService>();
 builder.Services.AddScoped<IVehicleInOutService, VehicleInOutService>();
 builder.Services.AddScoped<ILeadAssignService, LeadsAssignService>();
 builder.Services.AddScoped<IUserAssignmentMappingService, UserAssignmentMappingService>();

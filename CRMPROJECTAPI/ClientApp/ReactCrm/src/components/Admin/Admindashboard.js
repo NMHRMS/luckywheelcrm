@@ -1,53 +1,136 @@
-import React from "react";
-import { Bar, Line } from "react-chartjs-2";
-import "chart.js/auto";
+import React, { useEffect, useState } from "react";
+import UserPerformance from "./UserPerformance";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  PointElement,
+  LineElement,
+} from "chart.js";
+import { getRequest } from "../utils/Api";
+import Loader from "../utils/Loader";
 
-function Dashboard() {
-  // Dummy data for graphs and totals
-  const totalData = {
-    roles: 20,
-    users: 50,
-    branches: 15,
-    dailySales: 30,
-    positiveLeads: 18,
-    totalCalls: 100,
-    dailyCalls: 40,
-  };
+// Register required Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  PointElement,
+  LineElement
+);
 
-  // Data for the bar chart
-  const barChartData = {
-    labels: ["Daily Sales", "Positive Leads", "Total Calls", "Daily Calls"],
+export default function AdminDashboard() {
+  const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch Leads Data from API
+  useEffect(() => {
+    getRequest("/api/Leads/dashboard_leads")
+      .then((response) => {
+        console.log("API Response:", response.data.leads);
+        setLeads(response.data.leads);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching leads:", error);
+        setLeads([]);
+        setLoading(false);
+      });
+  }, []);
+
+  // Safe filtering by ensuring leads is an array
+  const totalLeads = leads.length;
+  const assignedLeads = leads.filter((lead) => lead.assignedTo !== null).length;
+  const pending = leads.filter((lead) => lead.status === "Pending").length;
+  const closedLeads = leads.filter((lead) => lead.status === "Closed").length;
+
+  // Card Data
+  const cardData = [
+    {
+      title: "Total Leads",
+      value: totalLeads,
+      icon: "bi bi-people",
+      bg: "primary",
+    },
+    {
+      title: "Assigned Leads",
+      value: assignedLeads,
+      icon: "bi bi-person-check",
+      bg: "success",
+    },
+    {
+      title: "Pending",
+      value: pending,
+      icon: "bi bi-telephone",
+      bg: "warning",
+    },
+    {
+      title: "Closed Leads",
+      value: closedLeads,
+      icon: "bi bi-handshake",
+      bg: "secondary",
+    },
+  ];
+
+  // Chart Data
+  const barData = {
+    labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
     datasets: [
       {
-        label: "Performance Metrics",
-        data: [
-          totalData.dailySales,
-          totalData.positiveLeads,
-          totalData.totalCalls,
-          totalData.dailyCalls,
-        ],
-        backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0"],
+        label: "New Leads",
+        data: [20, 35, 45, 60, 50, 70],
+        backgroundColor: "#007bff",
       },
     ],
   };
 
-  // Data for the line chart
-  const lineChartData = {
-    labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
+  const doughnutData = {
+    labels: [
+      "Not Called",
+      "Pending",
+      "Closed",
+      "Not Connected",
+      "Positive",
+      "Negative",
+      "Connected",
+    ],
     datasets: [
       {
-        label: "Sales Performance",
-        data: [10, 20, 15, 30],
-        fill: true,
-        borderColor: "#36A2EB",
-        backgroundColor: "rgba(54,162,235,0.2)",
+        data: [
+          leads.filter((lead) => lead.status === "Not Called").length,
+          leads.filter((lead) => lead.status === "Pending").length,
+          leads.filter((lead) => lead.status === "Closed").length,
+          leads.filter((lead) => lead.status === "Not Connected").length,
+          leads.filter((lead) => lead.status === "Positive").length,
+          leads.filter((lead) => lead.status === "Negative").length,
+          leads.filter((lead) => lead.status === "Connected").length,
+        ],
+        backgroundColor: [
+          "#007bff", // Not Called (Blue)
+          "#ffc107", // Pending (Yellow)
+          "#28a745", // Closed (Green)
+          "#dc3545", // Not Connected (Red)
+          "#20c997", // Positive (Teal)
+          "#6610f2", // Negative (Dark Purple)
+          "#fd7e14", // Connected (Orange)
+        ],
       },
     ],
   };
 
   return (
     <div className="container mt-0">
-       <div className="pagetitle mb-4">
+      {/* {/ Page Title /} */}
+      <div className="pagetitle mb-4">
         <h1>Admin Dashboard</h1>
         <nav>
           <ol className="breadcrumb">
@@ -59,86 +142,28 @@ function Dashboard() {
         </nav>
       </div>
 
-      {/* Display total numbers */}
-      {/* <div className="row text-center mt-4">
-        <div className="col-md-3 mb-3">
-          <div
-            className="p-3 rounded"
-            style={{ backgroundColor: "#FFD700", color: "#000" }}
-          >
-            <h4>Roles</h4>
-            <h2>{totalData.roles}</h2>
+      {loading ? (
+        <Loader />
+      ) : (
+        <>
+          {/* {/ Cards Section /} */}
+          <div className="row">
+            {cardData.map((card, index) => (
+              <div key={index} className="col-md-3">
+                <div className={`card text-white bg-${card.bg} mb-3`}>
+                  <div className="card-body">
+                    <h5 className="card-title">
+                      <i className={card.icon}></i> {card.title}
+                    </h5>
+                    <h2 className="card-text">{card.value}</h2>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-        <div className="col-md-3 mb-3">
-          <div
-            className="p-3 rounded"
-            style={{ backgroundColor: "#20B2AA", color: "#fff" }}
-          >
-            <h4>Users</h4>
-            <h2>{totalData.users}</h2>
-          </div>
-        </div>
-        <div className="col-md-3 mb-3">
-          <div
-            className="p-3 rounded"
-            style={{ backgroundColor: "#FF6347", color: "#fff" }}
-          >
-            <h4>Branches</h4>
-            <h2>{totalData.branches}</h2>
-          </div>
-        </div>
-        <div className="col-md-3 mb-3">
-          <div
-            className="p-3 rounded"
-            style={{ backgroundColor: "#4682B4", color: "#fff" }}
-          >
-            <h4>Daily Sales</h4>
-            <h2>{totalData.dailySales}</h2>
-          </div>
-        </div>
-        <div className="col-md-3 mb-3">
-          <div
-            className="p-3 rounded"
-            style={{ backgroundColor: "#32CD32", color: "#fff" }}
-          >
-            <h4>Positive Leads</h4>
-            <h2>{totalData.positiveLeads}</h2>
-          </div>
-        </div>
-        <div className="col-md-3 mb-3">
-          <div
-            className="p-3 rounded"
-            style={{ backgroundColor: "#8A2BE2", color: "#fff" }}
-          >
-            <h4>Total Calls</h4>
-            <h2>{totalData.totalCalls}</h2>
-          </div>
-        </div>
-        <div className="col-md-3 mb-3">
-          <div
-            className="p-3 rounded"
-            style={{ backgroundColor: "#FF4500", color: "#fff" }}
-          >
-            <h4>Daily Calls</h4>
-            <h2>{totalData.dailyCalls}</h2>
-          </div>
-        </div>
-      </div> */}
-
-      {/* Charts */}
-      <div className="row mt-4">
-        <div className="col-md-6">
-          <h4>Performance Metrics (Bar Chart)</h4>
-          <Bar data={barChartData} />
-        </div>
-        <div className="col-md-6">
-          <h4>Sales Performance (Line Chart)</h4>
-          <Line data={lineChartData} />
-        </div>
-      </div>
+        </>
+      )}
+      <UserPerformance />
     </div>
   );
 }
-
-export default Dashboard;

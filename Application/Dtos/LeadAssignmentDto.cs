@@ -10,7 +10,7 @@ namespace Application.Dtos
     {
         public Guid LeadID { get; set; }
         public Guid AssignedTo { get; set; }  
-        public Guid AssignedBy { get; set; }  
+        //public Guid AssignedBy { get; set; }  
         public DateTime AssignedDate { get; set; }    
     }
 }

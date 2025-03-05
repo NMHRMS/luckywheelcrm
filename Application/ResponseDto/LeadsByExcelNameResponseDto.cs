@@ -9,7 +9,7 @@ namespace Application.ResponseDto
 {
     public class LeadsByExcelNameResponseDto
     {
-        public IEnumerable<Lead> Leads { get; set; }
+        public IEnumerable<LeadResponseDto> Leads { get; set; }
         public int TotalLeadsCount { get; set; }
         public int AssignedLeadsCount { get; set; }
         public int NotAssignedLeadsCount { get; set; }

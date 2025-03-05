@@ -78,14 +78,20 @@ namespace CRMPROJECTAPI.Controllers
         }
 
         [HttpPost("upload-excel")]
-        public async Task<IActionResult> UploadLeads(IFormFile file)
+        public async Task<IActionResult> UploadLeads(IFormFile file, string fileName)
         {
             if (file == null || file.Length == 0)
                 return BadRequest(new { message = "Invalid file", latestLeads = (object)null });
 
+            bool fileExists = await _leadService.CheckIfFileExists(fileName);
+            if (fileExists)
+            {
+                return BadRequest(new { message = "A file with this name already exists. Please rename it before uploading.", latestLeads = (object)null });
+            }
+
             try
             {
-                await _leadService.UploadLeadsFromExcelAsync(file);
+                await _leadService.UploadLeadsFromExcelAsync(file, fileName);
             }
             catch (Exception ex)
             {
@@ -114,7 +120,6 @@ namespace CRMPROJECTAPI.Controllers
             var assignedLeads = await _leadService.GetTodaysFollowUpLeadsAsync(userId);
             return Ok(assignedLeads);
         }
-
 
         [HttpGet("filter")]
         public async Task<IActionResult> GetLeadsByAssignment([FromQuery] bool assigned)
@@ -157,14 +162,19 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(leads);
         }
 
+        [HttpGet("dashboard_leads_user")]
+        public async Task<IActionResult> GetDashboardLeads(Guid userId)
+        {
+            var leads = await _leadService.GetDashboardLeads(userId);
+            return Ok(leads);
+        }
 
-[HttpGet("get_leads_by_excelname")]
-public async Task<IActionResult> GetLeadsByExcelName(string excelName)
-{
-    var leads = await _leadService.GetLeadsByExcelName(excelName);
-    return Ok(leads);
-}
-
+        [HttpGet("get_leads_by_excelname")]
+        public async Task<IActionResult> GetLeadsByExcelName(string excelName)
+        {
+            var leads = await _leadService.GetLeadsByExcelName(excelName);
+            return Ok(leads);
+        }
 
         [HttpGet("get_leads_dataList")]
         public async Task<IActionResult> GetLeadsDataList()
@@ -179,5 +189,45 @@ public async Task<IActionResult> GetLeadsByExcelName(string excelName)
             var leads = await _leadService.GetDashboardListByUserId(userId, date);
             return Ok(leads);
         }
+
+        [HttpGet("by_followUpDate")]
+        public async Task<IActionResult> GetLeadsByFollowUpDate([FromQuery] DateTime followUpDate)
+        {
+            var leads = await _leadService.GetLeadsByFollowUpDateAsync(followUpDate);
+
+            if (!leads.Any())
+                return NotFound("No leads found for the selected follow-up date.");
+
+            return Ok(leads);
+        }
+
+        [HttpGet("leads_by_followUpDate")]
+        public async Task<IActionResult> GetAssignedLeadsByFollowUpDate(Guid userId, DateTime followUpDate)
+        {
+            var leads = await _leadService.GetAssignedLeadsByFollowUpDateAsync(userId, followUpDate);
+            return Ok(leads);
+        }
+
+        [HttpGet("assigned-leads-by-assigned-daterange")]
+        public async Task<IActionResult> GetAssignedLeadsByAssignedDateRange(Guid userId, DateTime startDate, DateTime endDate)
+        {
+            var leads = await _leadService.GetAssignedLeadsByAssignedDateRangeAsync(userId, startDate, endDate);
+            return Ok(leads);
+        }
+
+        [HttpGet("assigned-leads-by-followup-daterange")]
+        public async Task<IActionResult> GetAssignedLeadsByFollowUpDateRange(Guid userId, DateTime startDate, DateTime endDate)
+        {
+            var leads = await _leadService.GetAssignedLeadsByFollowUpDateRangeAsync(userId, startDate, endDate);
+            return Ok(leads);
+        }
+
+        [HttpGet("leads-by-timeframe")]
+        public async Task<IActionResult> GetLeadsByTimeFrame(Guid userId, string timeframe)
+        {
+            var leads = await _leadService.GetLeadsByTimeFrameAsync(userId, timeframe);
+            return Ok(leads);
+        }
+
     }
 }

@@ -1,110 +1,82 @@
-import React from 'react'
+import React from "react";
 import { Link } from "react-router-dom";
 
 export default function SidebarCRM() {
   return (
     <div>
-       <>
-      {/* <!-- ======= Sidebar ======= --> */}
+      {/* {/ <!-- Sidebar --> /} */}
       <aside id="sidebar" className="sidebar">
         <ul className="sidebar-nav" id="sidebar-nav">
           <li className="nav-item">
-            <Link to="/crm/dashboard" className="nav-link " href="index.html">
-              <i className="bi bi-grid"></i>
+            <Link to="/crm/dashboard" className="nav-link">
+              <i className="bi bi-speedometer2"></i>
               <span>DashboardCRM</span>
             </Link>
           </li>
-          {/* <!-- End Dashboard Nav --> */}
 
           <li className="nav-item">
-            <a
-              className="nav-link collapsed"
-              data-bs-target="#components-nav"
-              data-bs-toggle="collapse"
-              href="#"
-            >
-              <i className="bi bi-menu-button-wide"></i>
-              <span>Components</span>
-              <i className="bi bi-chevron-down ms-auto"></i>
-            </a>
-            <ul
-              id="components-nav"
-              className="nav-content collapse "
-              data-bs-parent="#sidebar-nav"
-            >
-              <li>
-                <Link to="/crm/excelform">
-                  <i className="bi bi-circle"></i>
-                  <span>Leads</span>
-                </Link>
-              </li>
-              
-               <li>
-                <Link to="/crm/vehiclecheck">
-                  <i className="bi bi-circle"></i>
-                  <span>VehicleCheckIn</span>
-                </Link>
-              </li>
-             {/* <li>
-                <Link to="/crm/sales">
-                  <i className="bi bi-circle"></i>
-                  <span>Sales</span>
-                </Link>
-              </li>
-              <li>
-                <Link to="/crm/dsm">
-                  <i className="bi bi-circle"></i>
-                  <span>DSM</span>
-                </Link>
-              </li>
-              <li>
-                <Link to="/crm/dse">
-                  <i className="bi bi-circle"></i>
-                  <span>DSE</span>
-                </Link>
-              </li>
-              <li>
-                <Link to="/crm/leads">
-                  <i className="bi bi-circle"></i>
-                  <span>Leads</span>
-                </Link>
-              </li> */}
-            </ul>
+            <Link to="/crm/leads" className="nav-link collapsed">
+              <i className="bi bi-upload"></i>
+              <span>Upload Excel</span>
+            </Link>
           </li>
 
-          {/* Dropdown Menu for Reports */}
-          
-          {/* End Dropdown Menu */}
-
-          {/* <li className="nav-item">
-            <a className="nav-link collapsed" href="users-profile.html">
-              <i className="bi bi-person"></i>
-              <span>Profile</span>
-            </a>
-          </li> */}
-          {/* <!-- End Profile Page Nav --> */}
-{/* 
           <li className="nav-item">
-            <a className="nav-link collapsed" href="pages-contact.html">
-              <i className="bi bi-envelope"></i>
-              <span>Contact</span>
-            </a>
-          </li> */}
-          {/* <!-- End Contact Page Nav --> */}
+            <Link to="/crm/listleads" className="nav-link collapsed">
+              <i className="bi bi-file-earmark-spreadsheet"></i>
+              <span>Excel List</span>
+            </Link>
+          </li>
 
-          
+          <li className="nav-item">
+            <Link to="/crm/allleads" className="nav-link collapsed">
+              <i className="bi bi-people"></i>
+              <span>All Leads</span>
+            </Link>
+          </li>
+
+          <li className="nav-item">
+            <Link to="/crm/asiignedleads" className="nav-link collapsed">
+              <i className="bi bi-search"></i>
+              <span>Track Leads</span>
+            </Link>
+          </li>
+
+          <li className="nav-item">
+            <Link to="/crm/performance" className="nav-link collapsed">
+              <i className="bi bi-bar-chart-line"></i>
+              <span>User Performance</span>
+            </Link>
+          </li>
+          <li className="nav-item">
+            <Link to="/crm/revertleads" className="nav-link collapsed">
+              <i className="bi bi-x-circle"></i>
+              <span>Reject Leads</span>
+            </Link>
+          </li>
+          <li className="nav-item">
+            <Link to="/crm/reports" className="nav-link collapsed">
+              <i className="bi bi-x-circle"></i>
+              <span>Reports</span>
+            </Link>
+          </li>
+
+          <li className="nav-item">
+            <Link to="/crm/vehiclecheck" className="nav-link collapsed">
+              <i className="bi bi-car-front"></i>
+              <span>Vehicle Check-In</span>
+            </Link>
+          </li>
 
           <li className="nav-item">
             <Link to="/" className="nav-link collapsed">
-              <i className="bi bi-box-arrow-in-right"></i>
+              <i className="bi bi-box-arrow-right"></i>
               <span>Logout</span>
             </Link>
           </li>
-          {/* <!-- End Register Page Nav --> */}
         </ul>
       </aside>
-      {/* <!-- End Sidebar--> */}
-    </>
+      {/* {/ <!-- End Sidebar--> /} */}
     </div>
-  )
+  );
 }

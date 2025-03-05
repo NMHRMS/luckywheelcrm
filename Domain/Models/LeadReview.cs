@@ -17,6 +17,8 @@ public partial class LeadReview
 
     public string? Review {  get; set; }
 
+    public Guid? ReviewBy { get; set; }
+
     public DateTime? ReviewDate { get; set; }
 
     public DateTime FollowUpDate { get; set; } 
@@ -25,8 +27,10 @@ public partial class LeadReview
 
     public DateTime? UpdateDate { get; set; }
 
-    public virtual Company Company { get; set; } = null!;
+    public virtual Company Company { get; set; }
 
-    public virtual Lead Lead { get; set; } = null!;
+    public virtual Lead Lead { get; set; }
+
+    public virtual User ReviewByUser { get; set; }
     
 }

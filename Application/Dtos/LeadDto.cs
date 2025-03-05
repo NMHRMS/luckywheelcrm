@@ -11,7 +11,7 @@
         public string CurrentAddress { get; set; }
         public string? RegistrationNo { get; set; }
         public DateTime? RegistrationDate { get; set; }
-        public int? ChasisNo { get; set; }
+        public string? ChasisNo { get; set; }
         public string? CurrentVehicle { get; set; }
         public string? CategoryName { get; set; }
         public string? ProductName { get; set; }

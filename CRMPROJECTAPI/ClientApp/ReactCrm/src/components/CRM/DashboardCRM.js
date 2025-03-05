@@ -12,8 +12,8 @@ import {
   PointElement,
   LineElement,
 } from "chart.js";
-import axios from "axios";
 import { getRequest } from "../utils/Api";
+import Loader from "../utils/Loader";
 
 // Register required Chart.js components
 ChartJS.register(
@@ -30,33 +30,58 @@ ChartJS.register(
 
 export default function DashboardCRM() {
   const [leads, setLeads] = useState([]);
-  
+  const [loading, setLoading] = useState(true);
+
   // Fetch Leads Data from API
   useEffect(() => {
-    getRequest("api/Leads")
-      .then(response => {
-        setLeads(response.data);
+    getRequest("/api/Leads/dashboard_leads")
+      .then((response) => {
+        console.log("API Response:", response.data.leads);
+        setLeads(response.data.leads);
+        setLoading(false);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("Error fetching leads:", error);
+        setLeads([]);
+        setLoading(false);
       });
   }, []);
 
-  // Calculate Dashboard Stats
+  // Safe filtering by ensuring leads is an array
   const totalLeads = leads.length;
-  const assignedLeads = leads.filter(lead => lead.assignedTo !== null).length;
-  const followUps = leads.filter(lead => lead.status === "Follow-up").length;
-  const closedDeals = leads.filter(lead => lead.status === "Closed").length;
+  const assignedLeads = leads.filter((lead) => lead.assignedTo !== null).length;
+  const pending = leads.filter((lead) => lead.status === "Pending").length;
+  const closedLeads = leads.filter((lead) => lead.status === "Closed").length;
 
   // Card Data
   const cardData = [
-    { title: "Total Leads", value: totalLeads, icon: "bi bi-people", bg: "primary" },
-    { title: "Assigned Leads", value: assignedLeads, icon: "bi bi-person-check", bg: "success" },
-    { title: "Follow-ups", value: followUps, icon: "bi bi-telephone", bg: "warning" },
-    { title: "Closed Deals", value: closedDeals, icon: "bi bi-handshake", bg: "secondary" },
+    {
+      title: "Total Leads",
+      value: totalLeads,
+      icon: "bi bi-people",
+      bg: "primary",
+    },
+    {
+      title: "Assigned Leads",
+      value: assignedLeads,
+      icon: "bi bi-person-check",
+      bg: "success",
+    },
+    {
+      title: "Pending",
+      value: pending,
+      icon: "bi bi-telephone",
+      bg: "warning",
+    },
+    {
+      title: "Closed Leads",
+      value: closedLeads,
+      icon: "bi bi-handshake",
+      bg: "secondary",
+    },
   ];
 
-  // Dummy chart data
+  // Chart Data
   const barData = {
     labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
     datasets: [
@@ -69,28 +94,35 @@ export default function DashboardCRM() {
   };
 
   const doughnutData = {
-    labels: ["New", "In Progress", "Closed"],
+    labels: [
+      "Not Called",
+      "Pending",
+      "Closed",
+      "Not Connected",
+      "Positive",
+      "Negative",
+      "Connected",
+    ],
     datasets: [
       {
         data: [
-          leads.filter(lead => lead.status === "Not Called").length,
-          leads.filter(lead => lead.status === "In Progress").length,
-          closedDeals
+          leads.filter((lead) => lead.status === "Not Called").length,
+          leads.filter((lead) => lead.status === "Pending").length,
+          leads.filter((lead) => lead.status === "Closed").length,
+          leads.filter((lead) => lead.status === "Not Connected").length,
+          leads.filter((lead) => lead.status === "Positive").length,
+          leads.filter((lead) => lead.status === "Negative").length,
+          leads.filter((lead) => lead.status === "Connected").length,
         ],
-        backgroundColor: ["#007bff", "#ffc107", "#28a745"],
-      },
-    ],
-  };
-
-  const lineData = {
-    labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-    datasets: [
-      {
-        label: "Follow-ups",
-        data: [15, 30, 50, 40],
-        borderColor: "#17a2b8",
-        backgroundColor: "rgba(23,162,184,0.2)",
-        fill: true,
+        backgroundColor: [
+          "#007bff", // Not Called (Blue)
+          "#ffc107", // Pending (Yellow)
+          "#28a745", // Closed (Green)
+          "#dc3545", // Not Connected (Red)
+          "#20c997", // Positive (Teal)
+          "#6610f2", // Negative (Dark Purple)
+          "#fd7e14", // Connected (Orange)
+        ],
       },
     ],
   };
@@ -110,51 +142,48 @@ export default function DashboardCRM() {
         </nav>
       </div>
 
-      {/* Cards Section */}
-      <div className="row">
-        {cardData.map((card, index) => (
-          <div key={index} className="col-md-3">
-            <div className={`card text-white bg-${card.bg} mb-3`}>
-              <div className="card-body">
-                <h5 className="card-title">
-                  <i className={card.icon}></i> {card.title}
-                </h5>
-                <h2 className="card-text">{card.value}</h2>
+      {loading ? (
+        <Loader />
+      ) : (
+        <>
+          {/* Cards Section */}
+          <div className="row">
+            {cardData.map((card, index) => (
+              <div key={index} className="col-md-3">
+                <div className={`card text-white bg-${card.bg} mb-3`}>
+                  <div className="card-body">
+                    <h5 className="card-title">
+                      <i className={card.icon}></i> {card.title}
+                    </h5>
+                    <h2 className="card-text">{card.value}</h2>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Charts Section */}
+          <div className="row">
+            <div className="col-md-6">
+              <div className="card shadow-sm mb-4">
+                <div className="card-body">
+                  <h5 className="card-title">Leads Status</h5>
+                  <Doughnut data={doughnutData} />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
 
-      {/* Charts Section */}
-      <div className="row">
-        <div className="col-md-7">
-          <div className="card shadow-sm mb-4">
-            <div className="card-body">
-              <h5 className="card-title">Leads Overview</h5>
-              <Bar data={barData} />
-            </div>
+            {/* <div className="col-md-6">
+              <div className="card shadow-sm mb-4">
+                <div className="card-body">
+                  <h5 className="card-title">New Leads (Monthly)</h5>
+                  <Bar data={barData} />
+                </div>
+              </div>
+            </div> */}
           </div>
-        </div>
-
-        <div className="col-md-5">
-          <div className="card shadow-sm mb-4">
-            <div className="card-body">
-              <h5 className="card-title">Leads Status</h5>
-              <Doughnut data={doughnutData} />
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-12">
-          <div className="card shadow-sm mb-4">
-            <div className="card-body">
-              <h5 className="card-title">Follow-ups Trend</h5>
-              <Line data={lineData} />
-            </div>
-          </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }

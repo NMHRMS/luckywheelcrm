@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { getRequest, postRequest, putRequest, deleteRequest } from "../utils/Api";
-import { getAuthData, fetchStoredData } from "../utils/AuthUtils";
+import { Table, Button } from "antd";
+import { getRequest } from "../utils/Api";
+
 function VehicleEntry() {
   const [selectedBranch, setSelectedBranch] = useState("All");
   const [branches, setBranches] = useState([]);
@@ -9,21 +9,11 @@ function VehicleEntry() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const getAuthToken = () => {
-    return localStorage.getItem("authToken") || "";
-  };
+  const getAuthToken = () => localStorage.getItem("authToken") || "";
 
   const fetchBranches = async () => {
-    const token = getAuthToken();
-    // if (!token) {
-    //   console.error("No auth token found");
-    //   window.location.href = "/login";
-    //   return;
-    // }
-
     try {
-      const response = await getRequest("/api/Branch")
-
+      const response = await getRequest("/api/Branch");
       if (Array.isArray(response.data)) {
         setBranches(
           response.data.map((branch) => ({
@@ -31,11 +21,8 @@ function VehicleEntry() {
             name: branch.name,
           }))
         );
-      } else {
-        console.error("Unexpected API response format:", response.data);
       }
     } catch (err) {
-      console.error("Error fetching branches:", err);
       setError("Failed to load branches.");
     }
   };
@@ -44,45 +31,25 @@ function VehicleEntry() {
     setLoading(true);
     setVehicleData([]);
 
-    const token = getAuthToken();
-    // if (!token) {
-    //   console.error("No auth token found");
-    //   window.location.href = "/login";
-    //   return;
-    // }
-
-    let url = "";
-    if (branch === "All") {
-      url = "/api/VehicleInOut/all";
-    } else {
-      const selectedBranchId = branches.find((b) => b.name === branch)?.id;
-      if (!selectedBranchId) {
-        console.error("Branch ID not found for:", branch);
-        return;
-      }
-      url = `/api/VehicleInOut/get-checkInOutDetails_by_id?branchId=${selectedBranchId}`;
-    }
+    let url = branch === "All"
+      ? "/api/VehicleInOut/all"
+      : `/api/VehicleInOut/get-checkInOutDetails_by_id?branchId=${branches.find(b => b.name === branch)?.id}`;
 
     try {
       const response = await getRequest(url);
+      const processData = (data) => data.map((vehicle, index) => ({
+        key: index + 1,
+        branch: branches.find((b) => b.id === vehicle.branchId)?.name || "Unknown",
+        vehicleNumber: vehicle.vehicleNo,
+        reason: vehicle.checkInReason,
+        status: vehicle.status || (vehicle.checkOutDate ? "Checked Out" : "Checked In"),
+        date: new Date(vehicle.checkInDate).toLocaleDateString(),
+        time: new Date(vehicle.checkInDate).toLocaleTimeString(),
+      }));
 
-      const processData = (data) => {
-        return data.map((vehicle) => ({
-          branch: branches.find((b) => b.id === vehicle.branchId)?.name || "Unknown",
-          vehicleNumber: vehicle.vehicleNo,
-          reason: vehicle.checkInReason,
-          status: vehicle.status || (vehicle.checkOutDate ? "Checked Out" : "Checked In"),
-          date: new Date(vehicle.checkInDate).toLocaleDateString(),
-          time: new Date(vehicle.checkInDate).toLocaleTimeString(),
-        }));
-      };
-
-      setVehicleData(
-        processData(Array.isArray(response.data) ? response.data : response.data.records || [])
-      );
+      setVehicleData(processData(response.data?.records || response.data || []));
     } catch (err) {
-      console.error("Error fetching vehicle data:", err);
-      setError(`Failed to load vehicle data: ${err.response?.data?.message || err.message}`);
+      setError(`Failed to load vehicle data: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -93,40 +60,91 @@ function VehicleEntry() {
   }, []);
 
   useEffect(() => {
-    if (branches.length > 0) {
-      fetchVehicleData(selectedBranch);
-    }
+    if (branches.length > 0) fetchVehicleData(selectedBranch);
   }, [branches, selectedBranch]);
 
-  const handleBranchClick = (branch) => {
-    setSelectedBranch(branch);
-  };
+  const handleBranchClick = (branch) => setSelectedBranch(branch);
+
+  const columns = [
+    {
+      title: "Sr. No",
+      dataIndex: "key",
+      key: "key",
+      sorter: (a, b) => a.key - b.key,
+    },
+    {
+      title: "Branch",
+      dataIndex: "branch",
+      key: "branch",
+      filters: branches.map((b) => ({ text: b.name, value: b.name })),
+      onFilter: (value, record) => record.branch === value,
+      sorter: (a, b) => a.branch.localeCompare(b.branch),
+      filterSearch:true,
+      filterMode: "tree", 
+    },
+    {
+      title: "Vehicle Number",
+      dataIndex: "vehicleNumber",
+      key: "vehicleNumber",
+      sorter: (a, b) => a.vehicleNumber.localeCompare(b.vehicleNumber),
+    },
+    {
+      title: "Reason",
+      dataIndex: "reason",
+      key: "reason",
+      sorter: (a, b) => a.reason.localeCompare(b.reason),
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      filters: [
+        { text: "Checked In", value: "Checked In" },
+        { text: "Checked Out", value: "Checked Out" },
+      ],
+      onFilter: (value, record) => record.status === value,
+      sorter: (a, b) => a.status.localeCompare(b.status),
+      filterSearch:true,
+      filterMode: "tree", 
+      render: (text) => (
+        <span className={text === "Checked In" ? "text-success fw-bold" : "text-danger fw-bold"}>
+          {text}
+        </span>
+      ),
+    },
+    {
+      title: "Date",
+      dataIndex: "date",
+      key: "date",
+      sorter: (a, b) => new Date(a.date) - new Date(b.date),
+    },
+    {
+      title: "Time",
+      dataIndex: "time",
+      key: "time",
+      sorter: (a, b) => a.time.localeCompare(b.time),
+    },
+  ];
 
   return (
     <div className="p-4">
       <h1 className="text-center mb-4">Vehicle Check-In/Check-Out Records</h1>
 
-      <div className="d-flex justify-content-end gap-2 mb-2 me-2">
-        <button
-          className={`btn btn-sm px-3 py-2 rounded-3 shadow-sm ${
-            selectedBranch === "All" ? "btn-primary" : "btn-outline-secondary"
-          }`}
-          style={{ width: "100px", height: "40px" }}
+      <div className="d-flex justify-content-end gap-2 mb-2" >
+        <Button
+          type={selectedBranch === "All" ? "primary" : "default"}
           onClick={() => handleBranchClick("All")}
         >
           All
-        </button>
+        </Button>
         {branches.map((branch) => (
-          <button
+          <Button
             key={branch.id}
-            className={`btn btn-sm px-3 py-2 rounded-3 shadow-sm ${
-              selectedBranch === branch.name ? "btn-primary" : "btn-outline-secondary"
-            }`}
-            style={{ width: "100px", height: "40px" }}
+            type={selectedBranch === branch.name ? "primary" : "default"}
             onClick={() => handleBranchClick(branch.name)}
           >
             {branch.name}
-          </button>
+          </Button>
         ))}
       </div>
 
@@ -135,47 +153,8 @@ function VehicleEntry() {
           <p className="text-center">Loading...</p>
         ) : error ? (
           <p className="text-danger text-center">{error}</p>
-        ) : vehicleData.length === 0 ? (
-          <p className="text-center">No records found</p>
         ) : (
-          <div className="table-responsive shadow-sm rounded">
-            <table className="table table-bordered table-hover">
-              <thead className="bg-primary text-white">
-                <tr>
-                  <th>Select</th>
-                  <th>Sr. No</th>
-                  <th>Branch</th>
-                  <th>Vehicle Number</th>
-                  <th>Reason</th>
-                  <th>Status</th>
-                  <th>Date</th>
-                  <th>Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {vehicleData.map((vehicle, index) => (
-                  <tr key={index}>
-                    <td>
-                      <input type="checkbox" />
-                    </td>
-                    <td>{index + 1}</td>
-                    <td>{vehicle.branch}</td>
-                    <td>{vehicle.vehicleNumber}</td>
-                    <td>{vehicle.reason}</td>
-                    <td
-                      className={`${
-                        vehicle.status === "Checked In" ? "text-success fw-bold" : "text-danger fw-bold"
-                      }`}
-                    >
-                      {vehicle.status}
-                    </td>
-                    <td>{vehicle.date}</td>
-                    <td>{vehicle.time}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table columns={columns} dataSource={vehicleData} bordered pagination={{ pageSize: 10 }} />
         )}
       </div>
     </div>

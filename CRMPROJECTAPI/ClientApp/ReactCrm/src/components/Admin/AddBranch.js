@@ -1,252 +1,231 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { toast, ToastContainer  } from "react-toastify";
+import { Table, Button, Modal, Input, Space } from "antd";
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { getRequest, postRequest, putRequest, deleteRequest } from "../utils/Api";
-import { getAuthData, fetchStoredData } from "../utils/AuthUtils";
+import {
+  getRequest,
+  postRequest,
+  putRequest,
+  deleteRequest,
+} from "../utils/Api";
+import Loader from "../utils/Loader";
+import {
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
 
-const Branch = () => {
+const AddBranch = () => {
   const [showModal, setShowModal] = useState(false);
-  const [data, setData] = useState({
-    name: "",
-    contact: "",
-    address: "",
-  });
-  const [newData, setNewData] = useState([]);
-  const [id, setId] = useState(undefined);
-  const userData = JSON.parse(localStorage.getItem("user"));
+  const [data, setData] = useState({ name: "", contact: "", address: "" });
+  const [branches, setBranches] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [id, setId] = useState(null);
+
+  const userData = JSON.parse(localStorage.getItem("userDetails"));
   const companyId = userData?.companyId;
 
-  // Handles input changes in form
-  function handleChange(e) {
-    setData({ ...data, [e.target.name]: e.target.value });
-  }
-
-  // Handles submit for both create and update
-  function handleSubmit(e) {
-    e.preventDefault();
-  
-    if (!companyId) {
-      toast.error("Company ID is missing");
-      return;
-    }
-  
-    const branchData = {
-      branchId: id, // Ensure branchId is included for updates
-      name: data.name,
-      contact: data.contact,
-      address: data.address,
-      companyId: companyId, 
-    };
-  
-    if (id === undefined) {
-      // Create a new branch
-      
-        postRequest("/api/Branch", branchData)
-        .then(() => {
-          loadData();
-          setShowModal(false);
-          toast.success("Branch added successfully!");
-        })
-        .catch((error) => {console.error("Add Error:", error.response?.data);
-          toast.error("Failed to add branch!");
-     } )
-    } else {
-      // Update the branch
-      putRequest(`/api/Branch/${id}`, branchData) // Include branchId in the request
-        .then(() => {
-          loadData();
-          setId(undefined);
-          setShowModal(false);
-          toast.error("Failed to add branch!");
-        })
-        .catch((error) => {
-          console.error("Update Error:", error.response?.data);
-          toast.error("Failed to update branch!");
-        })
-    }
-  
-    setData({ name: "", contact: "", address: "" });
-  }
-  
-
-  // Loads data from the server
-  function loadData() {
-    getRequest("/api/Branch")
-      .then((res) => setNewData(res.data))
-      .catch((error) => {console.error("Load Error:", error.response?.data);
-        toast.error("Failed to load branches!");
-      });
-  }
-
-  // Handles deletion of a branch
-  function handleDelete(id) {
-    if (window.confirm("Are you sure you want to delete this branch?")) {
-      deleteRequest(`/api/Branch/${id}`)
-        .then(() =>{
-          loadData();
-          toast.success("Branch deleted successfully!");
-        })
-        .catch((error) => { console.error("Delete Error:", error.response?.data);
-          toast.error("Failed to delete branch!");
-        });
-    }
-  }
-
-  // Fetches branch details for updating
-  function handleUpdate(id) {
-    setId(id);
-    getRequest(`/api/Branch/${id}`)
-      .then((res) => {
-        setData({
-          name: res.data.name,
-          contact: res.data.contact,
-          address: res.data.address,
-        });
-        setShowModal(true); // Open the modal for update
-      })
-      .catch((error) => {   console.error("Fetch Error:", error.response?.data);
-        toast.error("Failed to fetch branch details!");
-      });
-  }
-
-  // Initialize data when component mounts
   useEffect(() => {
     loadData();
   }, []);
 
-  // Close the modal and reset the data
-  const closeModal = () => {
-    setShowModal(false);
-    setData({ name: "", contact: "", address: "" }); // Reset form data on close
+  const loadData = () => {
+    setLoading(true);
+    getRequest("/api/Branch")
+      .then((res) => {
+        setBranches(res.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Load Error:", error.response?.data);
+        toast.error("Failed to load branches!");
+        setLoading(false);
+      });
   };
 
+  const handleDelete = async (branchId) => {
+    Modal.confirm({
+      title: "Are you sure?",
+      content: "Do you really want to delete this branch?",
+      okText: "Yes, Delete",
+      okType: "danger",
+      cancelText: "Cancel",
+      onOk: async () => {
+        try {
+          await deleteRequest(`/api/Branch/${branchId}`);
+          toast.success("Branch deleted successfully!");
+          loadData();
+        } catch (error) {
+          console.error("Delete Error:", error.response?.data);
+          toast.error("Failed to delete branch!");
+        }
+      },
+    });
+  };
+
+  const handleUpdate = (branch) => {
+    setId(branch.branchId);
+    setData({
+      name: branch.name,
+      contact: branch.contact,
+      address: branch.address,
+    });
+    setShowModal(true);
+  };
+
+  const handleChange = (e) => {
+    setData({ ...data, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = () => {
+    if (!companyId) {
+      toast.error("Company ID is missing");
+      return;
+    }
+
+    const branchData = {
+      name: data.name,
+      contact: data.contact,
+      address: data.address,
+      companyId,
+    };
+
+    const request = id
+      ? putRequest(`/api/Branch/${id}`, { branchId: id, ...branchData })
+      : postRequest("/api/Branch", branchData);
+
+    request
+      .then(() => {
+        loadData();
+        setShowModal(false);
+        toast.success(id ? "Branch updated successfully!" : "Branch added successfully!");
+      })
+      .catch((error) => {
+        console.error("Error:", error.response?.data);
+        toast.error(id ? "Failed to update branch!" : "Failed to add branch!");
+      });
+
+    setData({ name: "", contact: "", address: "" });
+    setId(null);
+  };
+
+  const columns = [
+    {
+      title: "Sr. No",
+      dataIndex: "srNo",
+      key: "srNo",
+      render: (_, __, index) => index + 1,
+    },
+    {
+      title: "Branch Name",
+      dataIndex: "name",
+      key: "name",
+      sorter: (a, b) => a.name.localeCompare(b.name),
+      filters: [...new Set(branches.map((b) => b.name))].map((name) => ({
+        text: name,
+        value: name,
+      })),
+      onFilter: (value, record) => record.name.includes(value),
+      filterSearch:true,
+      filterMode: "tree", 
+    },
+    {
+      title: "Contact",
+      dataIndex: "contact",
+      key: "contact",
+      sorter: (a, b) => a.contact.localeCompare(b.contact),
+      filters: [...new Set(branches.map((b) => b.contact))].map((contact) => ({
+        text: contact,
+        value: contact,
+      })),
+      onFilter: (value, record) => record.contact.includes(value),
+      filterSearch:true,
+      filterMode: "tree", 
+    },
+    {
+      title: "Address",
+      dataIndex: "address",
+      key: "address",
+      sorter: (a, b) => a.address.localeCompare(b.address),
+      filters: [...new Set(branches.map((b) => b.address))].map((address) => ({
+        text: address,
+        value: address,
+      })),
+      onFilter: (value, record) => record.address.includes(value),
+      filterSearch:true,
+      filterMode: "tree", 
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
+        <Space>
+          <Button
+            type="text"
+            icon={<EditOutlined style={{ color: "#1890ff" }} />}
+            onClick={() => handleUpdate(record)}
+          />
+          <Button
+            type="text"
+            icon={<DeleteOutlined />}
+            danger
+            onClick={() => handleDelete(record.branchId)}
+          />
+        </Space>
+      ),
+    },
+  ];
+
   return (
-    <div className="container mt-1">
-        <ToastContainer />
+    <div className="container mt-3">
+      <ToastContainer />
       <h3>Add Branch</h3>
-      <div className="d-flex justify-content-end">
-        <button
-          className="btn btn-primary mb-3"
-          onClick={() => setShowModal(true)}
-        >
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "10px" }}>
+        <Button type="primary" icon={<PlusOutlined />} onClick={() => setShowModal(true)}>
           Add Branch
-        </button>
+        </Button>
       </div>
-      <table className="table table-bordered">
-        <thead>
-          <tr>
-            <th>Sr.no</th>
-            <th>Branch Name</th>
-            <th>Contact</th>
-            <th>Address</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {newData.map((branch, index) => (
-            <tr key={branch.branchId}>
-              <td>{index + 1}</td>
-              <td>{branch.name}</td>
-              <td>{branch.contact}</td>
-              <td>{branch.address}</td>
-              <td>
-                <button
-                  className="btn text-primary btn-sm me-2"
-                  onClick={() => handleUpdate(branch.branchId)}
-                >
-                  <i className="bi bi-pencil-square"></i>
-                </button>
-                <button
-                  className="btn text-danger btn-sm"
-                  onClick={() => handleDelete(branch.branchId)}
-                >
-                  <i className="bi bi-trash"></i>
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* {/ Modal for adding/updating branch /} */}
-      {showModal && (
-        <>
-          <div
-            className="modal-backdrop fade show"
-            style={{ zIndex: 1040 }}
-          ></div>
-          <div
-            className="modal fade show"
-            style={{ display: "block", zIndex: 1050 }}
-          >
-            <div className="modal-dialog modal-dialog-centered">
-              <div className="modal-content">
-                <div className="modal-header">
-                  <h5 className="modal-title">
-                    {id ? "Edit Branch" : "Add Branch"}
-                  </h5>
-                  <button
-                    type="button"
-                    className="btn-close"
-                    onClick={closeModal}
-                  ></button>
-                </div>
-                <div className="modal-body">
-                  <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                      <label>Branch Name</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="name"
-                        value={data.name}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label>Contact</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="contact"
-                        value={data.contact}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Address</label>
-                      <input
-                        type="text"
-                        className="form-control"
-                        name="address"
-                        value={data.address}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                    <button type="submit" className="btn btn-primary me-2 mt-2">
-                      {id ? "Update" : "Submit"}
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn-secondary mt-2"
-                      onClick={closeModal}
-                    >
-                      Close
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
+      {loading ? (
+        <Loader />
+      ) : (
+        <Table
+          columns={columns}
+          dataSource={branches}
+          rowKey="branchId"
+          pagination={{ pageSize: 5 }}
+          bordered
+        />
       )}
+
+      <Modal
+        title={id ? "Edit Branch" : "Add Branch"}
+        open={showModal}
+        onCancel={() => setShowModal(false)}
+        onOk={handleSubmit}
+      >
+        <Input
+          placeholder="Branch Name"
+          name="name"
+          value={data.name}
+          onChange={handleChange}
+          className="mb-2"
+        />
+        <Input
+          placeholder="Contact"
+          name="contact"
+          value={data.contact}
+          onChange={handleChange}
+          className="mb-2"
+        />
+        <Input
+          placeholder="Address"
+          name="address"
+          value={data.address}
+          onChange={handleChange}
+        />
+      </Modal>
     </div>
   );
 };
 
-export default Branch;
+export default AddBranch;

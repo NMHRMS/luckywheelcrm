@@ -4,21 +4,12 @@ import { jwtDecode } from "jwt-decode";
 import { postRequest } from "../utils/Api";
 import { saveAuthData } from "../utils/AuthUtils";
 
-function LoginForm() {
+function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-
-  const roleMapping = {
-    "e3592de2-23f6-4752-950d-bae6d6791798": "admin",
-    "3a91f9d0-563c-4960-a237-11b5c7434876": "crm",
-    "ad851efd-cd73-43ff-aca5-9f3bc12127b2": "cre",
-    "341fe51d-b3bb-4ce0-901f-06443bb61830": "dsm",
-    "5c13fc2f-6c3a-412d-86cf-e83ba26bdb42": "dse",
-    "52b46093-6e80-4842-b08e-d0a75ab920c2": "sales",
-  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -45,22 +36,16 @@ function LoginForm() {
         return;
       }
 
-      const roleId = decodedToken?.roleId;
-      if (!roleId) {
-        setError("Role ID is missing from the token.");
-        return;
-      }
-
-      const roleName = roleMapping[roleId];
+      const roleName = decodedToken?.roleName?.trim().toLowerCase(); // Extract and normalize role name
       if (!roleName) {
-        setError("Role not found for the given Role ID.");
+        setError("Role name is missing from the token.");
         return;
       }
 
       await saveAuthData({
         token,
-        userDetails: { ...decodedToken, role: roleName },
-        roleDetails: { roleId, roleName },
+        userDetails: decodedToken,
+        roleDetails: { roleName },
       });
 
       const roleRoutes = {
@@ -85,7 +70,10 @@ function LoginForm() {
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center vh-100 " style={{backgroundColor:"#eff5fb"}}>
+    <div
+      className="d-flex justify-content-center align-items-center vh-100 "
+      style={{ backgroundColor: "#eff5fb" }}
+    >
       <div className="row w-100">
         {/* Left side: Image */}
         <div className="col-lg-6 d-flex justify-content-center align-items-center">
@@ -93,19 +81,24 @@ function LoginForm() {
             src="/assets/img/crmlogin4.png" // Replace with your image path
             alt="Login Image"
             className="img-fluid "
-            style={{height:"500px",width:"750px",marginLeft:"25%"}}
+            style={{ height: "500px", width: "750px", marginLeft: "25%" }}
           />
         </div>
 
         {/* Right side: Form */}
         <div className="col-lg-6 d-flex justify-content-center align-items-center">
-          <div className="card p-4 shadow-lg" style={{ width: "400px", borderRadius: "10px" }}>
+          <div
+            className="card p-4 shadow-lg"
+            style={{ width: "400px", borderRadius: "10px" }}
+          >
             <h3 className="text-center mb-3 fw-bold">LOGIN</h3>
             {/* <p className="text-center text-muted mb-4">You must become a member to login and access the entire site.</p> */}
 
             <form onSubmit={handleLogin}>
               <div className="mb-3">
-                <label htmlFor="email" className="form-label fw-semibold">Email Address</label>
+                <label htmlFor="email" className="form-label fw-semibold">
+                  Email Address
+                </label>
                 <input
                   type="email"
                   className="form-control"
@@ -118,7 +111,9 @@ function LoginForm() {
               </div>
 
               <div className="mb-3">
-                <label htmlFor="password" className="form-label fw-semibold">Password</label>
+                <label htmlFor="password" className="form-label fw-semibold">
+                  Password
+                </label>
                 <div className="input-group">
                   <input
                     type="password"
@@ -139,17 +134,26 @@ function LoginForm() {
 
               <div className="d-flex justify-content-between">
                 <div></div>
-                <a href="#" className="text-primary text-decoration-none">Forgot Password</a>
+                {/* <a href="#" className="text-primary text-decoration-none">
+                  Forgot Password
+                </a> */}
               </div>
 
-              <button type="submit" className="btn btn-primary w-100 mt-3" disabled={isLoading}>
+              <button
+                type="submit"
+                className="btn btn-primary w-100 mt-3"
+                disabled={isLoading}
+              >
                 {isLoading ? "Logging in..." : "LOGIN"}
               </button>
             </form>
 
-            <p className="text-center mt-3">
-              Not a member yet? <a href="#" className="text-primary text-decoration-none fw-bold">Sign Up</a>
-            </p>
+            {/* <p className="text-center mt-3">
+              Not a member yet?{" "}
+              <a href="#" className="text-primary text-decoration-none fw-bold">
+                Sign Up
+              </a>
+            </p> */}
           </div>
         </div>
       </div>
@@ -157,4 +161,4 @@ function LoginForm() {
   );
 }
 
-export default LoginForm;
+export default Login;
