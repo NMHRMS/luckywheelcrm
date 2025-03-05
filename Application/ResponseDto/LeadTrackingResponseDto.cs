@@ -16,7 +16,8 @@ namespace Application.ResponseDto
         public Guid AssignedBy { get; set; }
         public string AssignedByName { get; set; }
         public DateTime AssignedDate { get; set; }
+        public DateTime? ClosedDate { get; set; }
         public string LeadDuration { get; set; } 
-        public string LeadDurationFormatted { get; set; } 
+        public string LeadDurationFormatted { get; set; }
     }
 }

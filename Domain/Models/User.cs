@@ -13,6 +13,7 @@ public partial class User
     public Guid RoleId { get; set; }
     public Guid? CategoryId { get; set; }
     public bool IsActive { get; set; }
+    //public string? FireBaseId { get; set; }
     public DateTime CreateDate { get; set; }
     public DateTime? UpdateDate { get; set; }
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Domain.Models;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Infrastructure.Utilities;
 
 namespace Infrastructure.Data;
 
@@ -53,59 +54,27 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.Contact).HasMaxLength(15);
             entity.Property(e => e.Address).HasMaxLength(100);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.CreateDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+            entity.Property(e => e.CreateDate).HasDefaultValue(DateTimeHelper.GetIndianTime()).HasColumnType("datetime");
             entity.Property(e => e.UpdateDate).HasColumnType("datetime");
 
         });
+
         modelBuilder.Entity<CallRecord>(entity =>
         {
             entity.HasKey(e => e.RecordId).HasName("PK_CallRecords");
-
-            entity.Property(e => e.RecordId)
-                .HasColumnName("CallRecordID");
-
-            entity.Property(e => e.CompanyId)
-                .HasColumnName("CompanyID");
-
-            entity.Property(e => e.UserId)
-                .HasColumnName("UserID");
-
-            entity.Property(e => e.Name)
-                .HasMaxLength(100);
-
-            entity.Property(e => e.MobileNo)
-                .HasMaxLength(15);
-
-            entity.Property(e => e.CallType)
-                .HasMaxLength(50);
-
-            entity.Property(e => e.Recordings)
-                .HasColumnType("binary(100)");
-
-            entity.Property(e => e.Date)
-                .HasColumnType("datetime");
-
-            entity.Property(e => e.Duration)
-                .HasColumnType("time(7)");
-
-            entity.Property(e => e.Status)
-                .HasMaxLength(50);
-
-            entity.Property(e => e.CreateDate)
-                .HasColumnType("datetime")
-                .HasDefaultValueSql("(getdate())");
-
-            entity.HasOne(e => e.Company)
-                .WithMany(c => c.CallRecords)
-                .HasForeignKey(e => e.CompanyId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_CallRecords_Companies");
-
-            entity.HasOne(e => e.User)
-                .WithMany(c => c.CallRecords)
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_CallRecords_Users");
+            entity.Property(e => e.RecordId).HasColumnName("CallRecordID");
+            entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
+            entity.Property(e => e.UserId).HasColumnName("UserID");
+            entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.MobileNo).HasMaxLength(15);
+            entity.Property(e => e.CallType).HasMaxLength(50);
+            entity.Property(e => e.Recordings).HasColumnType("binary(100)");
+            entity.Property(e => e.Date).HasColumnType("datetime");
+            entity.Property(e => e.Duration).HasColumnType("time(7)");
+            entity.Property(e => e.Status).HasMaxLength(50);
+            entity.Property(e => e.CreateDate).HasColumnType("datetime").HasDefaultValue(DateTimeHelper.GetIndianTime());
+            entity.HasOne(e => e.Company).WithMany(c => c.CallRecords).HasForeignKey(e => e.CompanyId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_CallRecords_Companies");
+            entity.HasOne(e => e.User).WithMany(c => c.CallRecords).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_CallRecords_Users");
         });
 
         modelBuilder.Entity<District>(entity =>
@@ -151,7 +120,7 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
             entity.Property(e => e.Address).HasMaxLength(100);
             entity.Property(e => e.CompanyContact).HasMaxLength(15);
-            entity.Property(e => e.CreateDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+            entity.Property(e => e.CreateDate).HasDefaultValue(DateTimeHelper.GetIndianTime()).HasColumnType("datetime");
             entity.Property(e => e.EmailId).HasColumnName("EmailID").HasMaxLength(50);
             entity.Property(e => e.MobileNo).HasMaxLength(15);
             entity.Property(e => e.Name).HasMaxLength(100);
@@ -190,7 +159,7 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.LastRevertedBy).HasColumnName("LastRevertedBy");
             entity.Property(e => e.Remark).HasColumnType("nvarchar(max)");
             entity.Property(e => e.Status).HasMaxLength(20).HasDefaultValue("Not Called");
-            entity.Property(e => e.CreateDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+            entity.Property(e => e.CreateDate).HasDefaultValue(DateTimeHelper.GetIndianTime()).HasColumnType("datetime");
             entity.Property(e => e.UpdateDate).HasColumnType("datetime");
 
             entity.HasOne(d => d.Company)
@@ -242,9 +211,9 @@ public partial class ApplicationDbContext : DbContext
             entity.ToTable("LeadsReview", tb => tb.HasTrigger("trg_UpdateDate_LeadsReview"));
             entity.Property(e => e.LeadReviewId).HasColumnName("LeadReviewID");
             entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
-            entity.Property(e => e.CreateDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
             entity.Property(e => e.ReviewBy).HasColumnName("ReviewBy");
             entity.Property(e => e.LeadId).HasColumnName("LeadID");
+            entity.Property(e => e.CreateDate).HasDefaultValue(DateTimeHelper.GetIndianTime()).HasColumnType("datetime");
             entity.Property(e => e.UpdateDate).HasColumnType("datetime");
             entity.HasOne(d => d.Company).WithMany(p => p.LeadsReview).HasForeignKey(d => d.CompanyId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_LeadsReview_Companies");
             entity.HasOne(d => d.ReviewByUser).WithMany(p => p.LeadsReview).HasForeignKey(d => d.ReviewBy).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_LeadsReview_Users");
@@ -260,6 +229,8 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.AssignedTo).IsRequired();
             entity.Property(e => e.AssignedBy).IsRequired();
             entity.Property(e => e.AssignedDate).IsRequired();
+            entity.Property(e => e.LeadStatus).IsRequired();
+            entity.Property(e => e.ClosedDate);
             entity.HasOne(e => e.Lead).WithMany(l => l.LeadTrackings).HasForeignKey(e => e.LeadId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_LeadsTracking_Leads");
             entity.HasOne(e => e.AssignedToUser).WithMany(u => u.AssignedToLeadTrackings).HasForeignKey(e => e.AssignedTo).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_LeadsTracking_Users");
             entity.HasOne(e => e.AssignedByUser).WithMany(u => u.AssignedByLeadTrackings).HasForeignKey(e => e.AssignedBy).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_LeadsTracking_Users1");
@@ -285,8 +256,8 @@ public partial class ApplicationDbContext : DbContext
             entity.ToTable("Products", tb => tb.HasTrigger("trg_UpdateDate_Products"));
             entity.Property(e => e.ProductId).HasColumnName("ProductID");
             entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
-            entity.Property(e => e.CreateDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
             entity.Property(e => e.ProductName).HasMaxLength(100);
+            entity.Property(e => e.CreateDate).HasDefaultValue(DateTimeHelper.GetIndianTime()).HasColumnType("datetime");
             entity.Property(e => e.UpdateDate).HasColumnType("datetime");
             entity.HasOne(d => d.Company).WithMany(p => p.Products).HasForeignKey(d => d.CompanyId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Products_Companies");
             entity.HasOne(e => e.Category)
@@ -302,8 +273,8 @@ public partial class ApplicationDbContext : DbContext
             entity.ToTable("Roles", tb => tb.HasTrigger("trg_UpdateDate_Roles"));
             entity.Property(e => e.RoleId).HasColumnName("RoleID");
             entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
-            entity.Property(e => e.CreateDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
             entity.Property(e => e.RoleName).HasMaxLength(25);
+            entity.Property(e => e.CreateDate).HasDefaultValue(DateTimeHelper.GetIndianTime()).HasColumnType("datetime");
             entity.Property(e => e.UpdateDate).HasColumnType("datetime");
             entity.HasOne(d => d.Company).WithMany(p => p.Roles).HasForeignKey(d => d.CompanyId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Roles_Companies");
         });
@@ -324,7 +295,8 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.LastName).HasMaxLength(25);
             entity.Property(e => e.ContactNumber).HasMaxLength(50);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.CreateDate).HasDefaultValueSql("(getdate())").HasColumnType("datetime");
+            //entity.Property(e => e.FireBaseId).HasColumnName("FireBaseID");
+            entity.Property(e => e.CreateDate).HasDefaultValue(DateTimeHelper.GetIndianTime()).HasColumnType("datetime");
             entity.Property(e => e.UpdateDate).HasColumnType("datetime");
 
             entity.HasOne(d => d.Company)
@@ -373,11 +345,11 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.CheckInImage).HasColumnType("varbinary(MAX)");
             entity.Property(e => e.CheckInReason).IsRequired().HasMaxLength(100);
             entity.Property(e => e.CheckInBy).IsRequired();
-            entity.Property(e => e.CheckInDate).HasDefaultValueSql("GETDATE()");
+            entity.Property(e => e.CheckInDate).HasDefaultValue(DateTimeHelper.GetIndianTime());
             entity.Property(e => e.CheckOutImage).HasColumnType("varbinary(MAX)");
             entity.Property(e => e.CheckOutRemark).HasMaxLength(255);
             entity.Property(e => e.CheckOutBy).IsRequired(false);
-            entity.Property(e => e.CheckOutDate).HasColumnType("DATETIME");
+            entity.Property(e => e.CheckOutDate).HasColumnType("DATETIME").HasDefaultValue(DateTimeHelper.GetIndianTime());
             entity.Property(e => e.Status).HasMaxLength(20);
             entity.HasOne(e => e.Branch).WithMany(b => b.VehicleCheckInCheckOut).HasForeignKey(e => e.BranchId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_VehicleCheckInCheckOut_Branches");
             entity.HasOne(e => e.Company).WithMany(c => c.VehicleCheckInCheckOut).HasForeignKey(e => e.CompanyId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_VehicleCheckInCheckOut_Companies");

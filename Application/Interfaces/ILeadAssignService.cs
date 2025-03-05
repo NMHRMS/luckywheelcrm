@@ -10,9 +10,10 @@ namespace Application.Interfaces
         Task<LeadResponseDto> RevertLeadAssignmentAsync(LeadRevertDto requestDto);
         Task<IEnumerable<LeadResponseDto>> GetRevertedLeadsAsync();
         Task<ClosedLeadResponseDto> GetClosedLeadsAsync();
-        Task<ClosedLeadResponseDto> GetClosedLeadsByUserAsync();
-        Task<ClosedLeadResponseDto> GetClosedLeadsByDateAsync(DateTime date);
-        Task<ClosedLeadResponseDto> GetClosedLeadsByDateRangeAsync(DateTime startDate, DateTime endDate);
+        Task<List<WorkedUsersResponseDto>> GetUsersWhoWorkedOnClosedLead(Guid leadId);
+        Task<ClosedLeadResponseDto> GetClosedLeadsByUserAsync(Guid userId);
+        Task<ClosedLeadResponseDto> GetClosedLeadsByDateAsync(Guid userId, DateTime date);
+        Task<ClosedLeadResponseDto> GetClosedLeadsByDateRangeAsync(Guid userId, DateTime startDate, DateTime endDate);
     }
 
 }

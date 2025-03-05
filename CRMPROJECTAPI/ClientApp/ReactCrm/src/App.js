@@ -36,9 +36,11 @@ import Pagination from "./components/CRM/Pagination";
 import Categories from "./components/Admin/Categories";
 import Allleads from "./components/CRM/Allleads";
 import AssignedNotAssignedList from "./components/CRM/Assignednotassignedlist";
-import RejectList from "./components/CRM/RejectList";
+import RevertList from "./components/CRM/RevertList";
 import PerformanceUser from "./components/CRM/PerformanceUser";
 import Reports from "./components/CRM/Reports";
+import DailyReport from "./components/CRM/DailyReport";
+import Products from "./components/Admin/Products";
 
 function App() {
   return (
@@ -68,10 +70,11 @@ function App() {
           <Route path="leadmodal" element={<LeadModal />} />
           <Route path="pagination" element={<Pagination />} />
           <Route path="allleads" element={<Allleads />} />
-          <Route path="asiignedleads" element={<AssignedNotAssignedList />} />
-          <Route path="revertleads" element={<RejectList />} />
+          <Route path="assignedleads" element={<AssignedNotAssignedList />} />
+          <Route path="revertleads" element={<RevertList />} />
           <Route path="performance" element={<PerformanceUser />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="dailyreport" element={<DailyReport />} />
         </Route>
         <Route path="/dsm" element={<Layout />}>
           <Route path="dashboard" element={<DSMDashboard />} />
@@ -96,6 +99,7 @@ function App() {
           <Route path="assignmanagement" element={<AssignManagement />} />
           <Route path="userperformance" element={<UserPerformance />} />
           <Route path="categories" element={<Categories />} />
+          <Route path="products" element={<Products />} />
         </Route>
       </Routes>
     </BrowserRouter>

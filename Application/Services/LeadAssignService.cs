@@ -6,6 +6,7 @@ using AutoMapper;
 using Azure.Core;
 using Domain.Models;
 using Infrastructure.Data;
+using Infrastructure.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 public class LeadsAssignService : ILeadAssignService
@@ -13,7 +14,7 @@ public class LeadsAssignService : ILeadAssignService
     private readonly ApplicationDbContext _context;
     private readonly IMapper _mapper;
     private readonly IJwtTokenService _jwtTokenService;
-
+            
     public LeadsAssignService(ApplicationDbContext context, IMapper mapper, IJwtTokenService jwtTokenService)
     {
         _context = context;
@@ -43,8 +44,10 @@ public class LeadsAssignService : ILeadAssignService
             throw new UnauthorizedAccessException("You do not have permission to assign this lead.");
         }
 
+        string currentLeadStatus = lead.Status;
+
         lead.AssignedTo = requestDto.AssignedTo;
-        lead.AssignedDate = requestDto.AssignedDate;
+        lead.AssignedDate = DateTimeHelper.GetIndianTime();
 
         lead.LastRevertedBy = null;
         lead.Remark = null;
@@ -53,6 +56,8 @@ public class LeadsAssignService : ILeadAssignService
 
         var leadTracking = _mapper.Map<LeadTracking>(requestDto);
         leadTracking.AssignedBy = (Guid)assignedByUserId;
+        leadTracking.LeadStatus = currentLeadStatus;
+
         await _context.LeadsTracking.AddAsync(leadTracking);
 
         await _context.SaveChangesAsync();
@@ -125,6 +130,26 @@ public class LeadsAssignService : ILeadAssignService
         return _mapper.Map<IEnumerable<LeadResponseDto>>(revertedLeads);
     }
 
+    public async Task<List<WorkedUsersResponseDto>> GetUsersWhoWorkedOnClosedLead(Guid leadId)
+    {
+        var assignedUsers = await _context.LeadsTracking
+            .Where(lt => lt.LeadId == leadId)
+            .Select(lt => lt.AssignedTo)
+            .Distinct()
+            .ToListAsync();
+
+        var users = await _context.Users
+            .Where(u => assignedUsers.Contains(u.UserId))
+            .Select(u => new WorkedUsersResponseDto
+            {
+                UserId = u.UserId,
+                FullName = (u.FirstName ?? "")
+            })
+            .ToListAsync();
+
+        return users;
+    }
+
     public async Task<ClosedLeadResponseDto> GetClosedLeadsAsync()
     {
         var closedLeads = await _context.Leads
@@ -141,12 +166,44 @@ public class LeadsAssignService : ILeadAssignService
         return await MapLeadTrackingRecords(leadTrackingRecords);
     }
 
-    public async Task<ClosedLeadResponseDto> GetClosedLeadsByUserAsync()
+    public async Task<ClosedLeadResponseDto> GetClosedLeadsByUserAsync(Guid userId)
     {
-        var userId = _jwtTokenService.GetUserIdFromToken();
-
+        // Get all closed leads
         var closedLeads = await _context.LeadsTracking
-            .Where(lt => lt.AssignedTo == userId && lt.Lead.Status == "Closed")
+            .Where(lt => lt.LeadStatus == "Closed")
+            .Select(lt => lt.LeadId)
+            .Distinct()
+            .ToListAsync();
+
+        // Get leads where this user has worked
+        var userWorkedOnLeads = await _context.LeadsTracking
+            .Where(lt => closedLeads.Contains(lt.LeadId) && lt.AssignedTo == userId)
+            .Select(lt => lt.LeadId)
+            .Distinct()
+            .ToListAsync();
+
+        if (!userWorkedOnLeads.Any())
+        {
+            return new ClosedLeadResponseDto
+            {
+                TotalClosedLeads = 0,
+                Leads = new List<ClosedLeadDto>()
+            };
+        }
+
+        // Get lead tracking details for those leads
+        var leadTrackingRecords = await _context.LeadsTracking
+            .Where(lt => userWorkedOnLeads.Contains(lt.LeadId))
+            .OrderByDescending(lt => lt.AssignedDate)
+            .ToListAsync();
+
+        return await MapLeadTrackingRecords(leadTrackingRecords);
+    }
+
+    public async Task<ClosedLeadResponseDto> GetClosedLeadsByDateAsync(Guid userId, DateTime date)
+    {
+        var closedLeads = await _context.LeadsTracking
+            .Where(lt => lt.AssignedTo == userId && lt.ClosedDate.HasValue && lt.ClosedDate.Value.Date == date.Date)
             .Select(lt => lt.LeadId)
             .Distinct()
             .ToListAsync();
@@ -159,28 +216,10 @@ public class LeadsAssignService : ILeadAssignService
         return await MapLeadTrackingRecords(leadTrackingRecords);
     }
 
-    public async Task<ClosedLeadResponseDto> GetClosedLeadsByDateAsync(DateTime date)
+    public async Task<ClosedLeadResponseDto> GetClosedLeadsByDateRangeAsync(Guid userId, DateTime startDate, DateTime endDate)
     {
-        var userId = _jwtTokenService.GetUserIdFromToken();
         var closedLeads = await _context.LeadsTracking
-            .Where(lt => lt.AssignedTo == userId && lt.AssignedDate.Date == date.Date && lt.Lead.Status == "Closed")
-            .Select(lt => lt.LeadId)
-            .Distinct()
-            .ToListAsync();
-
-        var leadTrackingRecords = await _context.LeadsTracking
-            .Where(lt => closedLeads.Contains(lt.LeadId))
-            .OrderByDescending(lt => lt.AssignedDate)
-            .ToListAsync();
-
-        return await MapLeadTrackingRecords(leadTrackingRecords);
-    }
-
-    public async Task<ClosedLeadResponseDto> GetClosedLeadsByDateRangeAsync(DateTime startDate, DateTime endDate)
-    {
-        var userId = _jwtTokenService.GetUserIdFromToken();
-        var closedLeads = await _context.LeadsTracking
-            .Where(lt => lt.AssignedTo == userId && lt.AssignedDate.Date >= startDate.Date && lt.AssignedDate.Date <= endDate.Date && lt.Lead.Status == "Closed")
+            .Where(lt => lt.AssignedTo == userId && lt.ClosedDate.HasValue && lt.ClosedDate.Value.Date >= startDate.Date && lt.ClosedDate.Value.Date <= endDate.Date)
             .Select(lt => lt.LeadId)
             .Distinct()
             .ToListAsync();
@@ -197,34 +236,28 @@ public class LeadsAssignService : ILeadAssignService
     {
         var responseDtos = _mapper.Map<List<LeadTrackingResponseDto>>(leadTrackingRecords);
 
-        var userIds = leadTrackingRecords
-            .SelectMany(lt => new[] { lt.AssignedTo, lt.AssignedBy })
-            .Distinct()
-            .ToList();
+        var leadIds = responseDtos.Select(dto => dto.LeadId).Distinct().ToList();
 
-        var userNames = await _context.Users
-            .Where(u => userIds.Contains(u.UserId))
-            .Select(u => new { u.UserId, FullName = u.FirstName + " " + (u.LastName ?? "") })
-            .ToDictionaryAsync(u => u.UserId, u => u.FullName);
+        // Fetch Leads and map to LeadResponseDto
+        var leads = await _context.Leads
+            .Where(l => leadIds.Contains(l.LeadId))
+            .ToListAsync();
 
-        foreach (var dto in responseDtos)
-        {
-            dto.AssignedToName = userNames.ContainsKey(dto.AssignedTo) ? userNames[dto.AssignedTo] : "";
-            dto.AssignedByName = userNames.ContainsKey(dto.AssignedBy) ? userNames[dto.AssignedBy] : "";
-            dto.LeadStatus = "Closed";
-        }
+        var leadResponseDtos = _mapper.Map<List<LeadResponseDto>>(leads)
+            .ToDictionary(l => l.LeadId, l => l);
 
         var groupedLeadTrackings = responseDtos
             .GroupBy(dto => dto.LeadId)
             .Select(group =>
             {
                 var leadTrackings = group.OrderByDescending(g => g.AssignedDate).ToList();
+                var leadId = group.Key;
 
                 for (int i = 0; i < leadTrackings.Count; i++)
                 {
                     var currentRecord = leadTrackings[i];
                     DateTime assignedDate = currentRecord.AssignedDate;
-                    DateTime nextAssignedDate = (i > 0) ? leadTrackings[i - 1].AssignedDate : DateTime.UtcNow;
+                    DateTime nextAssignedDate = (i > 0) ? leadTrackings[i - 1].AssignedDate : DateTimeHelper.GetIndianTime();
 
                     TimeSpan duration = nextAssignedDate - assignedDate;
 
@@ -234,7 +267,8 @@ public class LeadsAssignService : ILeadAssignService
 
                 return new ClosedLeadDto
                 {
-                    LeadId = group.Key,
+                    LeadId = leadId,
+                    LeadDetails = leadResponseDtos.ContainsKey(leadId) ? leadResponseDtos[leadId] : null,
                     LeadTrackingRecords = leadTrackings
                 };
             })
@@ -251,7 +285,6 @@ public class LeadsAssignService : ILeadAssignService
     {
         var leadStatus = await _context.Leads
             .Where(l => l.LeadId == leadId)
-            .Select(l => l.Status)
             .FirstOrDefaultAsync();
 
         var leadTrackingRecords = await _context.LeadsTracking
@@ -275,14 +308,14 @@ public class LeadsAssignService : ILeadAssignService
         {
             dto.AssignedToName = userNames.ContainsKey(dto.AssignedTo) ? userNames[dto.AssignedTo] : "";
             dto.AssignedByName = userNames.ContainsKey(dto.AssignedBy) ? userNames[dto.AssignedBy] : "";
-            dto.LeadStatus = leadStatus;
+            //dto.LeadStatus = leadStatus;
         }
 
         for (int i = 0; i < responseDtos.Count(); i++)
         {
             var currentRecord = responseDtos.ElementAt(i);
             DateTime assignedDate = currentRecord.AssignedDate;
-            DateTime nextAssignedDate = (i > 0) ? responseDtos.ElementAt(i - 1).AssignedDate : DateTime.UtcNow;
+            DateTime nextAssignedDate = (i > 0) ? responseDtos.ElementAt(i - 1).AssignedDate : DateTimeHelper.GetIndianTime();
 
             TimeSpan duration = nextAssignedDate - assignedDate;
 

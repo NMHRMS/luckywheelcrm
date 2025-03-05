@@ -45,7 +45,11 @@ const Layout = () => {
   return (
     <>
       <Header />
-      {SidebarComponent ? <SidebarComponent /> : <div>No Sidebar Available</div>}
+      {SidebarComponent ? (
+        <SidebarComponent />
+      ) : (
+        <div>No Sidebar Available</div>
+      )}
       <main id="main" className="main">
         <Outlet />
       </main>

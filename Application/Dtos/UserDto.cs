@@ -18,5 +18,6 @@ namespace Application.Dtos
         public Guid? BranchId { get; set; }
         public Guid RoleId { get; set; }
         public Guid? CategoryId { get; set; }
+        //public string? FireBaseId { get; set; }
     }
 }

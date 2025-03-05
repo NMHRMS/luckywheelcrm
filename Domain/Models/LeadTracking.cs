@@ -12,7 +12,9 @@ namespace Domain.Models
         public Guid LeadId { get; set; }  
         public Guid AssignedTo { get; set; } 
         public Guid AssignedBy { get; set; } 
-        public DateTime AssignedDate { get; set; } 
+        public DateTime AssignedDate { get; set; }
+        public string LeadStatus { get; set; }
+        public DateTime? ClosedDate { get; set; }
 
         // Navigation Properties
         public virtual Lead Lead { get; set; }

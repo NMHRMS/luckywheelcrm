@@ -9,11 +9,7 @@ import {
   deleteRequest,
 } from "../utils/Api";
 import Loader from "../utils/Loader";
-import {
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-} from "@ant-design/icons";
+import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 
 const AddBranch = () => {
   const [showModal, setShowModal] = useState(false);
@@ -78,6 +74,11 @@ const AddBranch = () => {
   };
 
   const handleSubmit = () => {
+    if (!data.name.trim() || !data.contact.trim() || !data.address.trim()) {
+      toast.error("All fields are required!");
+      return;
+    }
+
     if (!companyId) {
       toast.error("Company ID is missing");
       return;
@@ -98,7 +99,9 @@ const AddBranch = () => {
       .then(() => {
         loadData();
         setShowModal(false);
-        toast.success(id ? "Branch updated successfully!" : "Branch added successfully!");
+        toast.success(
+          id ? "Branch updated successfully!" : "Branch added successfully!"
+        );
       })
       .catch((error) => {
         console.error("Error:", error.response?.data);
@@ -126,8 +129,8 @@ const AddBranch = () => {
         value: name,
       })),
       onFilter: (value, record) => record.name.includes(value),
-      filterSearch:true,
-      filterMode: "tree", 
+      filterSearch: true,
+      filterMode: "tree",
     },
     {
       title: "Contact",
@@ -139,8 +142,8 @@ const AddBranch = () => {
         value: contact,
       })),
       onFilter: (value, record) => record.contact.includes(value),
-      filterSearch:true,
-      filterMode: "tree", 
+      filterSearch: true,
+      filterMode: "tree",
     },
     {
       title: "Address",
@@ -152,8 +155,8 @@ const AddBranch = () => {
         value: address,
       })),
       onFilter: (value, record) => record.address.includes(value),
-      filterSearch:true,
-      filterMode: "tree", 
+      filterSearch: true,
+      filterMode: "tree",
     },
     {
       title: "Actions",
@@ -180,8 +183,18 @@ const AddBranch = () => {
     <div className="container mt-3">
       <ToastContainer />
       <h3>Add Branch</h3>
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "10px" }}>
-        <Button type="primary" icon={<PlusOutlined />} onClick={() => setShowModal(true)}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          marginBottom: "10px",
+        }}
+      >
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() => setShowModal(true)}
+        >
           Add Branch
         </Button>
       </div>

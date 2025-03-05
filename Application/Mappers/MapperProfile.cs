@@ -52,6 +52,8 @@ namespace Application.Mappers
                       opt => opt.MapFrom(src => src.AssignedToUser != null? $"{src.AssignedToUser.FirstName}": null))
                 .ForMember(dest => dest.LastRevertedByName,
                       opt => opt.MapFrom(src => src.RevertedByUser != null? $"{src.RevertedByUser.FirstName}": null));
+            CreateMap<Lead, LeadReportResponseDto>();
+            CreateMap<Lead, UserLeadReportResponseDto>();
             CreateMap<LeadSource, AddLeadSourceDto>().ReverseMap();
             CreateMap<LeadSource, LeadSourceResponseDto>();
             CreateMap<LeadTracking, LeadResponseDto>();

@@ -5,6 +5,7 @@ using Application.Services;
 using AutoMapper;
 using Domain.Models;
 using Infrastructure.Data;
+using Infrastructure.Utilities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
@@ -25,6 +26,120 @@ namespace Application.Services
             _leadAssignService = leadAssignService;
             _jwtTokenService = jwtTokenService;  
         }
+
+        public async Task<LeadReportResponseDto> GetLeadReportAsync(DateTime startDate, DateTime endDate)
+        {
+            var totalLeads = await _context.Leads
+                .Include(l => l.District)
+                .Include(l => l.State)
+                .Include(l => l.LeadSource)
+                .Include(l => l.Category)
+                .Include(l => l.Product)
+                .Include(l => l.AssignedToUser)
+                .Where(l => l.CreateDate.Date >= startDate && l.CreateDate.Date <= endDate)
+                .ToListAsync();
+
+            int assignedCount = totalLeads.Count(l => l.AssignedTo != null);
+            int notAssignedCount = totalLeads.Count(l => l.AssignedTo == null);
+
+            var response = new LeadReportResponseDto
+            {
+                TotalLeadsCount = totalLeads.Count,
+                AssignedLeadsCount = assignedCount,
+                NotAssignedLeadsCount = notAssignedCount,
+                NotCalledCount = totalLeads.Count(l => l.Status == "Not Called"),
+                NotConnectedCount = totalLeads.Count(l => l.Status == "Not Connected"),
+                ConnectedCount = totalLeads.Count(l => l.Status == "Connected"),
+                PendingCount = totalLeads.Count(l => l.Status == "Pending"),
+                PositiveCount = totalLeads.Count(l => l.Status == "Positive"),
+                NegativeCount = totalLeads.Count(l => l.Status == "Negative"),
+                ClosedCount = totalLeads.Count(l => l.Status == "Closed"),
+                TotalLeads = _mapper.Map<List<LeadResponseDto>>(totalLeads)
+            };
+
+            return response;
+        }
+
+        public async Task<UserLeadReportResponseDto> GetUserLeadReportAsync(Guid userId, DateTime startDate, DateTime endDate, DateTime? singleDate = null)
+        {
+            IQueryable<Lead> assignedLeadsQuery = _context.Leads
+                .Include(l => l.District)
+                .Include(l => l.State)
+                .Include(l => l.LeadSource)
+                .Include(l => l.Category)
+                .Include(l => l.Product)
+                .Include(l => l.AssignedToUser)
+                .Where(l => l.AssignedTo == userId);
+
+            // Apply date filter based on singleDate or date range
+            if (singleDate.HasValue)
+            {
+                assignedLeadsQuery = assignedLeadsQuery.Where(l => l.AssignedDate.Value.Date == singleDate.Value.Date);
+            }
+            else
+            {
+                assignedLeadsQuery = assignedLeadsQuery.Where(l => l.AssignedDate.Value.Date >= startDate && l.AssignedDate.Value.Date <= endDate);
+            }
+
+            var assignedLeads = await assignedLeadsQuery.ToListAsync();
+
+            // Fetch delegated leads (Leads that were initially assigned to the user but later reassigned)
+            IQueryable<LeadTracking> delegatedLeadsQuery = _context.LeadsTracking
+                .Where(lt => lt.AssignedTo == userId);
+
+            if (singleDate.HasValue)
+            {
+                delegatedLeadsQuery = delegatedLeadsQuery.Where(lt => lt.AssignedDate.Date == singleDate.Value.Date);
+            }
+            else
+            {
+                delegatedLeadsQuery = delegatedLeadsQuery.Where(lt => lt.AssignedDate.Date >= startDate && lt.AssignedDate.Date <= endDate);
+            }
+
+            var delegatedLeadIds = await delegatedLeadsQuery
+                .Select(lt => lt.LeadId)
+                .Except(assignedLeadsQuery.Select(l => l.LeadId))
+                .ToListAsync();
+
+            var delegatedLeadsDetails = await _context.Leads
+                .Include(l => l.District)
+                .Include(l => l.State)
+                .Include(l => l.LeadSource)
+                .Include(l => l.Category)
+                .Include(l => l.Product)
+                .Include(l => l.AssignedToUser)
+                .Where(l => delegatedLeadIds.Contains(l.LeadId))
+                .ToListAsync();
+
+            // Get total assigned leads count from LeadsTracking
+            int totalAssignedLeadsCount = await delegatedLeadsQuery.CountAsync();
+
+            // Get closed leads count only if they were closed in the selected date(s)
+            var closedLeadResponse = await _leadAssignService.GetClosedLeadsByDateRangeAsync(userId,
+                singleDate.HasValue ? singleDate.Value : startDate,
+                singleDate.HasValue ? singleDate.Value : endDate);
+
+            int closedCount = closedLeadResponse.TotalClosedLeads;  
+
+            var response = new UserLeadReportResponseDto
+            {
+                TotalAssignedLeadsCount = totalAssignedLeadsCount,
+                AssignedLeadsCount = assignedLeads.Count,
+                DelegatedLeadsCount = delegatedLeadIds.Count,
+                NotCalledCount = assignedLeads.Count(l => l.Status == "Not Called"),
+                NotConnectedCount = assignedLeads.Count(l => l.Status == "Not Connected"),
+                ConnectedCount = assignedLeads.Count(l => l.Status == "Connected"),
+                PendingCount = assignedLeads.Count(l => l.Status == "Pending"),
+                PositiveCount = assignedLeads.Count(l => l.Status == "Positive"),
+                NegativeCount = assignedLeads.Count(l => l.Status == "Negative"),
+                ClosedCount = closedCount, 
+                AssignedLeads = _mapper.Map<List<LeadResponseDto>>(assignedLeads),
+                DelegatedLeads = _mapper.Map<List<LeadResponseDto>>(delegatedLeadsDetails)
+            };
+
+            return response;
+        }
+
 
         public async Task<LeadsSegregatedResponseDto> GetLatestUploadedLeadsAsync()
         {
@@ -97,7 +212,7 @@ namespace Application.Services
             var groupedLeads = leads.GroupBy(l => l.MobileNo).ToList();
 
             var newLeads = groupedLeads
-                .Where(g => g.Count() == 1)
+                .Where(g => g.Count() == 1 || g.Any(l => l.AssignedTo != null))
                 .Select(g => g.First())
                 .Where(l => l.Status != "Blocked")
                 .OrderBy(l => l.CreateDate)
@@ -192,8 +307,12 @@ namespace Application.Services
             var products = await _context.Products.ToDictionaryAsync(p => p.ProductName, p => p.ProductId);
 
             var users = await _context.Users
-                .Select(u => new { FullName = (u.FirstName ?? "") + " " + (u.LastName ?? ""), u.UserId })
+                .Select(u => new { FullName = (u.FirstName ?? ""), u.UserId })
                 .ToDictionaryAsync(u => u.FullName.Trim(), u => u.UserId);
+
+            var assignedByUserId = _jwtTokenService.GetUserIdFromToken();
+
+            var previousLeadStatus = existingLead.Status; 
 
             _mapper.Map(leadDto, existingLead);
 
@@ -213,14 +332,12 @@ namespace Application.Services
                 ? products[leadDto.ProductName]
                 : existingLead.ProductId;
 
-            var assignedByUserId = _jwtTokenService.GetUserIdFromToken();
-
             // Handle Lead Assignment with Permission Check
             if (!string.IsNullOrWhiteSpace(leadDto.AssignedToName) && users.ContainsKey(leadDto.AssignedToName))
             {
                 var newAssignedTo = users[leadDto.AssignedToName];
 
-                if (existingLead.AssignedTo != newAssignedTo) // Lead is being reassigned
+                if (existingLead.AssignedTo != newAssignedTo) 
                 {
                     var assignerUser = await _context.Users
                         .Include(u => u.AssignedUsers)
@@ -235,21 +352,46 @@ namespace Application.Services
                     }
 
                     existingLead.AssignedTo = newAssignedTo;
-                    existingLead.AssignedDate = DateTime.UtcNow;
-
-                    // Add an entry in the LeadTracking table
                     var leadTracking = new LeadTracking
                     {
                         LeadId = existingLead.LeadId,
                         AssignedTo = newAssignedTo,
                         AssignedBy = (Guid)assignedByUserId,
-                        AssignedDate = DateTime.UtcNow
+                        AssignedDate = DateTimeHelper.GetIndianTime(),
+                        LeadStatus = existingLead.Status
                     };
                     await _context.LeadsTracking.AddAsync(leadTracking);
                 }
             }
 
-            existingLead.UpdateDate = DateTime.UtcNow;
+            if (existingLead.Status == "Closed" && previousLeadStatus != "Closed")
+            {
+                // Update all tracking records for this LeadId
+                var trackingRecords = await _context.LeadsTracking
+                    .Where(lt => lt.LeadId == existingLead.LeadId)
+                    .ToListAsync();
+
+                foreach (var record in trackingRecords)
+                {
+                    record.ClosedDate = DateTimeHelper.GetIndianTime();
+                }
+
+                // Add new tracking record for closing
+                var closedLeadTracking = new LeadTracking
+                {
+                    LeadId = existingLead.LeadId,
+                    AssignedTo = (Guid)existingLead.AssignedTo,
+                    AssignedBy = (Guid)assignedByUserId,
+                    AssignedDate = DateTimeHelper.GetIndianTime(),
+                    LeadStatus = "Closed",
+                    ClosedDate = DateTimeHelper.GetIndianTime()
+                };
+
+                await _context.LeadsTracking.AddAsync(closedLeadTracking);
+            }
+
+
+            existingLead.UpdateDate = DateTimeHelper.GetIndianTime();
             _context.Leads.Update(existingLead);
             await _context.SaveChangesAsync();
 
@@ -307,7 +449,6 @@ namespace Application.Services
                 var productName = worksheet.Cells[row, 12].Value?.ToString();
                 var modelName = worksheet.Cells[row, 13].Value?.ToString();
 
-                //int? chasisNo = int.TryParse(chasisNoStr, out int parsedChasisNo) ? parsedChasisNo : (int?)null;
                 DateTime? registrationDate = DateTime.TryParse(registrationDateStr, out DateTime regDate) ? regDate : (DateTime?)null;
 
                 var lead = new Lead
@@ -327,8 +468,8 @@ namespace Application.Services
                     ProductId = !string.IsNullOrWhiteSpace(productName) && products.ContainsKey(productName) ? products[productName] : null,
                     LeadType = "N/A",   
                     Status = "Not Called",
-                    CreateDate = DateTime.UtcNow,
-                    UpdateDate = DateTime.UtcNow,
+                    CreateDate = DateTimeHelper.GetIndianTime(),
+                    UpdateDate = DateTimeHelper.GetIndianTime(),
                     AssignedTo = null,
                     AssignedDate = null,
                     FollowUpDate = null,
@@ -377,7 +518,7 @@ namespace Application.Services
             {
                 var assignmentDto = _mapper.Map<LeadAssignmentDto>(updateDto);
                 assignmentDto.LeadID = leadId;
-                assignmentDto.AssignedDate = DateTime.UtcNow;
+                assignmentDto.AssignedDate = DateTimeHelper.GetIndianTime();
 
                 await _leadAssignService.AssignLeadAsync(assignmentDto);
             }
@@ -389,7 +530,7 @@ namespace Application.Services
         public async Task<IEnumerable<LeadResponseDto>> GetLeadsByAssignmentAsync(bool assigned)
         {
             var leads = await _context.Leads
-                .Include(l => l.District)
+                .Include(l => l.District)   
                 .Include(l => l.State)
                 .Include(l => l.LeadSource)
                 .Include(l => l.Category)
@@ -438,7 +579,7 @@ namespace Application.Services
 
         public async Task<IEnumerable<LeadResponseDto>> GetTodaysAssignedLeadsAsync(Guid userId)
         {
-            var today = DateTime.UtcNow.Date;
+            var today = DateTimeHelper.GetIndianTime().Date;
             var leads = await _context.Leads
                 .Include(l => l.District)
                 .Include(l => l.State)
@@ -477,46 +618,45 @@ namespace Application.Services
                 leads = _mapper.Map<IEnumerable<LeadResponseDto>>(leadList),
                 totalLeadsCount = totalLeads
             };
-        } 
+        }
 
         public async Task<UserLeadsStatusResponseDto> GetDashboardLeads(Guid userId)
         {
-            var leadList = _context.Leads.Where(u => u.AssignedTo == userId).ToList();
-            int totalLeads = leadList.Count;
+            // Fetch total assigned leads count from LeadTracking
+            int totalAssignedCount = await _context.LeadsTracking
+                .Where(l => l.AssignedTo == userId)
+                .Select(l => l.LeadId)
+                .Distinct()
+                .CountAsync();
 
-            var InterestedList = leadList.Where(l => l.Status == "Psitive").ToList();
-            int InterestedCount = InterestedList.Count;
+            // Fetch only currently assigned leads from Leads table
+            var leadList = await _context.Leads
+                .Where(l => l.AssignedTo == userId)
+                .ToListAsync();
 
-            var NotInterestedList = leadList.Where(l => l.Status == "Negative").ToList();
-            int NotInterestedCount = NotInterestedList.Count;
+            // Categorize current leads based on their status
+            int interestedCount = leadList.Count(l => l.Status == "Positive");
+            int notInterestedCount = leadList.Count(l => l.Status == "Negative");
+            int notCalledCount = leadList.Count(l => l.Status == "Not Called");
+            int connectedCount = leadList.Count(l => l.Status == "Connected");
+            int notConnectedCount = leadList.Count(l => l.Status == "Not Connected");
+            int pendingCount = leadList.Count(l => l.Status == "Pending");
 
-            var NotCalledList = leadList.Where(l => l.Status == "Not Called").ToList();
-            int NotCalledCount = NotCalledList.Count;
-
-            var ConnectedList = leadList.Where(l => l.Status == "Connected").ToList();
-            int ConnectedCount = ConnectedList.Count;
-
-            var NotConnectedList = leadList.Where(l => l.Status == "Not Connected").ToList();
-            int NotConnectedCount = NotConnectedList.Count;
-
-            var PendingList = leadList.Where(l => l.Status == "Pending").ToList();
-            int PendingCount = PendingList.Count;
-
-            var ClosedList = leadList.Where(l => l.Status == "Closed").ToList();
-            int ClosedCount = ClosedList.Count;
+            // Fetch total closed leads
+            int closedCount = await _context.LeadsTracking
+                .CountAsync(l => l.AssignedTo == userId && l.LeadStatus == "Closed");
 
             return new UserLeadsStatusResponseDto
             {
-                leads = leadList,
-                totalAssignedCount = totalLeads,
-                InterestedCount = InterestedCount,
-                NotInterestedCount = NotInterestedCount,
-                NotCalledCount = NotCalledCount,
-                ConnectedCount = ConnectedCount,
-                NotConnectedCount = NotConnectedCount,
-                PendingCount = PendingCount,
-                ClosedCount = ClosedCount
-
+                Leads = leadList,
+                TotalAssignedCount = totalAssignedCount,
+                InterestedCount = interestedCount,
+                NotInterestedCount = notInterestedCount,
+                NotCalledCount = notCalledCount,
+                ConnectedCount = connectedCount,
+                NotConnectedCount = notConnectedCount,
+                PendingCount = pendingCount,
+                ClosedCount = closedCount
             };
         }
 
@@ -672,8 +812,8 @@ namespace Application.Services
 
         public async Task<IEnumerable<LeadResponseDto>> GetLeadsByTimeFrameAsync(Guid userId, string timeframe)
         {
-            DateTime startDate = DateTime.UtcNow.Date;
-            DateTime endDate = DateTime.UtcNow.Date;
+            DateTime startDate = DateTimeHelper.GetIndianTime().Date;
+            DateTime endDate = DateTimeHelper.GetIndianTime().Date;
 
             switch (timeframe.ToLower())
             {

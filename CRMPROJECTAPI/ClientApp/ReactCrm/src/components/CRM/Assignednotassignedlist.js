@@ -90,7 +90,7 @@ function AssignedNotAssignedList() {
       title: "Model Name",
       dataIndex: "modelName",
       key: "modelName",
-      sorter: (a, b) => a.modelName.localeCompare(b.modelName),
+      sorter: (a, b) => (a.modelName || "").localeCompare(b.modelName || ""),
       filters: [...new Set(leads.assigned.map((lead) => lead.modelName))].map(
         (modelName) => ({
           text: modelName,
@@ -119,7 +119,7 @@ function AssignedNotAssignedList() {
     {
       title: "Current Address",
       dataIndex: "currentAddress",
-      key: "currentAddress"
+      key: "currentAddress",
     },
     {
       title: "Mobile No.",
@@ -223,7 +223,7 @@ function AssignedNotAssignedList() {
       title: "Model Name",
       dataIndex: "modelName",
       key: "modelName",
-      sorter: (a, b) => a.modelName.localeCompare(b.modelName),
+      sorter: (a, b) => (a.modelName || "").localeCompare(b.modelName || ""),
       filters: [
         ...new Set(leads.notAssigned.map((lead) => lead.modelName)),
       ].map((modelName) => ({
@@ -398,11 +398,6 @@ function AssignedNotAssignedList() {
               onRow={(record) => ({
                 onClick: () => handleShowDetails(record),
               })}
-              // bordered
-              pagination={{ pageSize: 50 }}
-              // scroll={{ x: "max-content", y: 500 }}
-              locale={{ emptyText: "No assigned leads found" }}
-              style={{ overflowX: "auto", whiteSpace: "nowrap" }}
               components={{
                 body: {
                   row: (props) => (
@@ -412,6 +407,11 @@ function AssignedNotAssignedList() {
                   ),
                 },
               }}
+              pagination={{ pageSize: 50 }}
+              // scroll={{ x: "max-content", y: 500 }}
+              locale={{ emptyText: "No assigned leads found" }}
+              style={{ overflowX: "auto", whiteSpace: "nowrap" }}
+              // bordered
             />
           </div>
         </div>
@@ -448,7 +448,7 @@ function AssignedNotAssignedList() {
                   // scroll={{ x: "max-content", y: 500 }}
                   locale={{ emptyText: "No unassigned leads found" }}
                   style={{ overflowX: "auto", whiteSpace: "nowrap" }}
-                  bordered
+                  // bordered
                 />
               )}
             </>

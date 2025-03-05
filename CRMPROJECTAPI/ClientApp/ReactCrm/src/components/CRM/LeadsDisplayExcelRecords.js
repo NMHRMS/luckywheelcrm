@@ -12,7 +12,7 @@ const LeadsDisplayExcelRecords = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filters, setFilters] = useState({});
-  const [sortColumn, setSortColumn] = useState(null); 
+  const [sortColumn, setSortColumn] = useState(null);
   const [sortOrder, setSortOrder] = useState("asc");
   const [currentPage, setCurrentPage] = useState(1);
   const leadsPerPage = 50;
@@ -69,7 +69,13 @@ const LeadsDisplayExcelRecords = () => {
     if (sortColumn) {
       const valA = a[sortColumn] || "";
       const valB = b[sortColumn] || "";
-      return sortOrder === "asc" ? (valA > valB ? 1 : -1) : (valA < valB ? 1 : -1);
+      return sortOrder === "asc"
+        ? valA > valB
+          ? 1
+          : -1
+        : valA < valB
+        ? 1
+        : -1;
     }
     return 0;
   });
@@ -88,12 +94,15 @@ const LeadsDisplayExcelRecords = () => {
 
   // Ant Design Table columns configuration
   const columns = [
-    
     {
       title: "Owner Name",
       dataIndex: "ownerName",
       sorter: (a, b) => a.ownerName.localeCompare(b.ownerName),
-      filters: [...new Set(leads.map((lead) => ({ text: lead.ownerName, value: lead.ownerName })))],
+      filters: [
+        ...new Set(
+          leads.map((lead) => ({ text: lead.ownerName, value: lead.ownerName }))
+        ),
+      ],
       onFilter: (value, record) => record.ownerName === value,
       filterSearch: true,
       filterMode: "tree",
@@ -102,7 +111,11 @@ const LeadsDisplayExcelRecords = () => {
       title: "Mobile No",
       dataIndex: "mobileNo",
       sorter: (a, b) => a.mobileNo.localeCompare(b.mobileNo),
-      filters: [...new Set(leads.map((lead) => ({ text: lead.mobileNo, value: lead.mobileNo })))],
+      filters: [
+        ...new Set(
+          leads.map((lead) => ({ text: lead.mobileNo, value: lead.mobileNo }))
+        ),
+      ],
       onFilter: (value, record) => record.mobileNo === value,
       filterSearch: true,
       filterMode: "tree",
@@ -112,7 +125,14 @@ const LeadsDisplayExcelRecords = () => {
       title: "District",
       dataIndex: "districtName",
       sorter: (a, b) => a.districtName.localeCompare(b.districtName),
-      filters: [...new Set(leads.map((lead) => ({ text: lead.districtName, value: lead.districtName })))],
+      filters: [
+        ...new Set(
+          leads.map((lead) => ({
+            text: lead.districtName,
+            value: lead.districtName,
+          }))
+        ),
+      ],
       onFilter: (value, record) => record.districtName === value,
       filterSearch: true,
       filterMode: "tree",
@@ -121,7 +141,11 @@ const LeadsDisplayExcelRecords = () => {
       title: "State",
       dataIndex: "stateName",
       sorter: (a, b) => a.stateName.localeCompare(b.stateName),
-      filters: [...new Set(leads.map((lead) => ({ text: lead.stateName, value: lead.stateName })))],
+      filters: [
+        ...new Set(
+          leads.map((lead) => ({ text: lead.stateName, value: lead.stateName }))
+        ),
+      ],
       onFilter: (value, record) => record.stateName === value,
       filterSearch: true,
       filterMode: "tree",
@@ -130,45 +154,57 @@ const LeadsDisplayExcelRecords = () => {
       title: "Registration No",
       dataIndex: "registrationNo",
       sorter: (a, b) => a.registrationNo.localeCompare(b.registrationNo),
-      filters: [...new Set(leads.map((lead) => ({ text: lead.registrationNo, value: lead.registrationNo })))],
+      filters: [
+        ...new Set(
+          leads.map((lead) => ({
+            text: lead.registrationNo,
+            value: lead.registrationNo,
+          }))
+        ),
+      ],
       onFilter: (value, record) => record.registrationNo === value,
       filterSearch: true,
       filterMode: "tree",
     },
-   
+
     {
       title: "Model Name",
       dataIndex: "modelName",
       sorter: (a, b) => a.modelName.localeCompare(b.modelName),
-      filters: [...new Set(leads.map((lead) => ({ text: lead.modelName, value: lead.modelName })))],
+      filters: [
+        ...new Set(
+          leads.map((lead) => ({ text: lead.modelName, value: lead.modelName }))
+        ),
+      ],
       onFilter: (value, record) => record.modelName === value,
       filterSearch: true,
       filterMode: "tree",
     },
-    
 
-   
     {
       title: "Status",
       dataIndex: "status",
       sorter: (a, b) => a.status.localeCompare(b.status),
-      filters: [...new Set(leads.map((lead) => ({ text: lead.status, value: lead.status })))],
+      filters: [
+        ...new Set(
+          leads.map((lead) => ({ text: lead.status, value: lead.status }))
+        ),
+      ],
       onFilter: (value, record) => record.status === value,
       filterSearch: true,
       filterMode: "tree",
-    }
-
+    },
   ];
 
   return (
     <div className="container mt-4">
-        <Link to="/crm/listleads" className="nav-link collapsed">
+      <Link to="/crm/listleads" className="nav-link collapsed">
         <Button>
-        <i className="bi bi-arrow-left-short" size={26} ></i>
+          <i className="bi bi-arrow-left-short" size={26}></i>
         </Button>
-                  
-                   {/* <span>Upload Excel</span> */}
-                 </Link>
+
+        {/* <span>Upload Excel</span> */}
+      </Link>
       <h5 className="mb-3 text-left">Leads from: {excelName}</h5>
       {loading ? (
         <p>Loading leads...</p>
@@ -191,15 +227,18 @@ const LeadsDisplayExcelRecords = () => {
           />
 
           {/* Pagination Controls */}
-          <div className="pagination-container" style={{ textAlign: "center", marginTop: "20px" }}>
-      <Pagination
-        current={currentPage}
-        total={totalPages * 10} // AntD uses total items, so multiply by page size if needed
-        pageSize={10}
-        onChange={handlePageChange}
-        showSizeChanger={false}
-      />
-    </div>
+          <div
+            className="pagination-container"
+            style={{ textAlign: "center", marginTop: "20px" }}
+          >
+            <Pagination
+              current={currentPage}
+              total={totalPages * 50} // AntD uses total items, so multiply by page size if needed
+              pageSize={50}
+              onChange={handlePageChange}
+              showSizeChanger={false}
+            />
+          </div>
         </>
       )}
     </div>

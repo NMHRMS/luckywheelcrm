@@ -114,6 +114,21 @@ const LeadsTable = () => {
 
   const columns = [
     {
+      title: "Owner Name",
+      dataIndex: "ownerName",
+      key: "ownerName",
+      sorter: (a, b) => a.ownerName.localeCompare(b.ownerName),
+      filters: [...new Set(leads[activeTab].map((lead) => lead.ownerName))].map(
+        (ownerName) => ({
+          text: ownerName,
+          value: ownerName,
+        })
+      ),
+      onFilter: (value, record) => record.ownerName.indexOf(value) === 0,
+      filterSearch: true,
+      filterMode: "tree",
+    },
+    {
       title: "State Name",
       dataIndex: "stateName",
       key: "stateName",
@@ -140,21 +155,6 @@ const LeadsTable = () => {
         value: districtName,
       })),
       onFilter: (value, record) => record.districtName.indexOf(value) === 0,
-      filterSearch: true,
-      filterMode: "tree",
-    },
-    {
-      title: "Owner Name",
-      dataIndex: "ownerName",
-      key: "ownerName",
-      sorter: (a, b) => a.ownerName.localeCompare(b.ownerName),
-      filters: [...new Set(leads[activeTab].map((lead) => lead.ownerName))].map(
-        (ownerName) => ({
-          text: ownerName,
-          value: ownerName,
-        })
-      ),
-      onFilter: (value, record) => record.ownerName.indexOf(value) === 0,
       filterSearch: true,
       filterMode: "tree",
     },
@@ -199,6 +199,21 @@ const LeadsTable = () => {
       key: "currentVehical",
     },
     {
+      title: "Product Name",
+      dataIndex: "productName",
+      key: "productName",
+      sorter: (a, b) => new Date(a.productName) - new Date(b.productName),
+      filters: [
+        ...new Set(leads[activeTab].map((lead) => lead.productName)),
+      ].map((productName) => ({
+        text: productName,
+        value: productName,
+      })),
+      onFilter: (value, record) => record.productName.indexOf(value) === 0,
+      filterSearch: true,
+      filterMode: "tree",
+    },
+    {
       title: "Model Name",
       dataIndex: "modelName",
       key: "modelName",
@@ -213,19 +228,6 @@ const LeadsTable = () => {
       filterSearch: true,
       filterMode: "tree",
     },
-    // {
-    //   title: "Dealer Name",
-    //   dataIndex: "dealerName",
-    //   key: "dealerName",
-    //   sorter: (a, b) => a.dealerName.localeCompare(b.dealerName),
-    //   filters: [...new Set(leads[activeTab].map((lead) => lead.dealerName))].map((dealerName) => ({
-    //     text: dealerName,
-    //     value: dealerName,
-    //   })),
-    //   onFilter: (value, record) => record.dealerName.indexOf(value) === 0,
-    //   filterSearch: true,
-    //   filterMode: "tree",
-    // },
     {
       title: "Chasis No.",
       dataIndex: "chasisNo",
@@ -269,21 +271,6 @@ const LeadsTable = () => {
         value: registrationDate,
       })),
       onFilter: (value, record) => record.registrationDate.indexOf(value) === 0,
-      filterSearch: true,
-      filterMode: "tree",
-    },
-    {
-      title: "Product Name",
-      dataIndex: "productName",
-      key: "productName",
-      sorter: (a, b) => new Date(a.productName) - new Date(b.productName),
-      filters: [
-        ...new Set(leads[activeTab].map((lead) => lead.productName)),
-      ].map((productName) => ({
-        text: productName,
-        value: productName,
-      })),
-      onFilter: (value, record) => record.productName.indexOf(value) === 0,
       filterSearch: true,
       filterMode: "tree",
     },

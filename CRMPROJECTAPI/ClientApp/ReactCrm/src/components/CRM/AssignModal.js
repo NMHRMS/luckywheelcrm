@@ -1,105 +1,116 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { getRequest } from "../utils/Api"
-import { fetchStoredData } from "../utils/UserDataUtils"
+import { useState, useEffect } from "react";
+import { getRequest } from "../utils/Api";
+import { fetchStoredData } from "../utils/UserDataUtils";
 
 function AssignModal({ visible, onClose, selectedRows, onAssign }) {
-  const [creOptions, setCreOptions] = useState([])
-  const [assignUsers, setAssignUsers] = useState([])
-  const [selectedCRE, setSelectedCRE] = useState("")
+  const [creOptions, setCreOptions] = useState([]);
+  const [assignUsers, setAssignUsers] = useState([]);
+  const [selectedCRE, setSelectedCRE] = useState("");
   const [userData, setUserData] = useState({
     branchId: "",
     companyId: "",
     userId: "",
-  })
+  });
 
-  console.log("assignUsers",assignUsers);
-  
+  // console.log("assignUsers", assignUsers);
 
   useEffect(() => {
     const loadUserData = async () => {
-      const storedData = await fetchStoredData()
+      const storedData = await fetchStoredData();
       if (storedData) {
-        setUserData(storedData)
+        setUserData(storedData);
       }
-    }
-    loadUserData()
-  }, [])
+    };
+    loadUserData();
+  }, []);
 
   useEffect(() => {
-    console.log("selectedRows", selectedRows)
+    console.log("selectedRows", selectedRows);
     if (visible) {
-      fetchCreUsers()
-      fetchAssignments()
+      fetchAssignments();
     }
-  }, [visible, selectedRows]) // Added selectedRows to dependencies
+  }, [visible, selectedRows]);
 
-    const fetchAssignments = () => {
-      getRequest("/api/UserAssignmentMapping/get-mappings")
-        .then((response) => setAssignUsers({
-          ...response.data.map((item)=>{
-            return { ...item, key: item.userId }
-          })
-        }))
-        .catch((error) => console.error("Error fetching assignments:", error));
-    };
-
-  const fetchCreUsers = async () => {
+  const fetchAssignments = async () => {
     try {
-      const response = await getRequest("/api/Users")
-      console.log("responsedata", response.data)
+      const response = await getRequest("/api/UserAssignmentMapping/assignees");
+      console.log("Assignments Response:", response.data);
 
-      const creUsersList = response.data.filter((user) => user.roleId === "a8c8ea20-7154-4d78-97ea-a4d5cf217a27")
-      console.log("creUsersList", creUsersList)
-
-      setCreOptions(creUsersList)
+      setAssignUsers(
+        response.data.map((item) => ({
+          ...item,
+          key: item.assigneeId,
+        }))
+      );
     } catch (error) {
-      console.error("Error fetching CRE users:", error)
+      console.error("Error fetching assignments:", error);
     }
-  }
+  };
 
   const handleAssign = () => {
     if (!selectedCRE) {
-      alert("Please select a CRE to assign the leads.")
-      return
+      alert("Please select a CRE to assign the leads.");
+      return;
     }
-    onAssign(selectedCRE)
-  }
+    onAssign(selectedCRE);
+  };
 
-  if (!visible) return null
+  if (!visible) return null;
 
   return (
-    <div className="modal" tabIndex="-1" role="dialog" style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}>
+    <div
+      className="modal"
+      tabIndex="-1"
+      role="dialog"
+      style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
+    >
       <div className="modal-dialog" role="document">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">Assign to CRE</h5>
-            <button type="button" className="btn-close" onClick={onClose} aria-label="Close"></button>
+            <h5 className="modal-title">Assign to </h5>
+            <button
+              type="button"
+              className="btn-close"
+              onClick={onClose}
+              aria-label="Close"
+            ></button>
           </div>
           <div className="modal-body">
-            <select className="form-select" value={selectedCRE} onChange={(e) => setSelectedCRE(e.target.value)}>
-              <option value="">Select CRE</option>
-              {assignUsers.map((cre) => (
-                <option key={cre.userId} value={cre.userId}>
-                  {cre.firstName} {cre.lastName}
-                </option>
-              ))}
+            <select
+              className="form-select"
+              value={selectedCRE}
+              onChange={(e) => setSelectedCRE(e.target.value)}
+            >
+              {assignUsers.length > 0 &&
+                assignUsers.map((cre) => (
+                  <option key={cre.assigneeId} value={cre.assigneeId}>
+                    {cre.assigneeName}
+                  </option>
+                ))}
             </select>
           </div>
           <div className="modal-footer">
-            <button type="button" className="btn btn-secondary" onClick={onClose}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={onClose}
+            >
               Cancel
             </button>
-            <button type="button" className="btn btn-primary" onClick={handleAssign}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleAssign}
+            >
               Assign
             </button>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
-export default AssignModal
-
+export default AssignModal;
