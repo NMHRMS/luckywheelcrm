@@ -24,6 +24,7 @@ public partial class Company
     public virtual ICollection<Lead> Leads { get; set; } = new List<Lead>();
 
     public virtual ICollection<LeadReview> LeadsReview { get; set; } = new List<LeadReview>();
+    public virtual ICollection<ReviewsType> ReviewTypes { get; set; } = new List<ReviewsType>();
    
     public virtual ICollection<LeadSource> LeadSources { get; set; } = new List<LeadSource>();
 

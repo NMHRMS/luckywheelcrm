@@ -22,6 +22,8 @@ namespace Application.Mappers
             CreateMap<State, StateResponseDto>();
             CreateMap<District, DistrictDto>();
             CreateMap<District, DistrictResponseDto>();
+            CreateMap<ReviewsType, ReviewTypeDto>().ReverseMap();
+            CreateMap<ReviewsType, ReviewTypeResponseDto>();
             CreateMap<Role, AddRoleDto>().ReverseMap();
             CreateMap<Role, RoleResponseDto>();
             CreateMap<User, AddUserDto>().ReverseMap();

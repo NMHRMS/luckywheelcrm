@@ -59,7 +59,12 @@ const ListLeads = () => {
     if (selectedDates) {
       filtered = filtered.filter((file) => {
         const fileDate = dayjs(file.createdDate);
-        return fileDate.isBetween(selectedDates[0], selectedDates[1], "day", "[]");
+        return fileDate.isBetween(
+          selectedDates[0],
+          selectedDates[1],
+          "day",
+          "[]"
+        );
       });
     }
 
@@ -80,10 +85,12 @@ const ListLeads = () => {
           "Invalid Name"
         ),
       sorter: (a, b) => a.excelName.localeCompare(b.excelName),
-      filters: [...new Set(files.map((lead) => lead.excelName))].map((excelName) => ({
-        text: excelName,
-        value: excelName,
-      })),
+      filters: [...new Set(files.map((lead) => lead.excelName))].map(
+        (excelName) => ({
+          text: excelName,
+          value: excelName,
+        })
+      ),
       onFilter: (value, record) => record.excelName === value,
     },
     {

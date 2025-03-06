@@ -34,6 +34,8 @@ public partial class ApplicationDbContext : DbContext
 
     public virtual DbSet<Product> Products { get; set; }
 
+    public virtual DbSet<ReviewsType> ReviewTypes { get; set; }
+
     public virtual DbSet<Role> Roles { get; set; }
 
     public virtual DbSet<State> States { get; set; }
@@ -277,6 +279,16 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.CreateDate).HasDefaultValue(DateTimeHelper.GetIndianTime()).HasColumnType("datetime");
             entity.Property(e => e.UpdateDate).HasColumnType("datetime");
             entity.HasOne(d => d.Company).WithMany(p => p.Roles).HasForeignKey(d => d.CompanyId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Roles_Companies");
+        });
+
+        modelBuilder.Entity<ReviewsType>(entity =>
+        {
+            entity.HasKey(e => e.ReviewId).HasName("ReviewID");
+            entity.Property(e => e.ReviewId).HasColumnName("ReviewID");
+            entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
+            entity.Property(e => e.ReviewType).HasMaxLength(50);
+            entity.HasOne(d => d.Company).WithMany(p => p.ReviewTypes).HasForeignKey(d => d.CompanyId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_ReviewTypes_Companies");
+
         });
 
         modelBuilder.Entity<User>(entity =>

@@ -140,7 +140,6 @@ namespace Application.Services
             return response;
         }
 
-
         public async Task<LeadsSegregatedResponseDto> GetLatestUploadedLeadsAsync()
         {
             var latestExcelName = await _context.Leads
@@ -195,7 +194,7 @@ namespace Application.Services
                 DuplicateLeadsCount = duplicateLeads.Count(),
                 BlockedLeadsCount = blockedLeads.Count()
             };
-        }
+        } 
 
         public async Task<LeadsSegregatedResponseDto> GetAllLeadsAsync()
         {
@@ -681,6 +680,8 @@ namespace Application.Services
             return new LeadsByExcelNameResponseDto
             {
                 Leads = _mapper.Map<IEnumerable<LeadResponseDto>>(leadList),
+                AssignedLeads = _mapper.Map<IEnumerable<LeadResponseDto>>(assignedList),
+                NotAssignedLeads = _mapper.Map<IEnumerable<LeadResponseDto>>(notAssignedList),
                 TotalLeadsCount = totalLeads,
                 AssignedLeadsCount=assignedCount,
                 NotAssignedLeadsCount=notAssignedCount,
