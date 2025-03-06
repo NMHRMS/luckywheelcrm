@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Table, notification } from "antd";
+import { Table, notification, Select, Spin } from "antd";
 import { getRequest, postRequest, deleteRequest } from "../utils/Api";
 import AssignModal from "./AssignModal";
 import { fetchStoredData } from "../utils/UserDataUtils";
 import Loader from "../utils/Loader";
 import AddLeadModal from "./AddLeadModal";
-import { Spin } from "antd";
+
 const LeadsTable = () => {
   const [file, setFile] = useState(null);
   const [fileName, setFileName] = useState("");
@@ -15,6 +15,9 @@ const LeadsTable = () => {
   const [assignModalVisible, setAssignModalVisible] = useState(false);
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [pageSize, setPageSize] = useState(100);
+  const { Option } = Select;
+
   const [userData, setUserData] = useState({
     branchId: "",
     companyId: "",
@@ -344,6 +347,17 @@ const LeadsTable = () => {
         </h5>
         {/* Buttons (Right) */}
         <div className="d-flex align-items-center">
+          <Select
+            defaultValue={100}
+            style={{ width: 120, marginRight: 16 }}
+            onChange={(value) => setPageSize(value)}
+          >
+            {[100, 200, 300, 400, 500, "All"].map((size) => (
+              <Option key={size} value={size}>
+                {size === "All" ? "All" : `${size} `}
+              </Option>
+            ))}
+          </Select>
           <i
             className="bi bi-file-earmark-arrow-up me-2"
             style={{
@@ -464,7 +478,7 @@ const LeadsTable = () => {
           scroll={{ x: true }}
           bordered
           pagination={{
-            pageSize: 10,
+            pageSize: pageSize === "All" ? leads[activeTab].length : pageSize,
             showSizeChanger: false,
           }}
           onChange={(pagination, filters, sorter) => {

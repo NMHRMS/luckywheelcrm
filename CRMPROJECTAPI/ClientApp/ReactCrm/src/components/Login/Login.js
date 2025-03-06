@@ -116,7 +116,7 @@ function Login() {
                 </label>
                 <div className="input-group">
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     className="form-control"
                     id="password"
                     value={password}
