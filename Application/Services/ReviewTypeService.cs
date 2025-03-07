@@ -43,7 +43,6 @@ namespace Application.Services
             _context.ReviewTypes.Add(reviewType);
             await _context.SaveChangesAsync();
             return _mapper.Map<ReviewTypeResponseDto>(reviewType);
-
         }
 
         public async Task<ReviewTypeResponseDto?> UpdateReviewTypeAsync(Guid id, ReviewTypeDto reviewTypeDto)

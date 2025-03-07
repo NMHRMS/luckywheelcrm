@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace Application.ResponseDto
 {
-    public class ReviewTypeResponseDto
+    public class StatusResponseDto
     {
-        public Guid ReviewId { get; set; }
+        public Guid StatusId { get; set; }
         public Guid CompanyId { get; set; }
-        public string ReviewType { get; set; }
+        public string StatusType { get; set; }
     }
 }

@@ -224,6 +224,7 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
           rules={[{ required: true, message: "Please select District Name!" }]}
         >
           <Select
+            showSearch
             placeholder="Select District Name"
             dropdownRender={(menu) => (
               <>

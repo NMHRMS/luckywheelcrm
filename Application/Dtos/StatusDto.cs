@@ -4,12 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Application.ResponseDto
+namespace Application.Dtos
 {
-    public class ReviewTypeResponseDto
+    public class StatusDto
     {
-        public Guid ReviewId { get; set; }
         public Guid CompanyId { get; set; }
-        public string ReviewType { get; set; }
+        public string StatusType { get; set; }
     }
 }

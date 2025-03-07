@@ -18,10 +18,12 @@ namespace Application.Mappers
             CreateMap<Company, CompanyResponseDto>();
             CreateMap<Branch, AddBranchDto>().ReverseMap();
             CreateMap<Branch, BranchResponseDto>();
-            CreateMap<State, StateDto>();
+            CreateMap<State, StateDto>().ReverseMap();
             CreateMap<State, StateResponseDto>();
-            CreateMap<District, DistrictDto>();
+            CreateMap<District, DistrictDto>().ReverseMap();
             CreateMap<District, DistrictResponseDto>();
+            CreateMap<Status, StatusDto>().ReverseMap();
+            CreateMap<Status, StatusResponseDto>();
             CreateMap<ReviewsType, ReviewTypeDto>().ReverseMap();
             CreateMap<ReviewsType, ReviewTypeResponseDto>();
             CreateMap<Role, AddRoleDto>().ReverseMap();

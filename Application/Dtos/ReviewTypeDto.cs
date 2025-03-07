@@ -8,7 +8,7 @@ namespace Application.Dtos
 {
     public class ReviewTypeDto
     {
-        public Guid CompanyID { get; set; }
+        public Guid CompanyId { get; set; }
         public string? ReviewType { get; set; }
     }
 }

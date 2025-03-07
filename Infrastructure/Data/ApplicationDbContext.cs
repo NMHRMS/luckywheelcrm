@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Domain.Models;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Infrastructure.Utilities;
+using System.Reflection.Emit;
 
 namespace Infrastructure.Data;
 
@@ -39,6 +40,8 @@ public partial class ApplicationDbContext : DbContext
     public virtual DbSet<Role> Roles { get; set; }
 
     public virtual DbSet<State> States { get; set; }
+
+    public virtual DbSet<Status> Statuses { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
 
@@ -99,6 +102,15 @@ public partial class ApplicationDbContext : DbContext
             entity.HasKey(e => e.StateId).HasName("PK_States");
             entity.Property(e => e.StateId).HasColumnName("StateID");
             entity.Property(e => e.StateName).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<Status>(entity =>
+        {
+            entity.HasKey(e => e.StatusId).HasName("StatusID");
+            entity.Property(e => e.StatusId).HasColumnName("StatusID");
+            entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
+            entity.Property(e => e.StatusType).HasMaxLength(20);
+            entity.HasOne(d => d.Company).WithMany(p => p.Statuses).HasForeignKey(d => d.CompanyId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_Statuses_Companies");
         });
 
         modelBuilder.Entity<LeadSource>(entity =>
