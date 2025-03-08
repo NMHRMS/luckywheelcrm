@@ -60,7 +60,6 @@ namespace Application.Services
             return response;
         }
 
-
         public async Task<UserLeadReportResponseDto> GetUserLeadReportAsync(Guid userId, DateTime startDate, DateTime endDate, DateTime? date = null)
         {
             // Get assigned leads for the user
@@ -71,6 +70,8 @@ namespace Application.Services
                 .Include(l => l.Category)
                 .Include(l => l.Product)
                 .Include(l => l.AssignedToUser)
+                .Include(l => l.LeadsReview)
+                    .ThenInclude(r => r.ReviewByUser)
                 .Where(l => l.AssignedTo == userId);
 
             // Apply single date or date range filter
@@ -110,6 +111,8 @@ namespace Application.Services
                 .Include(l => l.Category)
                 .Include(l => l.Product)
                 .Include(l => l.AssignedToUser)
+                .Include(l => l.LeadsReview)
+                    .ThenInclude(r => r.ReviewByUser)
                 .Where(l => delegatedLeadIds.Contains(l.LeadId))
                 .ToListAsync();
 
@@ -139,91 +142,6 @@ namespace Application.Services
 
             return response;
         }
-
-        //public async Task<UserLeadReportResponseDto> GetUserLeadReportAsync(Guid userId, DateTime startDate, DateTime endDate, DateTime? date = null)
-        //{
-        //    IQueryable<Lead> assignedLeadsQuery = _context.Leads
-        //        .Include(l => l.District)
-        //        .Include(l => l.State)
-        //        .Include(l => l.LeadSource)
-        //        .Include(l => l.Category)
-        //        .Include(l => l.Product)
-        //        .Include(l => l.AssignedToUser)
-        //        .Where(l => l.AssignedTo == userId);
-
-        //    // Apply date filter based on singleDate or date range
-        //    if (date.HasValue)
-        //    {
-        //        assignedLeadsQuery = assignedLeadsQuery.Where(l => l.AssignedDate.Value.Date == date.Value.Date);
-        //    }
-
-        //    else
-        //    {
-        //        assignedLeadsQuery = assignedLeadsQuery.Where(l => l.AssignedDate.Value.Date >= startDate && l.AssignedDate.Value.Date <= endDate);
-        //    }
-
-        //    var assignedLeads = await assignedLeadsQuery.ToListAsync();
-
-        //    // Fetch delegated leads (Leads that were initially assigned to the user but later reassigned)
-        //    IQueryable<LeadTracking> delegatedLeadsQuery = _context.LeadsTracking
-        //        .Where(lt => lt.AssignedTo == userId);
-
-        //    if (date.HasValue)
-        //    {
-        //        delegatedLeadsQuery = delegatedLeadsQuery.Where(lt => lt.AssignedDate.Date == date.Value.Date);
-        //    }
-        //    else
-        //    {
-        //        delegatedLeadsQuery = delegatedLeadsQuery.Where(lt => lt.AssignedDate.Date >= startDate && lt.AssignedDate.Date <= endDate);
-        //    }
-
-        //    var delegatedLeadIds = await delegatedLeadsQuery
-        //        .Select(lt => lt.LeadId)
-        //        .Except(assignedLeadsQuery.Select(l => l.LeadId))
-        //        .ToListAsync();
-
-        //    var delegatedLeadsDetails = await _context.Leads
-        //        .Include(l => l.District)
-        //        .Include(l => l.State)
-        //        .Include(l => l.LeadSource)
-        //        .Include(l => l.Category)
-        //        .Include(l => l.Product)
-        //        .Include(l => l.AssignedToUser)
-        //        .Where(l => delegatedLeadIds.Contains(l.LeadId))
-        //        .ToListAsync();
-
-        //    // Get the total assigned leads count from the LeadsTracking table
-        //    int totalAssignedLeadsCount = await _context.LeadsTracking
-        //        .Where(lt => lt.AssignedTo == userId &&
-        //                    (date == null
-        //                        ? (lt.AssignedDate.Date >= startDate && lt.AssignedDate.Date <= endDate)
-        //                        : lt.AssignedDate.Date == date.Value.Date))
-        //        .CountAsync();
-        //    // Get closed leads count only if they were closed in the selected date(s)
-        //    var closedLeadResponse = await _leadAssignService.GetClosedLeadsByDateRangeAsync(userId,
-        //        date.HasValue ? date.Value : startDate,
-        //        date.HasValue ? date.Value : endDate);
-
-        //    int closedCount = closedLeadResponse.TotalClosedLeads;
-
-        //    var response = new UserLeadReportResponseDto
-        //    {
-        //        TotalAssignedLeadsCount = totalAssignedLeadsCount,
-        //        AssignedLeadsCount = assignedLeads.Count,
-        //        DelegatedLeadsCount = delegatedLeadIds.Count,
-        //        NotCalledCount = assignedLeads.Count(l => l.Status == "Not Called"),
-        //        NotConnectedCount = assignedLeads.Count(l => l.Status == "Not Connected"),
-        //        ConnectedCount = assignedLeads.Count(l => l.Status == "Connected"),
-        //        PendingCount = assignedLeads.Count(l => l.Status == "Pending"),
-        //        PositiveCount = assignedLeads.Count(l => l.Status == "Positive"),
-        //        NegativeCount = assignedLeads.Count(l => l.Status == "Negative"),
-        //        ClosedCount = closedCount,
-        //        AssignedLeads = _mapper.Map<List<LeadResponseDto>>(assignedLeads),
-        //        DelegatedLeads = _mapper.Map<List<LeadResponseDto>>(delegatedLeadsDetails)
-        //    };
-
-        //    return response;
-        //}
 
         public async Task<LeadsSegregatedResponseDto> GetLatestUploadedLeadsAsync()
         {
@@ -768,7 +686,7 @@ namespace Application.Services
 
             return new LeadsByExcelNameResponseDto
             {
-                Leads = _mapper.Map<IEnumerable<LeadResponseDto>>(leadList),
+                //Leads = _mapper.Map<IEnumerable<LeadResponseDto>>(leadList),
                 AssignedLeads = _mapper.Map<IEnumerable<LeadResponseDto>>(assignedList),
                 NotAssignedLeads = _mapper.Map<IEnumerable<LeadResponseDto>>(notAssignedList),
                 TotalLeadsCount = totalLeads,

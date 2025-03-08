@@ -1,4 +1,6 @@
-﻿namespace Application.ResponseDto
+﻿using Application.Dtos;
+
+namespace Application.ResponseDto
 {
     public class LeadResponseDto
     {
@@ -33,5 +35,6 @@
         public string LastRevertedByName { get; set; }
         public string? Remark { get; set; }
         public string? Status { get; set; }
+        public List<LeadReviewResponseDto> LeadsReview { get; set; }
     }
 }

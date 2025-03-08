@@ -33,10 +33,6 @@ namespace Application.Mappers
             CreateMap<User, UserResponseDto>();
             CreateMap<Product, AddProductDto>().ReverseMap();
             CreateMap<Product, ProductResponseDto>();
-            CreateMap<LeadReview, LeadReviewDto>().ReverseMap();
-            CreateMap<LeadReview, LeadReviewResponseDto>()
-                 .ForMember(dest => dest.ReviewByName,
-                      opt => opt.MapFrom(src => src.ReviewByUser != null ? $"{src.ReviewByUser.FirstName}" : null));
             CreateMap<CallRecord, CallRecordDto>().ReverseMap();
             CreateMap<CallRecord, CallRecordResponseDto>();
             CreateMap<Category, CategoryDto>().ReverseMap();
@@ -53,9 +49,13 @@ namespace Application.Mappers
                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.CategoryName))
                 .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.ProductName))
                 .ForMember(dest => dest.AssignedToName,
-                      opt => opt.MapFrom(src => src.AssignedToUser != null? $"{src.AssignedToUser.FirstName}": null))
+                      opt => opt.MapFrom(src => src.AssignedToUser != null ? $"{src.AssignedToUser.FirstName}" : null))
                 .ForMember(dest => dest.LastRevertedByName,
-                      opt => opt.MapFrom(src => src.RevertedByUser != null? $"{src.RevertedByUser.FirstName}": null));
+                      opt => opt.MapFrom(src => src.RevertedByUser != null ? $"{src.RevertedByUser.FirstName}" : null));
+            CreateMap<LeadReview, LeadReviewDto>().ReverseMap();
+            CreateMap<LeadReview, LeadReviewResponseDto>()
+                 .ForMember(dest => dest.ReviewByName,
+                      opt => opt.MapFrom(src => src.ReviewByUser != null ? $"{src.ReviewByUser.FirstName}" : null));
             CreateMap<Lead, LeadReportResponseDto>();
             CreateMap<Lead, UserLeadReportResponseDto>();
             CreateMap<LeadSource, AddLeadSourceDto>().ReverseMap();

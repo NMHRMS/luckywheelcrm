@@ -34,6 +34,17 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(leadReview);
         }
 
+        [HttpGet("reviews_by_leadId/{leadId}")]
+        public async Task<IActionResult> GetLeadReviewsByLeadId(Guid leadId)
+        {
+            var leadReviews = await _leadReviewService.GetLeadReviewsByLeadIdAsync(leadId);
+            if (!leadReviews.Any())
+            {
+                return NotFound("No reviews found for this Lead ID.");
+            }
+            return Ok(leadReviews);
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateLeadReview([FromBody] LeadReviewDto leadReviewDto)
         {
