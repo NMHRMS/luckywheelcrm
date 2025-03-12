@@ -17,11 +17,13 @@ namespace Application.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IJwtTokenService _jwtTokenService;
 
-        public StatusService(ApplicationDbContext context, IMapper mapper)
+        public StatusService(ApplicationDbContext context, IMapper mapper, IJwtTokenService jwtTokenService)
         {
             _context = context;
             _mapper = mapper;
+            _jwtTokenService = jwtTokenService;
         }
 
         public async Task<IEnumerable<StatusResponseDto>> GetAllStatusesAsync()
@@ -38,9 +40,10 @@ namespace Application.Services
 
         public async Task<StatusResponseDto> AddStatusAsync(StatusDto statusDto)
         {
-
+            var userId = _jwtTokenService.GetUserIdFromToken();
             var status = _mapper.Map<Status>(statusDto);
             status.StatusId = Guid.NewGuid();
+            status.CreatedBy = userId;
             _context.Statuses.Add(status);
             await _context.SaveChangesAsync();
             return _mapper.Map<StatusResponseDto>(status);
@@ -48,10 +51,12 @@ namespace Application.Services
 
         public async Task<StatusResponseDto?> UpdateStatusAsync(Guid id, StatusDto statusDto)
         {
+            var userId = _jwtTokenService.GetUserIdFromToken();
             var existingStatus = await _context.Statuses.FindAsync(id);
             if (existingStatus == null) return null;
 
             _mapper.Map(statusDto, existingStatus);
+            existingStatus.UpdatedBy = userId;
             _context.Statuses.Update(existingStatus);
             await _context.SaveChangesAsync();
             return _mapper.Map<StatusResponseDto>(existingStatus);

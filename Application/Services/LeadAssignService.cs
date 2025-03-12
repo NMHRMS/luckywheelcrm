@@ -48,10 +48,11 @@ public class LeadsAssignService : ILeadAssignService
 
         lead.AssignedTo = requestDto.AssignedTo;
         lead.AssignedDate = DateTimeHelper.GetIndianTime();
+        lead.AssignedBy = assignedByUserId;
 
         lead.LastRevertedBy = null;
         lead.Remark = null;
-
+        lead.UpdatedBy = assignedByUserId;
         _context.Leads.Update(lead);
 
         var leadTracking = _mapper.Map<LeadTracking>(requestDto);
@@ -102,6 +103,7 @@ public class LeadsAssignService : ILeadAssignService
         // Reset AssignedTo and AssignedDate in Leads table
         lead.AssignedTo = null;
         lead.AssignedDate = null;
+        lead.UpdatedBy = lastRevertedBy;
         _context.Leads.Update(lead);
 
         await _context.SaveChangesAsync();
@@ -308,7 +310,6 @@ public class LeadsAssignService : ILeadAssignService
         {
             dto.AssignedToName = userNames.ContainsKey(dto.AssignedTo) ? userNames[dto.AssignedTo] : "";
             dto.AssignedByName = userNames.ContainsKey(dto.AssignedBy) ? userNames[dto.AssignedBy] : "";
-            //dto.LeadStatus = leadStatus;
         }
 
         for (int i = 0; i < responseDtos.Count(); i++)

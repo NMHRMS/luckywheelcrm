@@ -9,6 +9,7 @@ using Infrastructure.Utilities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Application.Services
 {
@@ -36,6 +37,7 @@ namespace Application.Services
                 .Include(l => l.Category)
                 .Include(l => l.Product)
                 .Include(l => l.AssignedToUser)
+                .Include(l => l.AssignedByUser)
                 .Where(l => l.CreateDate.Date >= startDate && l.CreateDate.Date <= endDate)
                 .ToListAsync();
 
@@ -70,6 +72,7 @@ namespace Application.Services
                 .Include(l => l.Category)
                 .Include(l => l.Product)
                 .Include(l => l.AssignedToUser)
+                .Include(l => l.AssignedByUser)
                 .Include(l => l.LeadsReview)
                     .ThenInclude(r => r.ReviewByUser)
                 .Where(l => l.AssignedTo == userId);
@@ -111,6 +114,7 @@ namespace Application.Services
                 .Include(l => l.Category)
                 .Include(l => l.Product)
                 .Include(l => l.AssignedToUser)
+                .Include(l => l.AssignedByUser)
                 .Include(l => l.LeadsReview)
                     .ThenInclude(r => r.ReviewByUser)
                 .Where(l => delegatedLeadIds.Contains(l.LeadId))
@@ -143,6 +147,54 @@ namespace Application.Services
             return response;
         }
 
+        public async Task<DelegatedLeadsResponseDto> GetDelegatedLeadsAsync(DateTime? date, DateTime? startDate, DateTime? endDate)
+        {
+            var userId = _jwtTokenService.GetUserIdFromToken();
+            DateTime indianTime = DateTimeHelper.GetIndianTime();
+
+            if (date.HasValue)
+            {
+                startDate = date.Value.Date;
+                endDate = date.Value.Date.AddDays(1).AddTicks(-1);
+            }
+            else
+            {
+                startDate ??= indianTime.AddDays(-7);
+                endDate ??= indianTime;
+            }
+
+            // Get lead IDs that the user has delegated
+            var delegatedLeadIds = await _context.LeadsTracking
+                .Where(lt => lt.AssignedBy == userId && lt.AssignedTo != userId &&
+                             lt.AssignedDate >= startDate && lt.AssignedDate <= endDate)
+                .Select(lt => lt.LeadId)
+                .Distinct()
+                .ToListAsync();
+
+            // Fetch full lead details from the Leads table
+            var delegatedLeads = await _context.Leads
+                .Where(l => delegatedLeadIds.Contains(l.LeadId))
+                .Include(l => l.District)
+                .Include(l => l.State)
+                .Include(l => l.LeadSource)
+                .Include(l => l.Category)
+                .Include(l => l.Product)
+                .Include(l => l.AssignedToUser)
+                .Include(l => l.AssignedByUser)
+                .Include(l => l.LeadsReview)
+                    .ThenInclude(r => r.ReviewByUser)
+                .AsNoTracking()
+                .ToListAsync();
+
+            var mappedLeads = _mapper.Map<List<LeadResponseDto>>(delegatedLeads);
+
+            return new DelegatedLeadsResponseDto
+            {
+                TotalDelegatedLeadsCount = mappedLeads.Count,
+                DelegatedLeads = mappedLeads
+            };
+        }
+
         public async Task<LeadsSegregatedResponseDto> GetLatestUploadedLeadsAsync()
         {
             var latestExcelName = await _context.Leads
@@ -163,6 +215,7 @@ namespace Application.Services
                 .Include(l => l.Category)
                 .Include(l => l.Product)
                 .Include(l => l.AssignedToUser)
+                .Include(l => l.AssignedByUser)
                 .ToListAsync();
 
             var groupedLeads = leadList
@@ -210,6 +263,7 @@ namespace Application.Services
                 .Include(l => l.Category)
                 .Include(l => l.Product)
                 .Include(l => l.AssignedToUser)
+                .Include(l => l.AssignedByUser)
                 .ToListAsync();
             var groupedLeads = leads.GroupBy(l => l.MobileNo).ToList();
 
@@ -252,6 +306,7 @@ namespace Application.Services
                 .Include(l => l.Category)
                 .Include(l => l.Product)
                 .Include(l => l.AssignedToUser) 
+                .Include(l => l.AssignedByUser)
                 .FirstOrDefaultAsync(l => l.LeadId == id);
             return lead == null ? null : _mapper.Map<LeadResponseDto>(lead);
         }
@@ -289,6 +344,8 @@ namespace Application.Services
             lead.AssignedTo = !string.IsNullOrWhiteSpace(leadDto.AssignedToName) && users.ContainsKey(leadDto.AssignedToName)
                 ? users[leadDto.AssignedToName]
                 : null;
+            // Assigning the current logged-in user's UserId
+            lead.AssignedBy = _jwtTokenService.GetUserIdFromToken();
 
             // Generate Walk-In Excel Name with only Date
             var currentDate = DateTimeHelper.GetIndianTime().ToString("dd-MM-yyyy");
@@ -398,14 +455,22 @@ namespace Application.Services
 
 
             existingLead.UpdateDate = DateTimeHelper.GetIndianTime();
+            existingLead.UpdatedBy = assignedByUserId;
             _context.Leads.Update(existingLead);
             await _context.SaveChangesAsync();
 
             var response = _mapper.Map<LeadResponseDto>(existingLead);
 
+            // Create a reverse lookup dictionary for UserId to UserName
+            var userIdToName = users.ToDictionary(kv => kv.Value, kv => kv.Key);
+
             // Ensure AssignedToName is included in the response
-            response.AssignedToName = existingLead.AssignedTo.HasValue && users.ContainsValue(existingLead.AssignedTo.Value)
-                ? users.FirstOrDefault(x => x.Value == existingLead.AssignedTo.Value).Key
+            response.AssignedToName = existingLead.AssignedTo.HasValue
+                ? userIdToName.GetValueOrDefault(existingLead.AssignedTo.Value)
+                : null;
+
+            response.AssignedByName = existingLead.AssignedBy.HasValue
+                ? userIdToName.GetValueOrDefault(existingLead.AssignedBy.Value)
                 : null;
 
             return response;
@@ -542,6 +607,7 @@ namespace Application.Services
                 .Include(l => l.Category)
                 .Include(l => l.Product)
                 .Include(l => l.AssignedToUser)
+                .Include(l => l.AssignedByUser)
                 .Where(l => assigned ? l.AssignedTo != null : l.AssignedTo == null)
                 .ToListAsync();
             return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
@@ -556,6 +622,7 @@ namespace Application.Services
                 .Include(l => l.Category)
                 .Include(l => l.Product)
                 .Include(l => l.AssignedToUser)
+                .Include(l => l.AssignedByUser)
                 .OrderBy( l => l.AssignedDate)
                 .Where(lt => lt.AssignedTo == userId)
                 .ToListAsync();
@@ -593,6 +660,7 @@ namespace Application.Services
                 .Include(l => l.Category)
                 .Include(l => l.Product)
                 .Include(l => l.AssignedToUser)
+                .Include(l => l.AssignedByUser)
                 .Where(l => l.AssignedTo == userId && l.AssignedDate.HasValue && l.AssignedDate.Value.Date == today)
                 .ToListAsync();
             return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
@@ -617,6 +685,7 @@ namespace Application.Services
                 .Include(l => l.Category)
                 .Include(l => l.Product)
                 .Include(l => l.AssignedToUser)
+                .Include(l => l.AssignedByUser)
                 .ToList();
             int totalLeads = leadList.Count;
             return new DashboardLeadResponseDto
@@ -686,7 +755,6 @@ namespace Application.Services
 
             return new LeadsByExcelNameResponseDto
             {
-                //Leads = _mapper.Map<IEnumerable<LeadResponseDto>>(leadList),
                 AssignedLeads = _mapper.Map<IEnumerable<LeadResponseDto>>(assignedList),
                 NotAssignedLeads = _mapper.Map<IEnumerable<LeadResponseDto>>(notAssignedList),
                 TotalLeadsCount = totalLeads,
@@ -697,17 +765,23 @@ namespace Application.Services
 
         public async Task<List<LeadListResponseDto>> GetLeadsDataList()
         {
-            var excelNames = _context.Leads.Where(x => x.ExcelName != null).Select(x => x.ExcelName).Distinct().ToList();                        
+            var excelNames = await _context.Leads
+                .Where(x => x.ExcelName != null)
+                .Select(x => x.ExcelName)
+                .Distinct()
+                .ToListAsync();  // Execute the query before using it in a loop
+
             var responseList = new List<LeadListResponseDto>();
 
             foreach (var excelName in excelNames)
             {
-                var leadList = _context.Leads.Where(x => x.ExcelName == excelName).ToList();
+                var leadList = await _context.Leads
+                    .Where(x => x.ExcelName == excelName)
+                    .ToListAsync();  // Ensure async execution
+
                 int totalLeads = leadList.Count;
-                var assignedList = leadList.Where(x => x.AssignedTo != null).ToList();
-                int assignedCount = assignedList.Count;
-                var notAssignedList = leadList.Where(x => x.AssignedTo == null).ToList();
-                int notAssignedCount = notAssignedList.Count;
+                int assignedCount = leadList.Count(x => x.AssignedTo != null);
+                int notAssignedCount = totalLeads - assignedCount;
 
                 DateTime? createdDate = leadList.OrderBy(x => x.CreateDate).FirstOrDefault()?.CreateDate;
 
@@ -735,6 +809,7 @@ namespace Application.Services
                 .Include(l => l.Category)
                 .Include(l => l.Product)
                 .Include(l => l.AssignedToUser)
+                .Include(l => l.AssignedByUser)
                 .Where(l => l.FollowUpDate.HasValue && l.FollowUpDate.Value.Date == followUpDate.Date)
                 .ToListAsync();
 
@@ -743,7 +818,7 @@ namespace Application.Services
 
         public async Task<IEnumerable<LeadResponseDto>> GetTodaysFollowUpLeadsAsync(Guid userId)
         {
-            var today = DateTime.UtcNow.Date;
+            var today = DateTimeHelper.GetIndianTime().Date;
             var leads = await _context.Leads
                 .Include(l => l.District)
                 .Include(l => l.State)
@@ -751,6 +826,7 @@ namespace Application.Services
                 .Include(l => l.Category)
                 .Include(l => l.Product)
                 .Include(l => l.AssignedToUser)
+                .Include(l => l.AssignedByUser)
                 .Where(l => l.AssignedTo == userId && l.FollowUpDate.HasValue && l.FollowUpDate.Value.Date == today)
                 .ToListAsync();
             return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
@@ -765,6 +841,7 @@ namespace Application.Services
                 .Include(l => l.Category)
                 .Include(l => l.Product)
                 .Include(l => l.AssignedToUser)
+                .Include(l => l.AssignedByUser)
                 .Where(l => l.AssignedTo == userId && l.FollowUpDate.Value.Date == followUpDate.Date) 
                 .ToListAsync();
 
@@ -797,6 +874,7 @@ namespace Application.Services
                 .Include(l => l.Category)
                 .Include(l => l.Product)
                 .Include(l => l.AssignedToUser)
+                .Include(l => l.AssignedByUser)
                 .Where(l => l.AssignedTo == userId && l.AssignedDate.Value.Date >= startDate.Date && l.AssignedDate.Value.Date <= endDate.Date)
                 .ToListAsync();
 
@@ -812,6 +890,7 @@ namespace Application.Services
                 .Include(l => l.Category)
                 .Include(l => l.Product)
                 .Include(l => l.AssignedToUser)
+                .Include(l => l.AssignedByUser)
                 .Where(l => l.AssignedTo == userId && l.FollowUpDate.Value.Date >= startDate.Date && l.FollowUpDate.Value.Date <= endDate.Date)
                 .ToListAsync();
 
@@ -848,6 +927,7 @@ namespace Application.Services
                 .Include(l => l.Category)
                 .Include(l => l.Product)
                 .Include(l => l.AssignedToUser)
+                .Include(l => l.AssignedByUser)
                 .Where(l => l.AssignedTo == userId && l.AssignedDate.Value.Date >= startDate && l.AssignedDate.Value.Date <= endDate)
                 .ToListAsync();
 

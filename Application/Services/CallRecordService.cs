@@ -17,10 +17,12 @@ namespace Application.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
-        public CallRecordService(ApplicationDbContext context, IMapper mapper)
+        private readonly IJwtTokenService _jwtTokenService;
+        public CallRecordService(ApplicationDbContext context, IMapper mapper, IJwtTokenService jwtTokenService)
         {
             _context = context;
             _mapper = mapper;
+            _jwtTokenService = jwtTokenService;
         }
         public async Task<IEnumerable<CallRecordResponseDto>> GetAllCallRecordsAsync()
         {
@@ -34,8 +36,10 @@ namespace Application.Services
         }
         public async Task<CallRecordResponseDto> AddCallRecordAsync(CallRecordDto callRecordDto)
         {
+            var userId = _jwtTokenService.GetUserIdFromToken();
             var callRecord = _mapper.Map<CallRecord>(callRecordDto);
             callRecord.RecordId = Guid.NewGuid();
+            callRecord.CreatedBy = userId;
             _context.CallRecords.Add(callRecord);
             await _context.SaveChangesAsync();
             return _mapper.Map<CallRecordResponseDto>(callRecord);

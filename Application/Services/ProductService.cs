@@ -18,10 +18,12 @@ namespace Application.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
-        public ProductService(ApplicationDbContext context, IMapper mapper)
+        private readonly IJwtTokenService _jwtTokenService;
+        public ProductService(ApplicationDbContext context, IMapper mapper, IJwtTokenService jwtTokenService)
         {
             _context = context;
             _mapper = mapper;
+            _jwtTokenService = jwtTokenService;
         }
         public async Task<IEnumerable<ProductResponseDto>> GetAllProductsAsync()
         {
@@ -35,18 +37,22 @@ namespace Application.Services
         }
         public async Task<ProductResponseDto> AddProductAsync(AddProductDto productDto)
         {
+            var userId = _jwtTokenService.GetUserIdFromToken();
             var product = _mapper.Map<Product>(productDto);
             product.ProductId = Guid.NewGuid();   
+            product.CreatedBy = userId;
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
             return _mapper.Map<ProductResponseDto>(product);
         }
         public async Task<ProductResponseDto?> UpdateProductAsync(Guid id, AddProductDto productDto)
         {
+            var userId = _jwtTokenService.GetUserIdFromToken();
             var existingProduct = await _context.Products.FindAsync(id);
             if (existingProduct == null) return null;
 
             _mapper.Map(productDto, existingProduct);
+            existingProduct.UpdatedBy = userId;
             _context.Products.Update(existingProduct);
             await _context.SaveChangesAsync();
             return _mapper.Map<ProductResponseDto>(existingProduct);

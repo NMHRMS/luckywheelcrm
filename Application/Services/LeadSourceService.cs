@@ -17,11 +17,13 @@ namespace Application.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IJwtTokenService _jwtTokenService;
 
-        public LeadSourceService (ApplicationDbContext context, IMapper mapper)
+        public LeadSourceService (ApplicationDbContext context, IMapper mapper, IJwtTokenService jwtTokenService)
         {
             _context = context;
             _mapper = mapper;
+            _jwtTokenService = jwtTokenService;
         }
         public async Task<IEnumerable<LeadSourceResponseDto>> GetAllLeadSourcesAsync()
         {
@@ -36,8 +38,10 @@ namespace Application.Services
 
         public async Task<LeadSourceResponseDto> AddLeadSourceAsync(AddLeadSourceDto leadSourceDto)
         {
+            var userId = _jwtTokenService.GetUserIdFromToken();
             var leadsource = _mapper.Map<LeadSource>(leadSourceDto);
             leadsource.SourceId = Guid.NewGuid();
+            leadsource.CreatedBy = userId;
             _context.LeadSources.Add(leadsource);
             await _context.SaveChangesAsync();
             return _mapper.Map<LeadSourceResponseDto>(leadsource);
@@ -46,10 +50,12 @@ namespace Application.Services
 
         public async Task<LeadSourceResponseDto?> UpdateLeadSourceAsync(Guid id, AddLeadSourceDto leadSourceDto)
         {
+            var userId = _jwtTokenService.GetUserIdFromToken();
             var existingLeadSource = await _context.LeadSources.FindAsync(id);
             if (existingLeadSource == null) return null;
 
             _mapper.Map(leadSourceDto, existingLeadSource);
+            existingLeadSource.UpdatedBy = userId;
             _context.LeadSources.Update(existingLeadSource);
             await _context.SaveChangesAsync();
             return _mapper.Map<LeadSourceResponseDto>(existingLeadSource);

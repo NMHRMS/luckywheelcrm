@@ -18,13 +18,15 @@ namespace Application.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IJwtTokenService _jwtTokenService;
 
-        public BranchService(ApplicationDbContext context, IMapper mapper)
+        public BranchService(ApplicationDbContext context, IMapper mapper, IJwtTokenService jwtTokenService)
         {
             _context = context;
             _mapper = mapper;
+            _jwtTokenService = jwtTokenService;
         }
-
+         
         public async Task<IEnumerable<BranchResponseDto>> GetAllBranchesAsync()
         {
             var branch = await _context.Branches.ToListAsync();
@@ -39,18 +41,24 @@ namespace Application.Services
 
         public async Task<BranchResponseDto> AddBranchAsync(AddBranchDto branchDto)
         {
+
+            var userId = _jwtTokenService.GetUserIdFromToken();
             var branch = _mapper.Map<Branch>(branchDto);
             branch.BranchId = Guid.NewGuid();
+            branch.CreatedBy = userId;
             _context.Branches.Add(branch);
             await _context.SaveChangesAsync();
             return _mapper.Map<BranchResponseDto>(branch);
         }
         public async Task<BranchResponseDto> UpdateBranchAsync(Guid id, AddBranchDto branchDto)
         {
+            var userId = _jwtTokenService.GetUserIdFromToken();
             var existingBranch = await _context.Branches.FindAsync(id);
             if (existingBranch == null) return null;
 
             _mapper.Map(branchDto, existingBranch);
+
+            existingBranch.UpdatedBy = userId; 
             _context.Branches.Update(existingBranch);
             await _context.SaveChangesAsync();
             return _mapper.Map<BranchResponseDto>(existingBranch);

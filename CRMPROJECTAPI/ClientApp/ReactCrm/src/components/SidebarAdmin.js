@@ -86,8 +86,20 @@ function Sidebar() {
               location.pathname === "/admin/products" ? "active" : ""
             }`}
           >
-            <i className="bi bi-people"></i>
+            <i className="bi bi-box-seam"></i>
             <span className="ms-2">Add Products</span>
+          </Link>
+        </li>
+
+        <li className="nav-item">
+          <Link
+            to="/admin/addreview"
+            className={`nav-link ${
+              location.pathname === "/admin/products" ? "active" : ""
+            }`}
+          >
+            <i className="bi bi-star"></i>
+            <span className="ms-2">Add Review</span>
           </Link>
         </li>
 

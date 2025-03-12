@@ -19,10 +19,12 @@ namespace Application.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
-        public LeadReviewService(ApplicationDbContext context, IMapper mapper)
+        private readonly IJwtTokenService _jwtTokenService;
+        public LeadReviewService(ApplicationDbContext context, IMapper mapper, IJwtTokenService jwtTokenService)
         {
             _context = context;
             _mapper = mapper;
+            _jwtTokenService = jwtTokenService;
         }
 
         public async Task<IEnumerable<LeadReviewResponseDto>> GetAllLeadsReviewAsync()
@@ -84,10 +86,12 @@ namespace Application.Services
 
         public async Task<LeadReviewResponseDto?> UpdateLeadReviewAsync(Guid id, LeadReviewDto leadReviewDto)
         {
+            var userId = _jwtTokenService.GetUserIdFromToken(); 
             var existingLeadReview = await _context.LeadsReview.FindAsync(id);
             if (existingLeadReview == null) return null;
 
             _mapper.Map(leadReviewDto, existingLeadReview);
+            existingLeadReview.UpdatedBy = userId;
             _context.LeadsReview.Update(existingLeadReview);
             await _context.SaveChangesAsync();
             return _mapper.Map<LeadReviewResponseDto?>(existingLeadReview);

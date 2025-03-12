@@ -47,17 +47,23 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
           getRequest("/api/Categories"),
           getRequest("/api/Products"),
           getRequest("/api/LeadSources"),
-          getRequest("/api/Users"),
+          getRequest("/api/UserAssignmentMapping/assignees"),
           getRequest(`/api/states/districts/statename/${"Maharashtra"}`),
         ]);
         setCategories(cats.data || []);
         setProducts(prods.data || []);
         setLeadSources(sources.data || []);
         // Filter users with roleId "a8c8ea20-7154-4d78-97ea-a4d5cf217a27"
-        const filteredUsers = (users.data || []).filter(
-          (user) => user.roleId === "a8c8ea20-7154-4d78-97ea-a4d5cf217a27"
-        );
-        setAssignedusers(filteredUsers);
+        // const filteredUsers = (users.data || []).filter(
+        //   (user) => user.roleId === "a8c8ea20-7154-4d78-97ea-a4d5cf217a27"
+        // );
+        // const formattedUsers = users.data.map(user => ({
+        //   label: user.assigneeName, // Displayed in the dropdown
+        //   value: user.assigneeId,   // Selected value
+        // }));
+        // setAssignedusers(formattedUsers);
+        setAssignedusers(users.data || []);
+
         setDistricts(District.data || []);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -65,6 +71,9 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
     };
     loadData();
   }, []);
+
+  console.log("Assignedusers",Assignedusers);
+  
 
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) {
@@ -149,13 +158,6 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
       const assignedTo = response?.data?.assignedTo || null;
       const assignedBy = userData.userId;
       const assignedDate = new Date().toISOString();
-
-      // if (!leadID || !assignedTo ||assignedDate) {
-      //   console.error("Missing leadID or assignedTo in response", response);
-      //   alert("Error: Missing lead assignment details.");
-      //   return;
-      // }
-
       const assigndata = { leadID, assignedTo, assignedDate, assignedBy };
       console.log("assigndata", assigndata);
       const assignresponse = await postRequest(
@@ -210,14 +212,6 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
         >
           <Input placeholder="Enter mobile number" />
         </Form.Item>
-
-        {/* <Form.Item
-          label="District Name"
-          name="districtName"
-          rules={[{ required: true, message: 'Please input district name!' }]}
-        >
-          <Input placeholder="Enter district name" />
-        </Form.Item> */}
         <Form.Item
           label="District Name"
           name="districtName"
@@ -229,14 +223,6 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
             dropdownRender={(menu) => (
               <>
                 {menu}
-                {/* <div style={{ padding: '8px', display: 'flex', gap: '8px' }}>
-                    <Input
-                      value={newSourceName}
-                      onChange={(e) => setNewSourceName(e.target.value)}
-                      placeholder="New source name"
-                    />
-                    <Button onClick={handleAddSource}>+ Add</Button>
-                  </div> */}
               </>
             )}
           >
@@ -254,7 +240,7 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
         <Form.Item
           label="Current Address"
           name="currentAddress"
-          rules={[{ required: true, message: "Please input address!" }]}
+          // rules={[{ required: true, message: "Please input address!" }]}
         >
           <Input.TextArea rows={3} />
         </Form.Item>
@@ -262,7 +248,7 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
         <Form.Item
           label="Current Vehicle"
           name="currentVehicle"
-          rules={[{ required: true, message: "Please input current Vehicle!" }]}
+          // rules={[{ required: true, message: "Please input current Vehicle!" }]}
         >
           <Input placeholder="Enter current Vehicle" />
         </Form.Item>
@@ -270,7 +256,7 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
         <Form.Item
           label="Category"
           name="categoryName"
-          rules={[{ required: true, message: "Please select category!" }]}
+          // rules={[{ required: true, message: "Please select category!" }]}
         >
           <Select
             showSearch
@@ -300,7 +286,7 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
         <Form.Item
           label="Product"
           name="productName"
-          rules={[{ required: true, message: "Please select product!" }]}
+          // rules={[{ required: true, message: "Please select product!" }]}
         >
           <Select
             showSearch
@@ -329,7 +315,7 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
         <Form.Item
           label="Lead Source"
           name="leadSourceName"
-          rules={[{ required: true, message: "Please select a lead source!" }]}
+          // rules={[{ required: true, message: "Please select a lead source!" }]}
         >
           <Select
             showSearch
@@ -369,24 +355,12 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
         >
           <Select placeholder="Select assignedTo Name">
             {Assignedusers.map((user) => (
-              <Select.Option key={user.userId} value={user.firstName}>
-                {user.firstName}
+              <Select.Option key={user.assigneeId} value={user.assigneeName}>
+                {user.assigneeName}
               </Select.Option>
             ))}
           </Select>
         </Form.Item>
-        {/* 
-        <Form.Item
-          label="Status"
-          name="status"
-          rules={[{ required: true, message: 'Please select status!' }]}
-        >
-          <Select placeholder="Select status">
-            <Select.Option value="pending">Pending</Select.Option>
-            <Select.Option value="active">Active</Select.Option>
-            <Select.Option value="closed">Closed</Select.Option>
-          </Select>
-        </Form.Item> */}
       </Form>
     </Modal>
   );

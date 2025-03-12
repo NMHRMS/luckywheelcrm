@@ -18,11 +18,13 @@ namespace Application.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IJwtTokenService _jwtTokenService;
 
-        public RoleService(ApplicationDbContext context, IMapper mapper)
+        public RoleService(ApplicationDbContext context, IMapper mapper, IJwtTokenService jwtTokenService)
         {
             _context = context;
             _mapper = mapper;
+            _jwtTokenService = jwtTokenService;
         }
 
         public async Task<IEnumerable<RoleResponseDto>> GetAllRolesAsync()
@@ -39,8 +41,10 @@ namespace Application.Services
 
         public async Task<RoleResponseDto> AddRoleAsync(AddRoleDto roleDto)
         {
+            var userId = _jwtTokenService.GetUserIdFromToken();
             var role = _mapper.Map<Role>(roleDto);
             role.RoleId = Guid.NewGuid();
+            role.CreatedBy = userId;
             _context.Roles.Add(role);
             await _context.SaveChangesAsync();
             return _mapper.Map<RoleResponseDto>(role);
@@ -48,10 +52,12 @@ namespace Application.Services
 
         public async Task<RoleResponseDto?> UpdateRoleAsync(Guid id, AddRoleDto roleDto)
         {
+            var userId = _jwtTokenService.GetUserIdFromToken();
             var existingRole = await _context.Roles.FindAsync(id);
             if (existingRole == null) return null;
 
             _mapper.Map(roleDto, existingRole);
+            existingRole.UpdatedBy = userId;
             _context.Roles.Update(existingRole);
             await _context.SaveChangesAsync();
             return _mapper.Map<RoleResponseDto>(existingRole);

@@ -17,11 +17,13 @@ namespace Application.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IJwtTokenService _jwtTokenService;
 
-        public ReviewTypeService(ApplicationDbContext context, IMapper mapper)
+        public ReviewTypeService(ApplicationDbContext context, IMapper mapper, IJwtTokenService jwtTokenService)
         {
             _context = context;
             _mapper = mapper;
+            _jwtTokenService = jwtTokenService;
         }
 
         public async Task<IEnumerable<ReviewTypeResponseDto>> GetAllReviewTypesAsync()
@@ -38,8 +40,10 @@ namespace Application.Services
 
         public async Task<ReviewTypeResponseDto> AddReviewTypeAsync(ReviewTypeDto reviewTypeDto)
         {
+            var userId = _jwtTokenService.GetUserIdFromToken();
             var reviewType = _mapper.Map<ReviewsType>(reviewTypeDto);
             reviewType.ReviewId = Guid.NewGuid();
+            reviewType.CreatedBy = userId;
             _context.ReviewTypes.Add(reviewType);
             await _context.SaveChangesAsync();
             return _mapper.Map<ReviewTypeResponseDto>(reviewType);
@@ -47,10 +51,12 @@ namespace Application.Services
 
         public async Task<ReviewTypeResponseDto?> UpdateReviewTypeAsync(Guid id, ReviewTypeDto reviewTypeDto)
         {
+            var userId = _jwtTokenService.GetUserIdFromToken();
             var existingReviewType = await _context.ReviewTypes.FindAsync(id);
             if (existingReviewType == null) return null;
 
             _mapper.Map(reviewTypeDto, existingReviewType);
+            existingReviewType.UpdatedBy = userId;
             _context.ReviewTypes.Update(existingReviewType);
             await _context.SaveChangesAsync();
             return _mapper.Map<ReviewTypeResponseDto>(existingReviewType);

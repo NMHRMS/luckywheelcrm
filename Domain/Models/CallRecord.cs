@@ -19,9 +19,11 @@ public partial class CallRecord
     public DateTime? Date { get; set; }
     public TimeOnly? Duration { get; set; }
     public string? Status { get; set; }
+    public Guid? CreatedBy { get; set; }
     public DateTime CreateDate { get; set; }
 
     // Navigation properties
     public virtual Company Company { get; set; }
-    public virtual User User { get; set; }
+    public virtual User? User { get; set; }
+    public virtual User? CreatedByUser { get; set; }
 }

@@ -10,7 +10,7 @@ namespace Application.ResponseDto
     {
         public Guid TrackId { get; set; }
         public Guid LeadId { get; set; }
-        public string LeadStatus { get; set; }
+        public string? LeadStatus { get; set; }
         public Guid AssignedTo { get; set; }
         public string AssignedToName { get; set; }
         public Guid AssignedBy { get; set; }

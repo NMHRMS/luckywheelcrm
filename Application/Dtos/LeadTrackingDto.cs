@@ -12,7 +12,7 @@ namespace Application.Dtos
         public Guid AssignedTo { get; set; }
         public Guid AssignedBy { get; set; }
         public DateTime AssignedDate { get; set; }
-        public string LeadStatus { get; set; }
+        public string? LeadStatus { get; set; }
         public DateTime? ClosedDate { get; set; }
     }
 }

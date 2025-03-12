@@ -17,11 +17,13 @@ namespace Application.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IJwtTokenService _jwtTokenService;
 
-        public CompanyService(ApplicationDbContext context, IMapper mapper)
+        public CompanyService(ApplicationDbContext context, IMapper mapper, IJwtTokenService jwtTokenService)
         {
             _context = context;
             _mapper = mapper;
+            _jwtTokenService = jwtTokenService;
         }
 
         public async Task<IEnumerable<CompanyResponseDto>> GetAllCompaniesAsync()
@@ -38,8 +40,10 @@ namespace Application.Services
 
         public async Task<CompanyResponseDto> AddCompanyAsync(AddCompanyDto companyDto)
         {
+            var userId = _jwtTokenService.GetUserIdFromToken();
             var company = _mapper.Map<Company>(companyDto);
-            company.CompanyId = Guid.NewGuid();    
+            company.CompanyId = Guid.NewGuid(); 
+            company.CreatedBy = userId;
             _context.Companies.Add(company);
             await _context.SaveChangesAsync();
             return _mapper.Map<CompanyResponseDto>(company);
@@ -47,10 +51,12 @@ namespace Application.Services
 
         public async Task<CompanyResponseDto?> UpdateCompanyAsync(Guid id, AddCompanyDto companyDto)
         {
+            var userId = _jwtTokenService.GetUserIdFromToken();
             var existingCompany = await _context.Companies.FindAsync(id);
             if (existingCompany == null) return null;
 
             _mapper.Map(companyDto, existingCompany);
+            existingCompany.UpdatedBy = userId;
             _context.Companies.Update(existingCompany);
             await _context.SaveChangesAsync();
             return _mapper.Map<CompanyResponseDto>(existingCompany);

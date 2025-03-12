@@ -17,11 +17,13 @@ namespace Application.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
+        private readonly IJwtTokenService _jwtTokenService;
 
-        public UserService(ApplicationDbContext context, IMapper mapper)
+        public UserService(ApplicationDbContext context, IMapper mapper, IJwtTokenService jwtTokenService)
         {
             _context = context;
             _mapper = mapper;
+            _jwtTokenService = jwtTokenService;
         }
 
         public async Task<IEnumerable<UserResponseDto>> GetAllUsersAsync()
@@ -38,8 +40,10 @@ namespace Application.Services
 
         public async Task<UserResponseDto> AddUserAsync(UserDto userDto)
         {
+            var userId = _jwtTokenService.GetUserIdFromToken();
             var user = _mapper.Map<User>(userDto);
             user.UserId = Guid.NewGuid();   
+            user.CreatedBy = userId;
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
             return _mapper.Map<UserResponseDto>(user);
@@ -47,10 +51,12 @@ namespace Application.Services
 
         public async Task<UserResponseDto?> UpdateUserAsync(Guid id, UserDto userDto)
         {
+            var userId = _jwtTokenService.GetUserIdFromToken();
             var existingUser = await _context.Users.FindAsync(id);
             if (existingUser == null) return null;
 
             _mapper.Map(userDto, existingUser);
+            existingUser.UpdatedBy = userId;
             _context.Users.Update(existingUser);
             await _context.SaveChangesAsync();
             return _mapper.Map<UserResponseDto>(existingUser);

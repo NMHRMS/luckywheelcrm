@@ -11,7 +11,7 @@ public partial class Lead
     public string MobileNo { get; set; }
     public Guid? DistrictId { get; set; }
     public Guid? StateId { get; set; }
-    public string CurrentAddress { get; set; }
+    public string? CurrentAddress { get; set; }
     public string? RegistrationNo { get; set; }
     public DateTime? RegistrationDate { get; set; }
     public string? ChasisNo { get; set; }
@@ -21,22 +21,30 @@ public partial class Lead
     public string? ModelName { get; set; }
     public string? LeadType { get; set; }
     public Guid? AssignedTo { get; set; }
+    public Guid? AssignedBy { get; set; }
     public DateTime? AssignedDate { get; set; }
     public DateTime? FollowUpDate { get; set; }
     public Guid? LastRevertedBy { get; set; }
     public string? Remark { get; set; }
     public string? Status { get; set; }
     public DateTime CreateDate { get; set; }
+    public Guid? CreatedBy { get; set; }
     public DateTime? UpdateDate { get; set; }
+    public Guid? UpdatedBy { get; set; }
 
     //Navigation properties
     public virtual User? AssignedToUser { get; set; }
+    public virtual User? AssignedByUser { get; set; }
     public virtual User? RevertedByUser { get; set; }
+    public virtual User? CreatedByUser { get; set; }
+    public virtual User? UpdatedByUser { get; set; }
+
     public virtual District? District { get; set; }
     public virtual State? State { get; set; }
     public virtual Company? Company { get; set; }
     public virtual Product? Product { get; set; }
     public virtual Category? Category { get; set; }
+
     public virtual LeadSource? LeadSource { get; set; }
 
     //Collection Properties

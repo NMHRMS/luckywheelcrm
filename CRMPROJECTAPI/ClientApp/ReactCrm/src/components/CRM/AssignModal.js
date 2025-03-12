@@ -8,13 +8,12 @@ function AssignModal({ visible, onClose, selectedRows, onAssign }) {
   const [creOptions, setCreOptions] = useState([]);
   const [assignUsers, setAssignUsers] = useState([]);
   const [selectedCRE, setSelectedCRE] = useState("");
+  const [loading, setLoading] = useState(false); // New state for loader
   const [userData, setUserData] = useState({
     branchId: "",
     companyId: "",
     userId: "",
   });
-
-  // console.log("assignUsers", assignUsers);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -34,6 +33,7 @@ function AssignModal({ visible, onClose, selectedRows, onAssign }) {
   }, [visible, selectedRows]);
 
   const fetchAssignments = async () => {
+    setLoading(true); // Start loader
     try {
       const response = await getRequest("/api/UserAssignmentMapping/assignees");
       console.log("Assignments Response:", response.data);
@@ -46,6 +46,8 @@ function AssignModal({ visible, onClose, selectedRows, onAssign }) {
       );
     } catch (error) {
       console.error("Error fetching assignments:", error);
+    } finally {
+      setLoading(false); // Stop loader
     }
   };
 
@@ -78,18 +80,27 @@ function AssignModal({ visible, onClose, selectedRows, onAssign }) {
             ></button>
           </div>
           <div className="modal-body">
-            <select
-              className="form-select"
-              value={selectedCRE}
-              onChange={(e) => setSelectedCRE(e.target.value)}
-            >
-              {assignUsers.length > 0 &&
-                assignUsers.map((cre) => (
-                  <option key={cre.assigneeId} value={cre.assigneeId}>
-                    {cre.assigneeName}
-                  </option>
-                ))}
-            </select>
+            {loading ? (
+              <div className="text-center">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            ) : (
+              <select
+                className="form-select"
+                value={selectedCRE}
+                onChange={(e) => setSelectedCRE(e.target.value)}
+              >
+                <option value="">Select a CRE</option>
+                {assignUsers.length > 0 &&
+                  assignUsers.map((cre) => (
+                    <option key={cre.assigneeId} value={cre.assigneeId}>
+                      {cre.assigneeName}
+                    </option>
+                  ))}
+              </select>
+            )}
           </div>
           <div className="modal-footer">
             <button
@@ -103,8 +114,9 @@ function AssignModal({ visible, onClose, selectedRows, onAssign }) {
               type="button"
               className="btn btn-primary"
               onClick={handleAssign}
+              disabled={loading} // Disable button while loading
             >
-              Assign
+              {loading ? "Assigning..." : "Assign"}
             </button>
           </div>
         </div>

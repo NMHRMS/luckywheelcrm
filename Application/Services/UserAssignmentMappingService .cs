@@ -76,6 +76,7 @@ public class UserAssignmentMappingService : IUserAssignmentMappingService
 
     public async Task UpdateUserAssignmentMappingAsync(UserAssignmentMappingDto mappingDto)
     {
+        var userId = _jwtTokenService.GetUserIdFromToken();
         var assigner = await _context.Users
             .Include(u => u.AssignedUsers)
             .FirstOrDefaultAsync(u => u.UserId == mappingDto.AssignerUserId);

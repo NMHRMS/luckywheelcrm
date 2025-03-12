@@ -32,13 +32,20 @@ namespace CRMPROJECTAPI.Controllers
         public async Task<IActionResult> GetUserLeadReport([FromQuery] Guid userId, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] DateTime? date)
         {
             if (userId == Guid.Empty)
-                return BadRequest("UserId is required.");
+                return BadRequest("UserId is required.");   
 
             DateTime start = startDate ?? DateTime.UtcNow.AddDays(-7); // Default: last 7 days
             DateTime end = endDate ?? DateTime.UtcNow;
 
             var report = await _leadService.GetUserLeadReportAsync(userId, start, end, date);
             return Ok(report);
+        }
+
+        [HttpGet("delegated-leads")]
+        public async Task<IActionResult> GetDelegatedLeads([FromQuery] DateTime? date, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
+        {
+            var response = await _leadService.GetDelegatedLeadsAsync(date,startDate, endDate);
+            return Ok(response);
         }
 
         [HttpGet("latest-leads")]

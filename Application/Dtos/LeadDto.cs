@@ -8,7 +8,7 @@
         public string MobileNo { get; set; }
         public string? StateName { get; set; }
         public string? DistrictName { get; set; }
-        public string CurrentAddress { get; set; }
+        public string? CurrentAddress { get; set; }
         public string? RegistrationNo { get; set; }
         public DateTime? RegistrationDate { get; set; }
         public string? ChasisNo { get; set; }

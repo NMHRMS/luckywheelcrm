@@ -7,6 +7,7 @@ using Application.Dtos;
 using Application.ResponseDto;
 using AutoMapper;
 using Domain.Models;
+using Infrastructure.Utilities;
 
 namespace Application.Mappers
 {
@@ -50,6 +51,8 @@ namespace Application.Mappers
                 .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.ProductName))
                 .ForMember(dest => dest.AssignedToName,
                       opt => opt.MapFrom(src => src.AssignedToUser != null ? $"{src.AssignedToUser.FirstName}" : null))
+                .ForMember(dest => dest.AssignedByName,
+                      opt => opt.MapFrom(src => src.AssignedByUser != null ? $"{src.AssignedByUser.FirstName}" : null))
                 .ForMember(dest => dest.LastRevertedByName,
                       opt => opt.MapFrom(src => src.RevertedByUser != null ? $"{src.RevertedByUser.FirstName}" : null));
             CreateMap<LeadReview, LeadReviewDto>().ReverseMap();
@@ -63,7 +66,7 @@ namespace Application.Mappers
             CreateMap<LeadTracking, LeadResponseDto>();
             CreateMap<LeadTracking, LeadTrackingResponseDto>();
             CreateMap<LeadAssignmentDto, LeadTracking>()
-                .ForMember(dest => dest.AssignedDate, opt => opt.MapFrom(src => DateTime.UtcNow));
+                .ForMember(dest => dest.AssignedDate, opt => opt.MapFrom(src => DateTimeHelper.GetIndianTime()));
             CreateMap<LeadCallUpdateDto, Lead>();
             CreateMap<LeadCallUpdateDto, LeadAssignmentDto>()
                 .ForMember(dest => dest.LeadID, opt => opt.Ignore()) 

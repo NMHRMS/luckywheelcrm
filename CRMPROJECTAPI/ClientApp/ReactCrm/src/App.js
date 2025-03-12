@@ -41,6 +41,8 @@ import PerformanceUser from "./components/CRM/PerformanceUser";
 import Reports from "./components/CRM/Reports";
 import DailyReport from "./components/CRM/DailyReport";
 import Products from "./components/Admin/Products";
+import FollowUpDetails from "./components/CRM/follow-up-details";
+import AddReview from "./components/Admin/AddReview";
 
 function App() {
   return (
@@ -55,6 +57,7 @@ function App() {
           <Route path="excelform" element={<Excelform />} />
           <Route path="listleads" element={<ListLeads />} />
           <Route path="leads" element={<Leads />} />
+          <Route path="follow-up-details" element={<FollowUpDetails />} />
           {/* <Route path="crm" element={<CRM />} /> */}
           <Route path="vehiclecheck" element={<VehicleCheckIn />} />
           <Route
@@ -94,6 +97,7 @@ function App() {
         <Route path="/admin" element={<Layout />}>
           <Route path="dashboard" element={<Admindashboard />} />
           <Route path="addrole" element={<AddRole />} />
+          <Route path="addreview" element={<AddReview />} />
           <Route path="addusers" element={<AddUsers />} />
           <Route path="addbranch" element={<AddBranch />} />
           <Route path="assignmanagement" element={<AssignManagement />} />
