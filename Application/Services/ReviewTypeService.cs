@@ -44,6 +44,7 @@ namespace Application.Services
             var reviewType = _mapper.Map<ReviewsType>(reviewTypeDto);
             reviewType.ReviewId = Guid.NewGuid();
             reviewType.CreatedBy = userId;
+            reviewType.CreateDate = DateTime.Now;
             _context.ReviewTypes.Add(reviewType);
             await _context.SaveChangesAsync();
             return _mapper.Map<ReviewTypeResponseDto>(reviewType);
