@@ -6,7 +6,10 @@ namespace Application.Interfaces
 {
     public interface ILeadService
     {
+        Task<LeadReportResponseDto> GetLeadReportAsync(DateTime startDate, DateTime endDate);
+        Task<UserLeadReportResponseDto> GetUserLeadReportAsync(Guid userId, DateTime startDate, DateTime endDate, DateTime? date);
         Task<LeadsSegregatedResponseDto> GetLatestUploadedLeadsAsync();
+        Task<DelegatedLeadsResponseDto> GetDelegatedLeadsAsync(DateTime? date, DateTime? startDate, DateTime? endDate);
         Task<LeadsSegregatedResponseDto> GetAllLeadsAsync();
         Task<LeadResponseDto?> GetLeadByIdAsync(Guid id);
         Task<LeadResponseDto> AddLeadAsync(LeadDto leadDto);

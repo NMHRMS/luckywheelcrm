@@ -12,6 +12,7 @@ namespace Application.Interfaces
     {
         Task<IEnumerable<LeadReviewResponseDto>> GetAllLeadsReviewAsync();
         Task<LeadReviewResponseDto?> GetLeadReviewByIdAsync(Guid id);
+        Task<IEnumerable<LeadReviewResponseDto?>> GetLeadReviewsByLeadIdAsync(Guid leadId);
         Task<LeadReviewResponseDto> AddLeadReviewAsync(LeadReviewDto leadReviewDto);
         Task<LeadReviewResponseDto> UpdateLeadReviewAsync(Guid id, LeadReviewDto leadReviewDto);
         Task<bool> DeleteLeadReviewAsync(Guid id);

@@ -9,6 +9,7 @@ using Application.ResponseDto;
 using AutoMapper;
 using Domain.Models;
 using Infrastructure.Data;
+using Infrastructure.Utilities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
@@ -35,7 +36,7 @@ namespace Application.Services
 
             var vehicleRecord = _mapper.Map<VehicleInOutRecord>(vehicleDto);
 
-            vehicleRecord.CheckInDate = DateTime.UtcNow;
+            vehicleRecord.CheckInDate = DateTimeHelper.GetIndianTime();
             vehicleRecord.Status = "Checked In"; 
 
             if (checkInImage != null)
@@ -58,7 +59,7 @@ namespace Application.Services
 
             vehicleRecord.CheckOutBy = vehicleDto.CheckOutBy;
             vehicleRecord.CheckOutRemark = vehicleDto.CheckOutRemark;
-            vehicleRecord.CheckOutDate = DateTime.UtcNow;
+            vehicleRecord.CheckOutDate = DateTimeHelper.GetIndianTime();
             vehicleRecord.Status = "Checked Out"; 
 
             if (checkOutImage != null)

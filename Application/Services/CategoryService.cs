@@ -17,10 +17,13 @@ namespace Application.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
-        public CategoryService(ApplicationDbContext context, IMapper mapper)
+        private readonly IJwtTokenService _jwtTokenService;
+
+        public CategoryService(ApplicationDbContext context, IMapper mapper, IJwtTokenService jwtTokenService)
         {
             _context = context;
             _mapper = mapper;
+            _jwtTokenService = jwtTokenService;
         }
 
         public async Task<IEnumerable<CategoryResponseDto>> GetAllCategoriesAsync()
@@ -38,19 +41,22 @@ namespace Application.Services
 
         public async Task<CategoryResponseDto> AddCategoryAsync(CategoryDto categoryDto)
         {
+            var userId = _jwtTokenService.GetUserIdFromToken();
             var category = _mapper.Map<Category>(categoryDto);
             category.CategoryId = Guid.NewGuid();
+            category.CreatedBy = userId;
             _context.Categories.Add(category);
             await _context.SaveChangesAsync();
             return _mapper.Map<CategoryResponseDto>(category);
         }
         public async Task<CategoryResponseDto> UpdateCategoryAsync(Guid id, CategoryDto categoryDto)
         {
-
+            var userId = _jwtTokenService.GetUserIdFromToken();
             var existingCategory = await _context.Categories.FindAsync(id);
             if (existingCategory == null) return null;
 
             _mapper.Map(categoryDto, existingCategory);
+            existingCategory.UpdatedBy = userId;
             _context.Categories.Update(existingCategory);
             await _context.SaveChangesAsync();
             return _mapper.Map<CategoryResponseDto>(existingCategory);

@@ -9,6 +9,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -51,10 +52,10 @@ function Login() {
       const roleRoutes = {
         admin: "/admin/dashboard",
         crm: "/crm/dashboard",
-        cre: "/cre/dashboard",
-        dsm: "/dsm/dashboard",
-        dse: "/dse/dashboard",
-        sales: "/sales/dashboard",
+        // cre: "/cre/dashboard",
+        // dsm: "/dsm/dashboard",
+        // dse: "/dse/dashboard",
+        // sales: "/sales/dashboard",
       };
 
       navigate(roleRoutes[roleName] || "/");
@@ -78,9 +79,9 @@ function Login() {
         {/* Left side: Image */}
         <div className="col-lg-6 d-flex justify-content-center align-items-center">
           <img
-            src="/assets/img/crmlogin4.png" // Replace with your image path
+            src="/assets/img/crmlogin4.png"
             alt="Login Image"
-            className="img-fluid "
+            className="img-fluid"
             style={{ height: "500px", width: "750px", marginLeft: "25%" }}
           />
         </div>
@@ -92,7 +93,6 @@ function Login() {
             style={{ width: "400px", borderRadius: "10px" }}
           >
             <h3 className="text-center mb-3 fw-bold">LOGIN</h3>
-            {/* <p className="text-center text-muted mb-4">You must become a member to login and access the entire site.</p> */}
 
             <form onSubmit={handleLogin}>
               <div className="mb-3">
@@ -116,7 +116,7 @@ function Login() {
                 </label>
                 <div className="input-group">
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     className="form-control"
                     id="password"
                     value={password}
@@ -124,20 +124,19 @@ function Login() {
                     placeholder="Enter Password"
                     required
                   />
-                  <span className="input-group-text">
-                    <i className="bi bi-eye-slash"></i>
+                  <span
+                    className="input-group-text"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ cursor: "pointer" }} // Make it clickable
+                  >
+                    <i
+                      className={showPassword ? "bi bi-eye" : "bi bi-eye-slash"}
+                    ></i>
                   </span>
                 </div>
               </div>
 
               {error && <p className="text-danger text-center">{error}</p>}
-
-              <div className="d-flex justify-content-between">
-                <div></div>
-                {/* <a href="#" className="text-primary text-decoration-none">
-                  Forgot Password
-                </a> */}
-              </div>
 
               <button
                 type="submit"
@@ -147,13 +146,6 @@ function Login() {
                 {isLoading ? "Logging in..." : "LOGIN"}
               </button>
             </form>
-
-            {/* <p className="text-center mt-3">
-              Not a member yet?{" "}
-              <a href="#" className="text-primary text-decoration-none fw-bold">
-                Sign Up
-              </a>
-            </p> */}
           </div>
         </div>
       </div>

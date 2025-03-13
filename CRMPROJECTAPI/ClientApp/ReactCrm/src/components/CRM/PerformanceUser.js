@@ -18,7 +18,6 @@ const PerformanceUser = () => {
       .then((res) => {
         const validRoleIds = [
           "a8c8ea20-7154-4d78-97ea-a4d5cf217a27",
-          "633b4045-ae76-43ce-9419-cbf91b4bfd07",
           "82cf21da-45cd-4fe2-b892-7b5cb2bc8883",
         ];
         const filteredUsers = res.data.filter((user) =>

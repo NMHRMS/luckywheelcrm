@@ -36,9 +36,13 @@ import Pagination from "./components/CRM/Pagination";
 import Categories from "./components/Admin/Categories";
 import Allleads from "./components/CRM/Allleads";
 import AssignedNotAssignedList from "./components/CRM/Assignednotassignedlist";
-import RejectList from "./components/CRM/RejectList";
+import RevertList from "./components/CRM/RevertList";
 import PerformanceUser from "./components/CRM/PerformanceUser";
 import Reports from "./components/CRM/Reports";
+import DailyReport from "./components/CRM/DailyReport";
+import Products from "./components/Admin/Products";
+import FollowUpDetails from "./components/CRM/follow-up-details";
+import AddReview from "./components/Admin/AddReview";
 
 function App() {
   return (
@@ -53,6 +57,7 @@ function App() {
           <Route path="excelform" element={<Excelform />} />
           <Route path="listleads" element={<ListLeads />} />
           <Route path="leads" element={<Leads />} />
+          <Route path="follow-up-details" element={<FollowUpDetails />} />
           {/* <Route path="crm" element={<CRM />} /> */}
           <Route path="vehiclecheck" element={<VehicleCheckIn />} />
           <Route
@@ -68,10 +73,11 @@ function App() {
           <Route path="leadmodal" element={<LeadModal />} />
           <Route path="pagination" element={<Pagination />} />
           <Route path="allleads" element={<Allleads />} />
-          <Route path="asiignedleads" element={<AssignedNotAssignedList />} />
-          <Route path="revertleads" element={<RejectList />} />
+          <Route path="assignedleads" element={<AssignedNotAssignedList />} />
+          <Route path="revertleads" element={<RevertList />} />
           <Route path="performance" element={<PerformanceUser />} />
           <Route path="reports" element={<Reports />} />
+          <Route path="dailyreport" element={<DailyReport />} />
         </Route>
         <Route path="/dsm" element={<Layout />}>
           <Route path="dashboard" element={<DSMDashboard />} />
@@ -91,11 +97,13 @@ function App() {
         <Route path="/admin" element={<Layout />}>
           <Route path="dashboard" element={<Admindashboard />} />
           <Route path="addrole" element={<AddRole />} />
+          <Route path="addreview" element={<AddReview />} />
           <Route path="addusers" element={<AddUsers />} />
           <Route path="addbranch" element={<AddBranch />} />
           <Route path="assignmanagement" element={<AssignManagement />} />
           <Route path="userperformance" element={<UserPerformance />} />
           <Route path="categories" element={<Categories />} />
+          <Route path="products" element={<Products />} />
         </Route>
       </Routes>
     </BrowserRouter>

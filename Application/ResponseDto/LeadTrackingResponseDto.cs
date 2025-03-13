@@ -10,13 +10,14 @@ namespace Application.ResponseDto
     {
         public Guid TrackId { get; set; }
         public Guid LeadId { get; set; }
-        public string LeadStatus { get; set; }
+        public string? LeadStatus { get; set; }
         public Guid AssignedTo { get; set; }
         public string AssignedToName { get; set; }
         public Guid AssignedBy { get; set; }
         public string AssignedByName { get; set; }
         public DateTime AssignedDate { get; set; }
+        public DateTime? ClosedDate { get; set; }
         public string LeadDuration { get; set; } 
-        public string LeadDurationFormatted { get; set; } 
+        public string LeadDurationFormatted { get; set; }
     }
 }

@@ -9,8 +9,8 @@ namespace Application.Dtos
 {
     public class UserLeadsStatusResponseDto
     {
-        public IEnumerable<Lead> leads { get; set; }
-        public int totalAssignedCount { get; set; }
+        public IEnumerable<Lead> Leads { get; set; }
+        public int TotalAssignedCount { get; set; }
         public int InterestedCount { get; set; }
         public int NotInterestedCount { get; set; }
 

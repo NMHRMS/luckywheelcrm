@@ -7,6 +7,7 @@ using Application.Dtos;
 using Application.ResponseDto;
 using AutoMapper;
 using Domain.Models;
+using Infrastructure.Utilities;
 
 namespace Application.Mappers
 {
@@ -18,10 +19,14 @@ namespace Application.Mappers
             CreateMap<Company, CompanyResponseDto>();
             CreateMap<Branch, AddBranchDto>().ReverseMap();
             CreateMap<Branch, BranchResponseDto>();
-            CreateMap<State, StateDto>();
+            CreateMap<State, StateDto>().ReverseMap();
             CreateMap<State, StateResponseDto>();
-            CreateMap<District, DistrictDto>();
+            CreateMap<District, DistrictDto>().ReverseMap();
             CreateMap<District, DistrictResponseDto>();
+            CreateMap<Status, StatusDto>().ReverseMap();
+            CreateMap<Status, StatusResponseDto>();
+            CreateMap<ReviewsType, ReviewTypeDto>().ReverseMap();
+            CreateMap<ReviewsType, ReviewTypeResponseDto>();
             CreateMap<Role, AddRoleDto>().ReverseMap();
             CreateMap<Role, RoleResponseDto>();
             CreateMap<User, AddUserDto>().ReverseMap();
@@ -29,10 +34,6 @@ namespace Application.Mappers
             CreateMap<User, UserResponseDto>();
             CreateMap<Product, AddProductDto>().ReverseMap();
             CreateMap<Product, ProductResponseDto>();
-            CreateMap<LeadReview, LeadReviewDto>().ReverseMap();
-            CreateMap<LeadReview, LeadReviewResponseDto>()
-                 .ForMember(dest => dest.ReviewByName,
-                      opt => opt.MapFrom(src => src.ReviewByUser != null ? $"{src.ReviewByUser.FirstName}" : null));
             CreateMap<CallRecord, CallRecordDto>().ReverseMap();
             CreateMap<CallRecord, CallRecordResponseDto>();
             CreateMap<Category, CategoryDto>().ReverseMap();
@@ -49,15 +50,23 @@ namespace Application.Mappers
                 .ForMember(dest => dest.CategoryName, opt => opt.MapFrom(src => src.Category.CategoryName))
                 .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.ProductName))
                 .ForMember(dest => dest.AssignedToName,
-                      opt => opt.MapFrom(src => src.AssignedToUser != null? $"{src.AssignedToUser.FirstName}": null))
+                      opt => opt.MapFrom(src => src.AssignedToUser != null ? $"{src.AssignedToUser.FirstName}" : null))
+                .ForMember(dest => dest.AssignedByName,
+                      opt => opt.MapFrom(src => src.AssignedByUser != null ? $"{src.AssignedByUser.FirstName}" : null))
                 .ForMember(dest => dest.LastRevertedByName,
-                      opt => opt.MapFrom(src => src.RevertedByUser != null? $"{src.RevertedByUser.FirstName}": null));
+                      opt => opt.MapFrom(src => src.RevertedByUser != null ? $"{src.RevertedByUser.FirstName}" : null));
+            CreateMap<LeadReview, LeadReviewDto>().ReverseMap();
+            CreateMap<LeadReview, LeadReviewResponseDto>()
+                 .ForMember(dest => dest.ReviewByName,
+                      opt => opt.MapFrom(src => src.ReviewByUser != null ? $"{src.ReviewByUser.FirstName}" : null));
+            CreateMap<Lead, LeadReportResponseDto>();
+            CreateMap<Lead, UserLeadReportResponseDto>();
             CreateMap<LeadSource, AddLeadSourceDto>().ReverseMap();
             CreateMap<LeadSource, LeadSourceResponseDto>();
             CreateMap<LeadTracking, LeadResponseDto>();
             CreateMap<LeadTracking, LeadTrackingResponseDto>();
             CreateMap<LeadAssignmentDto, LeadTracking>()
-                .ForMember(dest => dest.AssignedDate, opt => opt.MapFrom(src => DateTime.UtcNow));
+                .ForMember(dest => dest.AssignedDate, opt => opt.MapFrom(src => DateTimeHelper.GetIndianTime()));
             CreateMap<LeadCallUpdateDto, Lead>();
             CreateMap<LeadCallUpdateDto, LeadAssignmentDto>()
                 .ForMember(dest => dest.LeadID, opt => opt.Ignore()) 

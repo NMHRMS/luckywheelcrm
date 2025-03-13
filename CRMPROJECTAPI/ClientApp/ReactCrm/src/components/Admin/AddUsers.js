@@ -26,7 +26,7 @@ const AddUsers = () => {
   const [showBranchesAndCategories, setShowBranchesAndCategories] =
     useState(false);
   const [showOnlyBranches, setShowOnlyBranches] = useState(false);
-
+  const [categories, setCategories] = useState([]); // Add this line
   const [newUser, setNewUser] = useState({
     firstName: "",
     // lastName: "",
@@ -120,6 +120,10 @@ const AddUsers = () => {
     getRequest("/api/Branch")
       .then((res) => setBranches(res.data))
       .catch((error) => toast.error("Error fetching branches: ", error));
+
+    getRequest("/api/Categories")
+      .then((res) => setCategories(res.data))
+      .catch((error) => toast.error("Error fetching categories: ", error));
   }, []);
 
   const handleRoleFilterChange = (e) => {
@@ -553,19 +557,19 @@ const AddUsers = () => {
                         Categories/Vertical
                       </label>
                       <select
-                        id="categoriesId"
                         name="categoriesId"
-                        className={`form-control ${
-                          errors.categoriesId ? "is-invalid" : ""
-                        }`}
                         value={newUser.categoriesId}
                         onChange={handleInputChange}
+                        className="form-control"
                       >
-                        <option value="">Select categories</option>
-                        <option value="1"> HCV </option>
-                        <option value="2"> Bus </option>
-                        <option value="3"> Icv </option>
+                        <option value="">Select Category</option>
+                        {categories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.categoryName}
+                          </option>
+                        ))}
                       </select>
+
                       {errors.categoriesId && (
                         <div className="invalid-feedback">
                           {errors.categoriesId}

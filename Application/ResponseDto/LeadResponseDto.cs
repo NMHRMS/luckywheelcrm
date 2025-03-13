@@ -1,4 +1,6 @@
-﻿namespace Application.ResponseDto
+﻿using Application.Dtos;
+
+namespace Application.ResponseDto
 {
     public class LeadResponseDto
     {
@@ -14,7 +16,7 @@
         public string DistrictName { get; set; }
         public Guid? StateId { get; set; }
         public string StateName { get; set; }   
-        public string CurrentAddress { get; set; }
+        public string? CurrentAddress { get; set; }
         public string? RegistrationNo { get; set; }
         public DateTime? RegistrationDate { get; set; }
         public string? ChasisNo { get; set; }
@@ -27,11 +29,14 @@
         public string? LeadType { get; set; }
         public Guid? AssignedTo { get; set; }
         public string AssignedToName { get; set; }
+        public Guid? AssignedBy { get; set; }
+        public string AssignedByName { get;set; }
         public DateTime? AssignedDate { get; set; }
         public DateTime? FollowUpDate { get; set; }
         public Guid? LastRevertedBy { get; set; }
         public string LastRevertedByName { get; set; }
         public string? Remark { get; set; }
         public string? Status { get; set; }
+        public List<LeadReviewResponseDto> LeadsReview { get; set; }
     }
 }

@@ -78,22 +78,35 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(await _leadAssignService.GetClosedLeadsAsync());
         }
 
-        [HttpGet("closed/user")]
-        public async Task<ActionResult<ClosedLeadResponseDto>> GetClosedLeadsByUser()
+        [HttpGet("closed-lead/users/{leadId}")]
+        public async Task<IActionResult> GetUsersWhoWorkedOnClosedLead(Guid leadId)
         {
-            return Ok(await _leadAssignService.GetClosedLeadsByUserAsync());
+            var users = await _leadAssignService.GetUsersWhoWorkedOnClosedLead(leadId);
+
+            if (users == null || !users.Any())
+            {
+                return NotFound("No users found for this closed lead.");
+            }
+
+            return Ok(users);
+        }
+
+        [HttpGet("closed/user")]
+        public async Task<ActionResult<ClosedLeadResponseDto>> GetClosedLeadsByUser(Guid userId)
+        {
+            return Ok(await _leadAssignService.GetClosedLeadsByUserAsync(userId));
         }
 
         [HttpPost("closed/date")]
-        public async Task<ActionResult<ClosedLeadResponseDto>> GetClosedLeadsByDate(DateTime date)
+        public async Task<ActionResult<ClosedLeadResponseDto>> GetClosedLeadsByDate(Guid userId, DateTime date)
         {
-            return Ok(await _leadAssignService.GetClosedLeadsByDateAsync(date));
+            return Ok(await _leadAssignService.GetClosedLeadsByDateAsync(userId, date));
         }
 
         [HttpPost("closed/daterange")]
-        public async Task<ActionResult<ClosedLeadResponseDto>> GetClosedLeadsBetweenDates(DateTime startDate,DateTime endDate)
+        public async Task<ActionResult<ClosedLeadResponseDto>> GetClosedLeadsBetweenDates(Guid userId, DateTime startDate, DateTime endDate)
         {
-           return Ok(await _leadAssignService.GetClosedLeadsByDateRangeAsync(startDate, endDate));
+            return Ok(await _leadAssignService.GetClosedLeadsByDateRangeAsync(userId, startDate, endDate));
         }
     }
 }

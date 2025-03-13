@@ -234,6 +234,10 @@ export default function AssignManagement() {
                 width: "100%",
                 textAlign: "left",
                 color: assignees.length > 0 ? "inherit" : "#aaa",
+                whiteSpace: "normal", // Allow the text to wrap
+                maxWidth: "100%", // Ensure button doesn't grow too wide
+                overflow: "hidden", // Hide overflowed text
+                textOverflow: "ellipsis", // Adds ellipsis if text overflows
               }}
             >
               {assignees.length > 0

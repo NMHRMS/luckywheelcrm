@@ -34,15 +34,17 @@ function VehicleEntry() {
   const fetchVehicleData = async (branch) => {
     setLoading(true);
     setVehicleData([]);
-    
+
     let url = "";
     if (branch === "All") {
       url = "/api/VehicleInOut/all";
     } else {
-      const selectedBranchId = branches.find((b) => b.name === branch.trim().toLowerCase())?.id;
+      const selectedBranchId = branches.find(
+        (b) => b.name === branch.trim().toLowerCase()
+      )?.id;
       console.log("Selected Branch:", branch);
       console.log("Selected Branch ID:", selectedBranchId);
-      
+
       if (!selectedBranchId) {
         console.error("Branch ID not found!");
         return;
@@ -56,18 +58,29 @@ function VehicleEntry() {
       const processData = (data) =>
         data.map((vehicle) => ({
           key: vehicle.vehicleNo, // Unique key for AntD table
-          branch: branches.find((b) => b.id === vehicle.branchId)?.name || "Unknown",
+          branch:
+            branches.find((b) => b.id === vehicle.branchId)?.name || "Unknown",
           vehicleNumber: vehicle.vehicleNo,
           reason: vehicle.checkInReason,
-          status: vehicle.status || (vehicle.checkOutDate ? "Checked Out" : "Checked In"),
+          status:
+            vehicle.status ||
+            (vehicle.checkOutDate ? "Checked Out" : "Checked In"),
           date: new Date(vehicle.checkInDate).toLocaleDateString(),
           time: new Date(vehicle.checkInDate).toLocaleTimeString(),
         }));
 
-      setVehicleData(processData(Array.isArray(response.data) ? response.data : response.data.records || []));
+      setVehicleData(
+        processData(
+          Array.isArray(response.data)
+            ? response.data
+            : response.data.records || []
+        )
+      );
     } catch (err) {
       console.error("Error fetching vehicle data:", err);
-      setError(`Failed to load data: ${err.response?.data?.message || err.message}`);
+      setError(
+        `Failed to load data: ${err.response?.data?.message || err.message}`
+      );
     } finally {
       setLoading(false);
     }
@@ -117,10 +130,16 @@ function VehicleEntry() {
         { text: "Checked Out", value: "Checked Out" },
       ],
       onFilter: (value, record) => record.status === value,
-      filterSearch:true,
-      filterMode: "tree", 
+      filterSearch: true,
+      filterMode: "tree",
       render: (status) => (
-        <span className={status === "Checked In" ? "text-success fw-bold" : "text-danger fw-bold"}>
+        <span
+          className={
+            status === "Checked In"
+              ? "text-success fw-bold"
+              : "text-danger fw-bold"
+          }
+        >
           {status}
         </span>
       ),
@@ -133,7 +152,8 @@ function VehicleEntry() {
     {
       title: "Time",
       dataIndex: "time",
-      sorter: (a, b) => new Date(`1970-01-01T${a.time}`) - new Date(`1970-01-01T${b.time}`),
+      sorter: (a, b) =>
+        new Date(`1970-01-01T${a.time}`) - new Date(`1970-01-01T${b.time}`),
     },
   ];
 

@@ -50,18 +50,6 @@ public class UserAssignmentMappingService : IUserAssignmentMappingService
             .ToListAsync();
     }
 
-    //public async Task<IEnumerable<string>> GetAssigneeNamesForAssignerAsync()
-    //{
-    //    var assignerUserId = _jwtTokenService.GetUserIdFromToken();
-
-    //    var assignees = await _context.Users
-    //        .Where(u => u.UserId == assignerUserId)
-    //        .SelectMany(u => u.AssignedUsers)
-    //        .Select(a => a.FirstName)
-    //        .ToListAsync();
-
-    //    return assignees;
-    //}
     public async Task<List<AssigneeResponseDto>> GetAssigneeNamesForAssignerAsync()
     {
         var assignerUserId = _jwtTokenService.GetUserIdFromToken();
@@ -79,7 +67,6 @@ public class UserAssignmentMappingService : IUserAssignmentMappingService
         return assignees;
     }
 
-
     public async Task<bool> CanAssignAsync(Guid assignerUserId, Guid assigneeUserId)
     {
         return await _context.Users
@@ -89,6 +76,7 @@ public class UserAssignmentMappingService : IUserAssignmentMappingService
 
     public async Task UpdateUserAssignmentMappingAsync(UserAssignmentMappingDto mappingDto)
     {
+        var userId = _jwtTokenService.GetUserIdFromToken();
         var assigner = await _context.Users
             .Include(u => u.AssignedUsers)
             .FirstOrDefaultAsync(u => u.UserId == mappingDto.AssignerUserId);

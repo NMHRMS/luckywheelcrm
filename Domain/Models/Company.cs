@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Domain.Models;
+﻿namespace Domain.Models;
 
 public partial class Company
 {
@@ -18,12 +11,21 @@ public partial class Company
     public string EmailId {  get; set; }
     public string Password { get; set; }
     public DateTime CreateDate { get; set; }
+    public Guid? CreatedBy { get; set; }
     public DateTime? UpdateDate { get; set; }
+    public Guid? UpdatedBy { get; set; }
+    
+    public virtual User? CreatedByUser { get; set; }
+
+    public virtual User? UpdatedByUser { get; set; }
+
     public virtual ICollection<Branch> Branches { get; set; } = new List<Branch>();
 
     public virtual ICollection<Lead> Leads { get; set; } = new List<Lead>();
 
     public virtual ICollection<LeadReview> LeadsReview { get; set; } = new List<LeadReview>();
+
+    public virtual ICollection<ReviewsType> ReviewTypes { get; set; } = new List<ReviewsType>();
    
     public virtual ICollection<LeadSource> LeadSources { get; set; } = new List<LeadSource>();
 
@@ -34,6 +36,8 @@ public partial class Company
     public virtual ICollection<Category> Categories { get; set; } = new List<Category>();
 
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+
+    public virtual ICollection<Status> Statuses { get; set; } = new List<Status>();
 
     public virtual ICollection<VehicleInOutRecord> VehicleCheckInCheckOut { get; set; } = new List<VehicleInOutRecord>();
 

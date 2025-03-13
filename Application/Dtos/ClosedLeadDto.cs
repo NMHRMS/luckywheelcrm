@@ -10,6 +10,7 @@ namespace Application.Dtos
     public class ClosedLeadDto
     {
         public Guid LeadId { get; set; }
+        public LeadResponseDto LeadDetails { get; set; }  // Added Lead Details
         public List<LeadTrackingResponseDto> LeadTrackingRecords { get; set; }
     }
 }
