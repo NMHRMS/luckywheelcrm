@@ -9,6 +9,7 @@ using Application.ResponseDto;
 using AutoMapper;
 using Domain.Models;
 using Infrastructure.Data;
+using Infrastructure.Utilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Application.Services
@@ -44,7 +45,7 @@ namespace Application.Services
             var reviewType = _mapper.Map<ReviewsType>(reviewTypeDto);
             reviewType.ReviewId = Guid.NewGuid();
             reviewType.CreatedBy = userId;
-            reviewType.CreateDate = DateTime.Now;
+            reviewType.CreateDate = DateTimeHelper.GetIndianTime();
             _context.ReviewTypes.Add(reviewType);
             await _context.SaveChangesAsync();
             return _mapper.Map<ReviewTypeResponseDto>(reviewType);

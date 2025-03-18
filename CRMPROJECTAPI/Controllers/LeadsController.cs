@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using Infrastructure.Utilities;
 
 namespace CRMPROJECTAPI.Controllers
 {
@@ -21,23 +22,23 @@ namespace CRMPROJECTAPI.Controllers
         [HttpGet("report")]
         public async Task<IActionResult> GetLeadReport([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
         {
-            DateTime start = startDate ?? DateTime.UtcNow.AddDays(-7); // Default: last 7 days
-            DateTime end = endDate ?? DateTime.UtcNow;
+            DateTime start = startDate ?? DateTimeHelper.GetIndianTime().AddDays(-7); // Default: last 7 days
+            DateTime end = endDate ?? DateTimeHelper.GetIndianTime();
 
             var report = await _leadService.GetLeadReportAsync(start, end);
             return Ok(report);
         }
 
         [HttpGet("user-report")]
-        public async Task<IActionResult> GetUserLeadReport([FromQuery] Guid userId, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] DateTime? date)
+        public async Task<IActionResult> GetUserLeadReport([FromQuery] List<Guid> userIds, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] DateTime? date)
         {
-            if (userId == Guid.Empty)
-                return BadRequest("UserId is required.");   
+            if (userIds == null || userIds.Count == 0)
+                return BadRequest("At least one UserId is required.");
 
-            DateTime start = startDate ?? DateTime.UtcNow.AddDays(-7); // Default: last 7 days
-            DateTime end = endDate ?? DateTime.UtcNow;
+            DateTime start = startDate ?? DateTimeHelper.GetIndianTime().AddDays(-7); // Default: last 7 days
+            DateTime end = endDate ?? DateTimeHelper.GetIndianTime();
 
-            var report = await _leadService.GetUserLeadReportAsync(userId, start, end, date);
+            var report = await _leadService.GetUserLeadReportAsync(userIds, start, end, date);
             return Ok(report);
         }
 

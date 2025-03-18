@@ -15,7 +15,7 @@ public partial class CallRecord
     public string? Name { get; set; }
     public string? MobileNo { get; set; }
     public string? CallType { get; set; }
-    public byte[]? Recordings { get; set; }
+    public string? Recordings { get; set; }
     public DateTime? Date { get; set; }
     public TimeOnly? Duration { get; set; }
     public string? Status { get; set; }

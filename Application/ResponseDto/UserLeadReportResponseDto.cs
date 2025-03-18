@@ -7,7 +7,9 @@ using System.Threading.Tasks;
 namespace Application.ResponseDto
 {
     public class UserLeadReportResponseDto
-    {
+    {       
+        public Guid UserId { get; set; }
+        public string UserName { get; set; }
         public int TotalAssignedLeadsCount { get; set; }
         public int AssignedLeadsCount { get; set; }  
         public int DelegatedLeadsCount { get; set; }

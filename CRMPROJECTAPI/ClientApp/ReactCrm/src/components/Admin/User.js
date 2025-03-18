@@ -124,8 +124,7 @@ export default function User() {
       })
       .catch((error) => console.error("Error fetching user data:", error));
   }
-  
-  
+
   const handleAddButtonClick = () => {
     setShowModal(true);
   };
@@ -181,178 +180,175 @@ export default function User() {
                   </tr>
                 </thead>
                 <tbody>
-  {newData.length > 0 ? (
-    newData.map((user, index) => (
-      <tr key={user.id}>
-        <td>{index + 1}</td> {/* Auto-incremented index */}
-        <td>{user.username}</td>
-        <td>{user.email}</td>
-        <td>{user.status}</td>
-        <td>{getBranchNameById(user.branchid)}</td>
-        <td>{getRoleNameById(user.roleid)}</td>
-        <td>
-          <button
-            className="btn btn-sm mx-1"
-            onClick={() => handleUpdate(user.id)}
-          >
-            <i className="fas fa-pen text-primary"></i>
-          </button>
-          <button
-            className="btn btn-sm mx-1"
-            onClick={() => handleDelete(user.id)}
-          >
-            <i className="fas fa-trash text-danger"></i>
-          </button>
-        </td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan="7" className="text-center">
-        No users found.
-      </td>
-    </tr>
-  )}
-</tbody>
-
+                  {newData.length > 0 ? (
+                    newData.map((user, index) => (
+                      <tr key={user.id}>
+                        <td>{index + 1}</td> {/* Auto-incremented index */}
+                        <td>{user.username}</td>
+                        <td>{user.email}</td>
+                        <td>{user.status}</td>
+                        <td>{getBranchNameById(user.branchid)}</td>
+                        <td>{getRoleNameById(user.roleid)}</td>
+                        <td>
+                          <button
+                            className="btn btn-sm mx-1"
+                            onClick={() => handleUpdate(user.id)}
+                          >
+                            <i className="fas fa-pen text-primary"></i>
+                          </button>
+                          <button
+                            className="btn btn-sm mx-1"
+                            onClick={() => handleDelete(user.id)}
+                          >
+                            <i className="fas fa-trash text-danger"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="7" className="text-center">
+                        No users found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
               </table>
             </div>
           </div>
 
           {showModal && (
-  <div
-    className="modal fade show"
-    style={{ display: "block", background: "rgba(0, 0, 0, 0.5)" }}
-    role="dialog"
-  >
-    <div className="modal-dialog modal-lg" role="document">
-      <div className="modal-content w-50 mx-auto">
-        <div className="modal-header">
-          <h5 className="modal-title">Add/Update User</h5>
-          <button
-            type="button"
-            className="btn-close"
-            onClick={handleCloseModal}
-            aria-label="Close"
-          ></button>
-        </div>
-        <div className="modal-body">
-          <form className="row g-3">
-            <div className="col-12">
-              <label htmlFor="username" className="form-label">
-                Username
-              </label>
-              <input
-                name="username"
-                id="username"
-                value={data.username}
-                onChange={handleChange}
-                type="text"
-                className="form-control"
-              />
-            </div>
-            <div className="col-12">
-              <label htmlFor="email" className="form-label">
-                Email
-              </label>
-              <input
-                name="email"
-                id="email"
-                value={data.email}
-                onChange={handleChange}
-                type="email"
-                className="form-control"
-              />
-            </div>
-            <div className="col-12">
-              <label htmlFor="password" className="form-label">
-                Password
-              </label>
-                <input
-                name="password"
-                id="password"
-                value={data.password}
-                onChange={handleChange}
-                type="password"
-                className="form-control"
-                autoComplete="current-password"
-              />
-            </div>
-            <div className="col-12">
-              <label htmlFor="roleid" className="form-label">
-                Role
-              </label>
-                          <select
-              id="roleid"
-              value={data.roleid || ""}
-              onChange={handleChange}
-              className="form-select"
+            <div
+              className="modal fade show"
+              style={{ display: "block", background: "rgba(0, 0, 0, 0.5)" }}
+              role="dialog"
             >
-              <option value="">Select Role</option>
-              {roles.map((role) => (
-                <option key={role.id} value={role.id}>
-                  {role.name}
-                </option>
-              ))}
-            </select>
-
+              <div className="modal-dialog modal-lg" role="document">
+                <div className="modal-content w-50 mx-auto">
+                  <div className="modal-header">
+                    <h5 className="modal-title">Add/Update User</h5>
+                    <button
+                      type="button"
+                      className="btn-close"
+                      onClick={handleCloseModal}
+                      aria-label="Close"
+                    ></button>
+                  </div>
+                  <div className="modal-body">
+                    <form className="row g-3">
+                      <div className="col-12">
+                        <label htmlFor="username" className="form-label">
+                          Username
+                        </label>
+                        <input
+                          name="username"
+                          id="username"
+                          value={data.username}
+                          onChange={handleChange}
+                          type="text"
+                          className="form-control"
+                        />
+                      </div>
+                      <div className="col-12">
+                        <label htmlFor="email" className="form-label">
+                          Email
+                        </label>
+                        <input
+                          name="email"
+                          id="email"
+                          value={data.email}
+                          onChange={handleChange}
+                          type="email"
+                          className="form-control"
+                        />
+                      </div>
+                      <div className="col-12">
+                        <label htmlFor="password" className="form-label">
+                          Password
+                        </label>
+                        <input
+                          name="password"
+                          id="password"
+                          value={data.password}
+                          onChange={handleChange}
+                          type="password"
+                          className="form-control"
+                          autoComplete="current-password"
+                        />
+                      </div>
+                      <div className="col-12">
+                        <label htmlFor="roleid" className="form-label">
+                          Role
+                        </label>
+                        <select
+                          id="roleid"
+                          value={data.roleid || ""}
+                          onChange={handleChange}
+                          className="form-select"
+                        >
+                          <option value="">Select Role</option>
+                          {roles.map((role) => (
+                            <option key={role.id} value={role.id}>
+                              {role.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="col-12">
+                        <label htmlFor="branchid" className="form-label">
+                          Branch
+                        </label>
+                        <select
+                          id="branchid"
+                          value={data.branchid}
+                          onChange={handleChange}
+                          className="form-select"
+                        >
+                          <option value="">Select Branch</option>
+                          {branches.map((branch) => (
+                            <option key={branch.id} value={branch.id}>
+                              {branch.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="col-12">
+                        <label htmlFor="status" className="form-label">
+                          Status
+                        </label>
+                        <select
+                          id="status"
+                          value={data.status}
+                          onChange={handleChange}
+                          className="form-select"
+                        >
+                          <option value="">Select Status</option>
+                          <option value="active">Active</option>
+                          <option value="inactive">Inactive</option>
+                        </select>
+                      </div>
+                    </form>
+                  </div>
+                  <div className="modal-footer">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={handleCloseModal}
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      onClick={handleSubmit}
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="col-12">
-              <label htmlFor="branchid" className="form-label">
-                Branch
-              </label>
-              <select
-                id="branchid"
-                value={data.branchid}
-                onChange={handleChange}
-                className="form-select"
-              >
-                <option value="">Select Branch</option>
-                {branches.map((branch) => (
-                  <option key={branch.id} value={branch.id}>
-                    {branch.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="col-12">
-              <label htmlFor="status" className="form-label">
-                Status
-              </label>
-              <select
-                id="status"
-                value={data.status}
-                onChange={handleChange}
-                className="form-select"
-              >
-                <option value="">Select Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-          </form>
-        </div>
-        <div className="modal-footer">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={handleCloseModal}
-          >
-            Close
-          </button>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            onClick={handleSubmit}
-          >
-            Save
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-
+          )}
         </div>
       </div>
     </div>
