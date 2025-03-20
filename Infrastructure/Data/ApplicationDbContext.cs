@@ -78,7 +78,7 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.Name).HasMaxLength(100);
             entity.Property(e => e.MobileNo).HasMaxLength(15);
             entity.Property(e => e.CallType).HasMaxLength(50);
-            entity.Property(e => e.Recordings);
+            entity.Property(e => e.Recordings).HasColumnType("nvarchar(MAX)");
             entity.Property(e => e.Date).HasColumnType("datetime");
             entity.Property(e => e.Duration).HasColumnType("time(7)");
             entity.Property(e => e.Status).HasMaxLength(50);

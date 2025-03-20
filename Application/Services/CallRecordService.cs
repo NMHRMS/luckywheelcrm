@@ -9,7 +9,9 @@ using Application.ResponseDto;
 using AutoMapper;
 using Domain.Models;
 using Infrastructure.Data;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+
 
 namespace Application.Services
 {
@@ -34,16 +36,37 @@ namespace Application.Services
             var callRecord = await _context.CallRecords.FindAsync(id);
             return callRecord == null ? null : _mapper.Map<CallRecordResponseDto>(callRecord);
         }
-        public async Task<CallRecordResponseDto> AddCallRecordAsync(CallRecordDto callRecordDto)
+        public async Task<CallRecordResponseDto> AddCallRecordAsync(CallRecordDto callRecordDto, IFormFile? recordings)
         {
             var userId = _jwtTokenService.GetUserIdFromToken();
             var callRecord = _mapper.Map<CallRecord>(callRecordDto);
             callRecord.RecordId = Guid.NewGuid();
             callRecord.CreatedBy = userId;
+
+            // Handle File Upload
+            if (recordings != null)
+            {
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "recordings");
+                Directory.CreateDirectory(uploadsFolder); // Ensure directory exists
+
+                var fileName = $"{Guid.NewGuid()}_{recordings.FileName}";
+                var filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await recordings.CopyToAsync(stream);
+                }
+
+                // Save relative path to DB (for easy API access)
+                callRecord.Recordings = $"/recordings/{fileName}";
+            }
+
             _context.CallRecords.Add(callRecord);
             await _context.SaveChangesAsync();
+
             return _mapper.Map<CallRecordResponseDto>(callRecord);
         }
+
         public async Task<CallRecordResponseDto?> UpdateCallRecordAsync(Guid id, CallRecordDto callRecordDto)
         {
             var existingCallRecord = await _context.CallRecords.FindAsync(id);

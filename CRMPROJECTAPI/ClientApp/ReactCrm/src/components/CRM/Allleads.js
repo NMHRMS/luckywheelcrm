@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table,Input } from "antd";
+import { Table, Input } from "antd";
 import { getRequest } from "../utils/Api";
 import Loader from "../utils/Loader";
 import { Spin } from "antd";
@@ -11,8 +11,8 @@ function AllLeads() {
   });
   const [activeTab, setActiveTab] = useState("new");
   const [loading, setLoading] = useState(false);
-  const [editingKey, setEditingKey] = useState('');
-const [searchText, setSearchText] = useState("");
+  const [editingKey, setEditingKey] = useState("");
+  const [searchText, setSearchText] = useState("");
   const fetchLeads = async () => {
     setLoading(true);
     try {
@@ -48,23 +48,22 @@ const [searchText, setSearchText] = useState("");
       lead.mobileNo.toLowerCase().includes(searchText) ||
       lead.ownerName.toLowerCase().includes(searchText)
   );
-  
+
   const filteredDuplicateLeads = leads.duplicateLeads.filter(
     (lead) =>
       lead.mobileNo.toLowerCase().includes(searchText) ||
       lead.ownerName.toLowerCase().includes(searchText)
   );
 
-  const filteredBlockedLeads =leads.blockedLeads.filter(
+  const filteredBlockedLeads = leads.blockedLeads.filter(
     (lead) =>
       lead.mobileNo.toLowerCase().includes(searchText) ||
       lead.ownerName.toLowerCase().includes(searchText)
   );
 
   const cancel = () => {
-    setEditingKey('');
+    setEditingKey("");
   };
-
 
   const columns = [
     {
@@ -77,13 +76,13 @@ const [searchText, setSearchText] = useState("");
       ),
       onFilter: (value, record) => record.stateName === value,
       sorter: (a, b) => {
-        const nameA = a.stateName ? a.stateName.toLowerCase() : '';
-        const nameB = b.stateName ? b.stateName.toLowerCase() : '';
+        const nameA = a.stateName ? a.stateName.toLowerCase() : "";
+        const nameB = b.stateName ? b.stateName.toLowerCase() : "";
         return nameA.localeCompare(nameB);
       },
       filterSearch: true,
       filterMode: "tree",
-      width:140
+      width: 140,
     },
     {
       title: "District",
@@ -95,13 +94,13 @@ const [searchText, setSearchText] = useState("");
       ),
       onFilter: (value, record) => record.districtName === value,
       sorter: (a, b) => {
-        const nameA = a.districtName ? a.districtName.toLowerCase() : '';
-        const nameB = b.districtName ? b.districtName.toLowerCase() : '';
+        const nameA = a.districtName ? a.districtName.toLowerCase() : "";
+        const nameB = b.districtName ? b.districtName.toLowerCase() : "";
         return nameA.localeCompare(nameB);
       },
       filterSearch: true,
       filterMode: "tree",
-      width:140
+      width: 140,
     },
     {
       title: "Owner Name",
@@ -115,13 +114,13 @@ const [searchText, setSearchText] = useState("");
         "ownerName"
       ),
       sorter: (a, b) => {
-        const nameA = a.ownerName ? a.ownerName.toLowerCase() : '';
-        const nameB = b.ownerName ? b.ownerName.toLowerCase() : '';
+        const nameA = a.ownerName ? a.ownerName.toLowerCase() : "";
+        const nameB = b.ownerName ? b.ownerName.toLowerCase() : "";
         return nameA.localeCompare(nameB);
       },
       filterSearch: true,
       filterMode: "tree",
-      width:140
+      width: 140,
     },
     {
       title: "Mobile No",
@@ -136,13 +135,13 @@ const [searchText, setSearchText] = useState("");
         "mobileNo"
       ),
       sorter: (a, b) => {
-        const nameA = a.mobileNo ? a.mobileNo.toLowerCase() : '';
-        const nameB = b.mobileNo ? b.mobileNo.toLowerCase() : '';
+        const nameA = a.mobileNo ? a.mobileNo.toLowerCase() : "";
+        const nameB = b.mobileNo ? b.mobileNo.toLowerCase() : "";
         return nameA.localeCompare(nameB);
       },
       filterSearch: true,
       filterMode: "tree",
-      width:140
+      width: 140,
     },
     {
       title: "Category",
@@ -154,13 +153,13 @@ const [searchText, setSearchText] = useState("");
       ),
       onFilter: (value, record) => record.categoryName === value,
       sorter: (a, b) => {
-        const nameA = a.categoryName ? a.categoryName.toLowerCase() : '';
-        const nameB = b.categoryName ? b.categoryName.toLowerCase() : '';
+        const nameA = a.categoryName ? a.categoryName.toLowerCase() : "";
+        const nameB = b.categoryName ? b.categoryName.toLowerCase() : "";
         return nameA.localeCompare(nameB);
       },
       filterSearch: true,
       filterMode: "tree",
-      width:140
+      width: 140,
     },
     {
       title: "Product",
@@ -172,13 +171,13 @@ const [searchText, setSearchText] = useState("");
       ),
       onFilter: (value, record) => record.productName === value,
       sorter: (a, b) => {
-        const nameA = a.productName ? a.productName.toLowerCase() : '';
-        const nameB = b.productName ? b.productName.toLowerCase() : '';
+        const nameA = a.productName ? a.productName.toLowerCase() : "";
+        const nameB = b.productName ? b.productName.toLowerCase() : "";
         return nameA.localeCompare(nameB);
       },
       filterSearch: true,
       filterMode: "tree",
-      width:140
+      width: 140,
     },
     {
       title: "Model",
@@ -190,13 +189,13 @@ const [searchText, setSearchText] = useState("");
       ),
       onFilter: (value, record) => record.modelName === value,
       sorter: (a, b) => {
-        const nameA = a.modelName ? a.modelName.toLowerCase() : '';
-        const nameB = b.modelName ? b.modelName.toLowerCase() : '';
+        const nameA = a.modelName ? a.modelName.toLowerCase() : "";
+        const nameB = b.modelName ? b.modelName.toLowerCase() : "";
         return nameA.localeCompare(nameB);
       },
       filterSearch: true,
       filterMode: "tree",
-      width:140
+      width: 140,
     },
     {
       title: "Lead Type",
@@ -208,13 +207,13 @@ const [searchText, setSearchText] = useState("");
       ),
       onFilter: (value, record) => record.leadType === value,
       sorter: (a, b) => {
-        const nameA = a.leadType ? a.leadType.toLowerCase() : '';
-        const nameB = b.leadType ? b.leadType.toLowerCase() : '';
+        const nameA = a.leadType ? a.leadType.toLowerCase() : "";
+        const nameB = b.leadType ? b.leadType.toLowerCase() : "";
         return nameA.localeCompare(nameB);
       },
       filterSearch: true,
       filterMode: "tree",
-      width:140
+      width: 140,
     },
     {
       title: "Assigned To",
@@ -226,13 +225,13 @@ const [searchText, setSearchText] = useState("");
       ),
       onFilter: (value, record) => record.assignedToName === value,
       sorter: (a, b) => {
-        const nameA = a.assignedToName ? a.assignedToName.toLowerCase() : '';
-        const nameB = b.assignedToName ? b.assignedToName.toLowerCase() : '';
+        const nameA = a.assignedToName ? a.assignedToName.toLowerCase() : "";
+        const nameB = b.assignedToName ? b.assignedToName.toLowerCase() : "";
         return nameA.localeCompare(nameB);
       },
       filterSearch: true,
       filterMode: "tree",
-      width:140
+      width: 140,
     },
     {
       title: "Followup Date",
@@ -244,13 +243,13 @@ const [searchText, setSearchText] = useState("");
       ),
       onFilter: (value, record) => record.followUpDate === value,
       sorter: (a, b) => {
-        const nameA = a.followUpDate ? a.followUpDate.toLowerCase() : '';
-        const nameB = b.followUpDate ? b.followUpDate.toLowerCase() : '';
+        const nameA = a.followUpDate ? a.followUpDate.toLowerCase() : "";
+        const nameB = b.followUpDate ? b.followUpDate.toLowerCase() : "";
         return nameA.localeCompare(nameB);
       },
       filterSearch: true,
       filterMode: "tree",
-      width:140
+      width: 140,
     },
     {
       title: "Status",
@@ -262,13 +261,13 @@ const [searchText, setSearchText] = useState("");
       ),
       onFilter: (value, record) => record.status === value,
       sorter: (a, b) => {
-        const nameA = a.status ? a.status.toLowerCase() : '';
-        const nameB = b.status ? b.status.toLowerCase() : '';
+        const nameA = a.status ? a.status.toLowerCase() : "";
+        const nameB = b.status ? b.status.toLowerCase() : "";
         return nameA.localeCompare(nameB);
       },
       filterSearch: true,
       filterMode: "tree",
-      width:140
+      width: 140,
     },
     {
       title: "Excel Name",
@@ -295,44 +294,43 @@ const [searchText, setSearchText] = useState("");
         <>
           {/* Bootstrap Tabs */}
           <div className="d-flex justify-content-between align-items-center mb-3">
-          <ul className="nav nav-tabs mb-4">
-            <li className="nav-item">
-              <button
-                className={`nav-link ${activeTab === "new" ? "active" : ""}`}
-                onClick={() => setActiveTab("new")}
-              >
-                New Leads ({leads.newLeads.length})
-              </button>
-            </li>
-            <li className="nav-item">
-              <button
-                className={`nav-link ${
-                  activeTab === "duplicate" ? "active" : ""
-                }`}
-                onClick={() => setActiveTab("duplicate")}
-              >
-                Duplicate Leads ({leads.duplicateLeads.length})
-              </button>
-            </li>
-            <li className="nav-item">
-              <button
-                className={`nav-link ${
-                  activeTab === "blocked" ? "active" : ""
-                }`}
-                onClick={() => setActiveTab("blocked")}
-              >
-                Blocked Leads ({leads.blockedLeads.length})
-              </button>
-            </li>
-          </ul>
-                <Input
-            placeholder="Search by Mobile No or Owner Name"
-            value={searchText}
-            onChange={handleSearch}
-            style={{ marginBottom: 16, width: "300px",marginRight:'10px' }}
-          />
+            <ul className="nav nav-tabs mb-4">
+              <li className="nav-item">
+                <button
+                  className={`nav-link ${activeTab === "new" ? "active" : ""}`}
+                  onClick={() => setActiveTab("new")}
+                >
+                  New Leads ({leads.newLeads.length})
+                </button>
+              </li>
+              <li className="nav-item">
+                <button
+                  className={`nav-link ${
+                    activeTab === "duplicate" ? "active" : ""
+                  }`}
+                  onClick={() => setActiveTab("duplicate")}
+                >
+                  Duplicate Leads ({leads.duplicateLeads.length})
+                </button>
+              </li>
+              <li className="nav-item">
+                <button
+                  className={`nav-link ${
+                    activeTab === "blocked" ? "active" : ""
+                  }`}
+                  onClick={() => setActiveTab("blocked")}
+                >
+                  Blocked Leads ({leads.blockedLeads.length})
+                </button>
+              </li>
+            </ul>
+            <Input
+              placeholder="Search by Mobile No or Owner Name"
+              value={searchText}
+              onChange={handleSearch}
+              style={{ marginBottom: 16, width: "300px", marginRight: "10px" }}
+            />
           </div>
-       
 
           {/* Tab Content */}
           <div className="tab-content">
@@ -345,9 +343,12 @@ const [searchText, setSearchText] = useState("");
                     columns={columns}
                     dataSource={filteredNewLeads}
                     rowKey="leadId"
-                    pagination={{onChange: cancel,position: ["topRight"],
+                    pagination={{
+                      onChange: cancel,
+                      position: ["topRight"],
                       defaultPageSize: 20,
-                      pageSizeOptions:[20,30,50,100,150,200,250,300] }}
+                      pageSizeOptions: [20, 30, 50, 100, 150, 200, 250, 300],
+                    }}
                     scroll={{ x: "max-content", y: 500 }}
                     style={{
                       overflowX: "auto",
@@ -370,9 +371,12 @@ const [searchText, setSearchText] = useState("");
                     columns={columns}
                     dataSource={filteredDuplicateLeads}
                     rowKey="leadId"
-                    pagination={{onChange: cancel,position: ["topRight"],
+                    pagination={{
+                      onChange: cancel,
+                      position: ["topRight"],
                       defaultPageSize: 20,
-                      pageSizeOptions:[20,30,50,100,150,200,250,300] }}
+                      pageSizeOptions: [20, 30, 50, 100, 150, 200, 250, 300],
+                    }}
                     scroll={{ x: "max-content", y: 500 }}
                     style={{ overflowX: "auto", whiteSpace: "nowrap" }}
                   />
@@ -391,9 +395,12 @@ const [searchText, setSearchText] = useState("");
                     columns={columns}
                     dataSource={filteredBlockedLeads}
                     rowKey="leadId"
-                    pagination={{onChange: cancel,position: ["topRight"],
+                    pagination={{
+                      onChange: cancel,
+                      position: ["topRight"],
                       defaultPageSize: 20,
-                      pageSizeOptions:[20,30,50,100,150,200,250,300] }}
+                      pageSizeOptions: [20, 30, 50, 100, 150, 200, 250, 300],
+                    }}
                     scroll={{ x: "max-content", y: 500 }}
                   />
                 </div>

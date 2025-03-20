@@ -72,8 +72,7 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
     loadData();
   }, []);
 
-  console.log("Assignedusers",Assignedusers);
-  
+  console.log("Assignedusers", Assignedusers);
 
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) {
@@ -220,11 +219,7 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
           <Select
             showSearch
             placeholder="Select District Name"
-            dropdownRender={(menu) => (
-              <>
-                {menu}
-              </>
-            )}
+            dropdownRender={(menu) => <>{menu}</>}
           >
             {Districts.map((district) => (
               <Select.Option
@@ -350,7 +345,7 @@ const AddLeadModal = ({ visible, onClose, onSuccess }) => {
           label="AssignedTo Name"
           name="assignedToName"
           rules={[
-            { required: true, message: "Please select assignedTo Name!" },
+            { required: false, message: "Please select assignedTo Name!" },
           ]}
         >
           <Select placeholder="Select assignedTo Name">

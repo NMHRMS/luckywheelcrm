@@ -12,7 +12,7 @@ function Header() {
   const [userRole, setUserRole] = useState("");
   const storedUser = localStorage.getItem("user");
   const user = storedUser ? JSON.parse(storedUser) : null;
- 
+
   const toggleSidebar = () => {
     setIsSidebarActive((prev) => !prev);
     const body = document.body;
@@ -53,13 +53,10 @@ function Header() {
     }
   }, [localStorage.getItem("token")]); // ✅ Added dependency for updates
 
-  const signout=()=>{
+  const signout = () => {
     localStorage.clear();
-    navigate('/');
-  
-  }
-
-
+    navigate("/");
+  };
 
   return (
     <>
@@ -69,7 +66,7 @@ function Header() {
         className="header fixed-top d-flex align-items-center"
       >
         <div className="d-flex align-items-center justify-content-between">
-          <a href="index.html" className="logo d-flex align-items-center">
+          <a href="/crm/dashboard" className="logo d-flex align-items-center">
             <img src="/assets/img/logo.png" alt="" />
             {/* <span className="d-none d-lg-block">{branchName}</span> */}
             <span>CRM</span>
@@ -194,7 +191,6 @@ function Header() {
               </ul>
               
             </li> */}
-         
 
             {/* <li className="nav-item dropdown">
               <a
@@ -318,9 +314,7 @@ function Header() {
                 </li>
 
                 <li>
-                  <Link
-                    className="dropdown-item d-flex align-items-center"
-                  >
+                  <Link className="dropdown-item d-flex align-items-center">
                     <i className="bi bi-person"></i>
                     <span>My Profile</span>
                   </Link>
@@ -330,10 +324,7 @@ function Header() {
                 </li>
 
                 <li>
-                  <Link
-                  
-                    className="dropdown-item d-flex align-items-center"
-                  >
+                  <Link className="dropdown-item d-flex align-items-center">
                     <i className="bi bi-gear"></i>
                     <span>Account Settings</span>
                   </Link>
@@ -343,9 +334,7 @@ function Header() {
                 </li>
 
                 <li>
-                  <Link
-                    className="dropdown-item d-flex align-items-center"
-                  >
+                  <Link className="dropdown-item d-flex align-items-center">
                     <i className="bi bi-question-circle"></i>
                     <span>Need Help?</span>
                   </Link>
@@ -355,12 +344,11 @@ function Header() {
                 </li>
 
                 <li onClick={signout}>
-                      <Link className="dropdown-item d-flex align-items-center"
-                  >
+                  <Link className="dropdown-item d-flex align-items-center">
                     <i className="bi bi-box-arrow-right"></i>
-          
+
                     <span>Sign Out</span>
-                    </Link>
+                  </Link>
                 </li>
               </ul>
 

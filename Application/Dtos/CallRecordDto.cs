@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace Application.Dtos
 {
@@ -13,9 +14,8 @@ namespace Application.Dtos
         public string? Name { get; set; }
         public string? MobileNo { get; set; }
         public string? CallType { get; set; } // incoming outgoing missedcall
-        public string? Recordings { get; set; }
         public DateTime? Date { get; set; }
         public TimeOnly? Duration { get; set; }
-        public string? Status { get; set; } //
+        public string? Status { get; set; } 
     }
 }

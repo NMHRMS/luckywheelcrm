@@ -34,13 +34,14 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(callRecord);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CreateCallRecord([FromBody] CallRecordDto callRecordDto)
+        [HttpPost("add-call-record")]
+        public async Task<IActionResult> CreateCallRecord([FromForm] CallRecordDto callRecordDto, IFormFile? recordings)
         {
-            var callRecord = await _callRecordService.AddCallRecordAsync(callRecordDto);
+            var result = await _callRecordService.AddCallRecordAsync(callRecordDto, recordings);
 
-            if (callRecord == null) return BadRequest("Error adding call record");
-            return Ok(callRecord);
+            if (result == null) return BadRequest("Error adding call record");
+
+            return Ok(result);
         }
 
         [HttpPut("{id}")]
