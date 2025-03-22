@@ -18,6 +18,7 @@
         public string? ModelName { get; set; }
         public string? LeadType { get; set; }
         public string Status { get; set; }
+        public bool IsActive { get; set; } = true;
         public DateTime? FollowUpDate { get; set; }
         public string? AssignedToName { get; set; }
     }

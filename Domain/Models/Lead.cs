@@ -27,6 +27,7 @@ public partial class Lead
     public Guid? LastRevertedBy { get; set; }
     public string? Remark { get; set; }
     public string? Status { get; set; }
+    public bool IsActive { get; set; } = true;
     public DateTime CreateDate { get; set; }
     public Guid? CreatedBy { get; set; }
     public DateTime? UpdateDate { get; set; }
@@ -44,10 +45,10 @@ public partial class Lead
     public virtual Company? Company { get; set; }
     public virtual Product? Product { get; set; }
     public virtual Category? Category { get; set; }
-
     public virtual LeadSource? LeadSource { get; set; }
 
     //Collection Properties
+    public virtual ICollection<CallRecord> CallRecords { get; set; } = new List<CallRecord>();
     public virtual ICollection<LeadTracking> LeadTrackings { get; set; } = new List<LeadTracking>();
     public virtual ICollection<LeadReview> LeadsReview { get; set; } = new List<LeadReview>();
 }

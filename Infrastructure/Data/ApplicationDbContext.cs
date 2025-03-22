@@ -74,18 +74,21 @@ public partial class ApplicationDbContext : DbContext
             entity.HasKey(e => e.RecordId).HasName("PK_CallRecords");
             entity.Property(e => e.RecordId).HasColumnName("CallRecordID");
             entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
+            entity.Property(e => e.LeadId).HasColumnName("LeadID");
             entity.Property(e => e.UserId).HasColumnName("UserID");
             entity.Property(e => e.Name).HasMaxLength(100);
             entity.Property(e => e.MobileNo).HasMaxLength(15);
             entity.Property(e => e.CallType).HasMaxLength(50);
-            entity.Property(e => e.Recordings);
+            entity.Property(e => e.Recordings).HasColumnType("nvarchar(MAX)");
             entity.Property(e => e.Date).HasColumnType("datetime");
             entity.Property(e => e.Duration).HasColumnType("time(7)");
             entity.Property(e => e.Status).HasMaxLength(50);
+            entity.Property(e => e.IsSynced).HasDefaultValue(false);
             entity.Property(e => e.CreatedBy).HasColumnName("CreatedBy");
             entity.Property(e => e.CreateDate).HasColumnType("datetime").HasDefaultValue(DateTimeHelper.GetIndianTime());
             entity.HasOne(e => e.Company).WithMany(c => c.CallRecords).HasForeignKey(e => e.CompanyId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_CallRecords_Companies");
             entity.HasOne(e => e.User).WithMany(c => c.CallRecords).HasForeignKey(e => e.UserId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_CallRecords_Users");
+            entity.HasOne(e => e.Lead).WithMany(c => c.CallRecords).HasForeignKey(e => e.LeadId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_CallRecords_Leads");
             entity.HasOne(e => e.CreatedByUser).WithMany().HasForeignKey(e => e.CreatedBy).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_CallRecords_Users1");
 
 
@@ -230,6 +233,7 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.LastRevertedBy).HasColumnName("LastRevertedBy");
             entity.Property(e => e.Remark).HasColumnType("nvarchar(max)");
             entity.Property(e => e.Status).HasMaxLength(20).HasDefaultValue("Not Called");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.CreatedBy).HasColumnName("CreatedBy");
             entity.Property(e => e.CreateDate).HasDefaultValue(DateTimeHelper.GetIndianTime()).HasColumnType("datetime");
             entity.Property(e => e.UpdateDate).HasColumnType("datetime");

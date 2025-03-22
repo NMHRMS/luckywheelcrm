@@ -57,10 +57,19 @@ function DailyReport() {
   }, []);
 
   // 1. Add a function to check if user and date range are selected
+  // const isFormValid = () => {
+  //   return (
+  //     selectedUsers.length > 0 &&
+  //     (selectedDate || (daterange.length === 2 && daterange[0] && daterange[1]))
+  //   );
+  // };
   const isFormValid = () => {
     return (
-      selectedUsers.length > 0 &&
-      (selectedDate || (daterange.length === 2 && daterange[0] && daterange[1]))
+      (selectedUsers.length > 0 &&
+        !selectedDate &&
+        !(daterange.length === 2 && daterange[0] && daterange[1])) ||
+      selectedDate ||
+      (daterange.length === 2 && daterange[0] && daterange[1])
     );
   };
   // 2. Update the submitdata function to validate inputs
@@ -1463,6 +1472,7 @@ function DailyReport() {
               }}
               style={{ overflowX: "auto", whiteSpace: "nowrap" }}
               scroll={{ x: "max-content", y: 500 }}
+              // scroll={{ x: true }}
               bordered
               loading={loading}
             />
@@ -1484,7 +1494,8 @@ function DailyReport() {
                 pageSizeOptions: [20, 30, 50, 100, 150, 200, 250, 300],
               }}
               style={{ overflowX: "auto", whiteSpace: "nowrap" }}
-              scroll={{ x: "max-content", y: 500 }}
+              // scroll={{ x: "max-content", y: 500 }}
+              scroll={{ x: true }}
               bordered
               loading={loading}
             />
@@ -1501,7 +1512,7 @@ function DailyReport() {
                 pageSizeOptions: [20, 30, 50, 100, 150, 200, 250, 300],
               }}
               style={{ overflowX: "auto", whiteSpace: "nowrap" }}
-              scroll={{ x: "max-content", y: 500 }}
+              // scroll={{ x: "true", y: 500 }}
               bordered
               loading={loading}
             />

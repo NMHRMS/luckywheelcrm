@@ -444,6 +444,7 @@ namespace Application.Services
             lead.ExcelName = $"Walk-In {currentMonth}";
 
             lead.LeadId = Guid.NewGuid();
+            lead.IsActive = true;
             _context.Leads.Add(lead);
             await _context.SaveChangesAsync();
 
@@ -454,6 +455,8 @@ namespace Application.Services
         {
             var existingLead = await _context.Leads.FindAsync(id);
             if (existingLead == null) return null;
+            
+            if(existingLead.Status == "Blocked") { existingLead.IsActive = false; }
 
             var states = await _context.States.ToDictionaryAsync(s => s.StateName, s => s.StateId);
             var districts = await _context.Districts.ToDictionaryAsync(d => d.DistrictName, d => d.DistrictId);
@@ -525,6 +528,8 @@ namespace Application.Services
                 var trackingRecords = await _context.LeadsTracking
                     .Where(lt => lt.LeadId == existingLead.LeadId)
                     .ToListAsync();
+
+                existingLead.IsActive = false;
 
                 foreach (var record in trackingRecords)
                 {
@@ -629,8 +634,9 @@ namespace Application.Services
                     RegistrationDate = registrationDate ?? null,
                     ModelName = modelName ?? null,
                     ProductId = !string.IsNullOrWhiteSpace(productName) && products.ContainsKey(productName) ? products[productName] : null,
-                    LeadType = "N/A",   
+                    LeadType = "N/A",
                     Status = "Not Called",
+                    IsActive = true,
                     CreateDate = DateTimeHelper.GetIndianTime(),
                     UpdateDate = DateTimeHelper.GetIndianTime(),
                     AssignedTo = null,
