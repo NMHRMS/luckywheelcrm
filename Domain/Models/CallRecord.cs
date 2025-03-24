@@ -21,7 +21,6 @@ public partial class CallRecord
     public DateTime? Date { get; set; }
     public TimeOnly? Duration { get; set; }
     public string? Status { get; set; }
-    public bool IsSynced { get; set; } = false;
     public Guid? CreatedBy { get; set; }
     public DateTime CreateDate { get; set; }
 

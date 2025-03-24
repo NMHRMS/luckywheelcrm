@@ -1,14 +1,14 @@
 ﻿using Application.Dtos;
 using Application.ResponseDto;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Application.Interfaces
 {
     public interface ICallRecordService
     {
-
-        Task<List<CallRecordResponseDto>> SyncCallRecords(List<CallRecordDto> callRecords, IFormFile file);
-        Task<List<CallRecordResponseDto>> GetAllCallRecords();
+        Task<CallRecordResponseDto> ProcessCallRecordAsync(CallRecordDto callRecordDto, IFormFile recording);
+        Task<List<CallRecordResponseDto>> GetAllCallRecordsAsync();
 
         //Task<IEnumerable<CallRecordResponseDto>> GetAllCallRecordsAsync();
         //Task<CallRecordResponseDto?> GetCallRecordByIdAsync(Guid id);

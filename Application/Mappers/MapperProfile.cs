@@ -36,8 +36,8 @@ namespace Application.Mappers
             CreateMap<Product, ProductResponseDto>();
             CreateMap<CallRecord, CallRecordDto>().ReverseMap();
             CreateMap<CallRecord, CallRecordResponseDto>()
-                  .ForMember(dest => dest.UserName,
-                      opt => opt.MapFrom(src => src.User != null ? $"{src.User.FirstName}" : null));
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User.FirstName))
+                .ForMember(dest => dest.Recordings, opt => opt.Ignore());
             CreateMap<Category, CategoryDto>().ReverseMap();
             CreateMap<Category, CategoryResponseDto>();
             CreateMap<VehicleInOutRecord, VehicleCheckInDto>().ReverseMap();

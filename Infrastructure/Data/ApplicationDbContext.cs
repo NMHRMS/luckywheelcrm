@@ -83,7 +83,6 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.Date).HasColumnType("datetime");
             entity.Property(e => e.Duration).HasColumnType("time(7)");
             entity.Property(e => e.Status).HasMaxLength(50);
-            entity.Property(e => e.IsSynced).HasDefaultValue(false);
             entity.Property(e => e.CreatedBy).HasColumnName("CreatedBy");
             entity.Property(e => e.CreateDate).HasColumnType("datetime").HasDefaultValue(DateTimeHelper.GetIndianTime());
             entity.HasOne(e => e.Company).WithMany(c => c.CallRecords).HasForeignKey(e => e.CompanyId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_CallRecords_Companies");

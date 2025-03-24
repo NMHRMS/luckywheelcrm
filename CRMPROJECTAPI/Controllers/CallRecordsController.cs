@@ -1,7 +1,9 @@
 ﻿using Application.Dtos;
 using Application.Interfaces;
+using Application.ResponseDto;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace CRMPROJECTAPI.Controllers
 {
@@ -12,25 +14,81 @@ namespace CRMPROJECTAPI.Controllers
     {
         private readonly ICallRecordService _callRecordService;
 
+
         public CallRecordsController(ICallRecordService callRecordService)
         {
             _callRecordService = callRecordService;
         }
 
-
         [HttpPost("sync")]
-        public async Task<IActionResult> SyncCallRecords([FromForm] List<CallRecordDto> callRecords, [FromForm] IFormFile file)
+        public async Task<IActionResult> SyncCallRecords(
+         [FromForm] string callRecordsJson,
+         [FromForm] List<IFormFile> recordings)
         {
-            var response = await _callRecordService.SyncCallRecords(callRecords, file);
-            return Ok(response);
-        }
+            try
+            {
+                // Deserialize callRecordsJson to List<CallRecordDto>
+                var callRecords = JsonConvert.DeserializeObject<List<CallRecordDto>>(callRecordsJson);
 
-        [HttpGet]
+                if (callRecords == null || !callRecords.Any())
+                {
+                    return BadRequest("Call records are missing or improperly formatted.");
+                }
+
+                var responseDtos = new List<CallRecordResponseDto>();
+
+                for (int i = 0; i < callRecords.Count; i++)
+                {
+                    // Handle recording if available, else null
+                    IFormFile? recording = (recordings.Count > i) ? recordings[i] : null;
+
+                    var responseDto = await _callRecordService.ProcessCallRecordAsync(callRecords[i], recording);
+                    responseDtos.Add(responseDto);
+                }
+
+                return Ok(responseDtos);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error syncing call records: {ex.Message}");
+            }
+        }
+        [HttpGet("GetAllCallRecords")]
         public async Task<IActionResult> GetAllCallRecords()
         {
-            var response = await _callRecordService.GetAllCallRecords();
-            return Ok(response);
+            var records = await _callRecordService.GetAllCallRecordsAsync();
+            return Ok(records);
         }
+
+        //[HttpPost("sync")]
+        //public async Task<IActionResult> SyncCallRecords([FromForm] CallRecordSyncRequest request)
+        //{
+        //    if (request.CallRecords == null || !request.CallRecords.Any())
+        //    {
+        //        return BadRequest("At least one call record must be provided.");
+        //    }
+
+        //    if (request.Files == null || !request.Files.Any())
+        //    {
+        //        return BadRequest("At least one recording file must be uploaded.");
+        //    }
+
+        //    var response = await _callRecordService.SyncCallRecords(request);
+        //    return Ok(response);
+        //}
+        //[HttpPost("sync")]
+        //public async Task<IActionResult> SyncCallRecords([FromForm] string callRecords, [FromForm] List<IFormFile> files)
+        //{
+        //    var responseList = await _callRecordService.SyncCallRecords(callRecords, files);
+        //    return Ok(responseList);
+        //}
+
+        //[HttpGet]
+        //public async Task<IActionResult> GetAllCallRecords()
+        //{
+        //    var records = await _callRecordService.GetAllCallRecords();
+        //    return Ok(records);
+        //}
 
         //[HttpGet]
         //public async Task<IActionResult> GetAllCallRecords()
