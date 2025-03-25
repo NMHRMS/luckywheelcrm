@@ -1,6 +1,8 @@
-﻿using Application.Dtos;
+﻿using System.Text.RegularExpressions;
+using Application.Dtos;
 using Application.Interfaces;
 using Application.ResponseDto;
+using Application.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -14,22 +16,17 @@ namespace CRMPROJECTAPI.Controllers
     {
         private readonly ICallRecordService _callRecordService;
 
-
         public CallRecordsController(ICallRecordService callRecordService)
         {
             _callRecordService = callRecordService;
         }
 
         [HttpPost("sync")]
-        public async Task<IActionResult> SyncCallRecords(
-         [FromForm] string callRecordsJson,
-         [FromForm] List<IFormFile> recordings)
+        public async Task<IActionResult> SyncCallRecords([FromForm] string callRecordsJson,[FromForm] List<IFormFile> recordings)
         {
             try
             {
-                // Deserialize callRecordsJson to List<CallRecordDto>
                 var callRecords = JsonConvert.DeserializeObject<List<CallRecordDto>>(callRecordsJson);
-
                 if (callRecords == null || !callRecords.Any())
                 {
                     return BadRequest("Call records are missing or improperly formatted.");
@@ -37,13 +34,40 @@ namespace CRMPROJECTAPI.Controllers
 
                 var responseDtos = new List<CallRecordResponseDto>();
 
-                for (int i = 0; i < callRecords.Count; i++)
+                foreach (var callRecord in callRecords)
                 {
-                    // Handle recording if available, else null
-                    IFormFile? recording = (recordings.Count > i) ? recordings[i] : null;
+                    IFormFile? matchedRecording = null;
 
-                    var responseDto = await _callRecordService.ProcessCallRecordAsync(callRecords[i], recording);
-                    responseDtos.Add(responseDto);
+                    // Try to find a recording that matches the mobile number
+                    if (recordings != null)
+                    {
+                        foreach (var recording in recordings)
+                        {
+                            var fileName = Path.GetFileNameWithoutExtension(recording.FileName);
+
+                            // Extract mobile number from filename (assuming it contains mobile number)
+                            var extractedMobileNo = ExtractMobileNumber(fileName);
+
+                            if (extractedMobileNo == callRecord.MobileNo)
+                            {
+                                matchedRecording = recording;
+                                break; // Stop checking once a match is found
+                            }
+                        }
+                    }
+
+                    try
+                    {
+                        var responseDto = await _callRecordService.ProcessCallRecordAsync(callRecord, matchedRecording);
+                        if (responseDto != null)
+                        {
+                            responseDtos.Add(responseDto);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Skipping record for {callRecord.MobileNo}: {ex.Message}");
+                    }
                 }
 
                 return Ok(responseDtos);
@@ -53,6 +77,15 @@ namespace CRMPROJECTAPI.Controllers
                 return StatusCode(500, $"Error syncing call records: {ex.Message}");
             }
         }
+
+        // Function to extract mobile number from file name
+        private string? ExtractMobileNumber(string fileName)
+        {
+            var match = Regex.Match(fileName, @"\d{10}"); // Looks for a 10-digit number
+            return match.Success ? match.Value : null;
+        }
+        
+
         [HttpGet("GetAllCallRecords")]
         public async Task<IActionResult> GetAllCallRecords()
         {
@@ -60,50 +93,27 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(records);
         }
 
-        //[HttpPost("sync")]
-        //public async Task<IActionResult> SyncCallRecords([FromForm] CallRecordSyncRequest request)
-        //{
-        //    if (request.CallRecords == null || !request.CallRecords.Any())
-        //    {
-        //        return BadRequest("At least one call record must be provided.");
-        //    }
+        [HttpGet("user/{userId}/recordings")]
+        public async Task<IActionResult> GetAllUserRecordings(Guid userId)
+        {
+            var recordings = await _callRecordService.GetAllUserRecordingsAsync(userId);
+            return Ok(recordings);
+        }
 
-        //    if (request.Files == null || !request.Files.Any())
-        //    {
-        //        return BadRequest("At least one recording file must be uploaded.");
-        //    }
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteCallRecord(Guid id)
+        {
+            await _callRecordService.DeleteCallRecordAsync(id);
+            return NoContent();
+        }
 
-        //    var response = await _callRecordService.SyncCallRecords(request);
-        //    return Ok(response);
-        //}
-        //[HttpPost("sync")]
-        //public async Task<IActionResult> SyncCallRecords([FromForm] string callRecords, [FromForm] List<IFormFile> files)
-        //{
-        //    var responseList = await _callRecordService.SyncCallRecords(callRecords, files);
-        //    return Ok(responseList);
-        //}
-
-        //[HttpGet]
-        //public async Task<IActionResult> GetAllCallRecords()
-        //{
-        //    var records = await _callRecordService.GetAllCallRecords();
-        //    return Ok(records);
-        //}
-
-        //[HttpGet]
-        //public async Task<IActionResult> GetAllCallRecords()
-        //{
-        //    var callRecords = await _callRecordService.GetAllCallRecordsAsync();
-        //    return Ok(callRecords);
-        //}
-
-        //[HttpGet("{id}")]
-        //public async Task<IActionResult> GetCallRecordById(Guid id)
-        //{
-        //    var callRecord = await _callRecordService.GetCallRecordByIdAsync(id);
-        //    if (callRecord == null) return NotFound();
-        //    return Ok(callRecord);
-        //}
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetCallRecordById(Guid id)
+        {
+            var callRecord = await _callRecordService.GetCallRecordByIdAsync(id);
+            if (callRecord == null) return NotFound();
+            return Ok(callRecord);
+        }
 
         //[HttpPut("{id}")]
         //public async Task<IActionResult> UpdateCallRecord(Guid id, [FromBody] CallRecordDto callRecordDto)
@@ -113,12 +123,6 @@ namespace CRMPROJECTAPI.Controllers
         //    return Ok(updatedCallRecord);
         //}
 
-        //[HttpDelete("{id}")]
-        //public async Task<IActionResult> DeleteCallRecord(Guid id)
-        //{
-        //    await _callRecordService.DeleteCallRecordAsync(id);
-        //    return NoContent();
-        //}
     }
 }
         //[HttpPost("add-call-record")]

@@ -69,7 +69,7 @@ namespace Application.Services
 
             foreach (var userId in userIds)
             {
-                // Assigned leads for this user
+                // Fetch assigned leads for the user
                 var assignedLeadsQuery = _context.Leads
                     .Include(l => l.District)
                     .Include(l => l.State)
@@ -82,7 +82,7 @@ namespace Application.Services
                         .ThenInclude(r => r.ReviewByUser)
                     .Where(l => l.AssignedTo == userId);
 
-                // Date filters
+                // Apply date filters
                 if (date.HasValue)
                     assignedLeadsQuery = assignedLeadsQuery.Where(l => l.AssignedDate.Value.Date == date.Value.Date);
                 else
@@ -90,8 +90,9 @@ namespace Application.Services
 
                 var assignedLeads = await assignedLeadsQuery.ToListAsync();
 
-                // Delegated leads for this user
+                // Fetch delegated leads for this user
                 var delegatedLeadsQuery = _context.LeadsTracking.Where(lt => lt.AssignedTo == userId);
+
                 if (date.HasValue)
                     delegatedLeadsQuery = delegatedLeadsQuery.Where(lt => lt.AssignedDate.Date == date.Value.Date);
                 else
@@ -99,7 +100,7 @@ namespace Application.Services
 
                 var delegatedLeadIds = await delegatedLeadsQuery
                     .Select(lt => lt.LeadId)
-                    .Except(assignedLeadsQuery.Select(l => l.LeadId)) // Remove currently assigned leads
+                    .Except(assignedLeadsQuery.Select(l => l.LeadId)) // Remove already assigned leads
                     .ToListAsync();
 
                 var delegatedLeadsDetails = await _context.Leads
@@ -115,12 +116,42 @@ namespace Application.Services
                     .Where(l => delegatedLeadIds.Contains(l.LeadId))
                     .ToListAsync();
 
-                // Closed leads for this user
+                // Get the closed leads count
                 var closedLeadsResponse = await _leadAssignService.GetClosedLeadsByDateRangeAsync(
                     userId,
                     date ?? startDate,
                     date ?? endDate
                 );
+
+                // Fetch all unique mobile numbers for this user's leads
+                var mobileNumbers = assignedLeads.Select(l => l.MobileNo)
+                    .Concat(delegatedLeadsDetails.Select(l => l.MobileNo))
+                    .Distinct()
+                    .ToList();
+
+                // Fetch call recordings for these mobile numbers
+                var callRecordings = await _context.CallRecords
+                    .Where(cr => mobileNumbers.Contains(cr.MobileNo))
+                    .ToListAsync();
+
+                // Map call recordings to leads
+                var assignedLeadDtos = assignedLeads.Select(lead =>
+                {
+                    var leadDto = _mapper.Map<LeadResponseDto>(lead);
+                    leadDto.CallRecordings = _mapper.Map<List<CallRecordResponseDto>>(
+                        callRecordings.Where(cr => cr.MobileNo == lead.MobileNo).ToList()
+                    );
+                    return leadDto;
+                }).ToList();
+
+                var delegatedLeadDtos = delegatedLeadsDetails.Select(lead =>
+                {
+                    var leadDto = _mapper.Map<LeadResponseDto>(lead);
+                    leadDto.CallRecordings = _mapper.Map<List<CallRecordResponseDto>>(
+                        callRecordings.Where(cr => cr.MobileNo == lead.MobileNo).ToList()
+                    );
+                    return leadDto;
+                }).ToList();
 
                 // Prepare response per user
                 var summary = new UserLeadReportResponseDto
@@ -139,8 +170,8 @@ namespace Application.Services
                     NegativeCount = assignedLeads.Count(l => l.Status == "Negative"),
                     ClosedCount = closedLeadsResponse.TotalClosedLeads,
 
-                    AssignedLeads = _mapper.Map<List<LeadResponseDto>>(assignedLeads),
-                    DelegatedLeads = _mapper.Map<List<LeadResponseDto>>(delegatedLeadsDetails)
+                    AssignedLeads = assignedLeadDtos,
+                    DelegatedLeads = delegatedLeadDtos
                 };
 
                 userSummaries.Add(summary);
@@ -148,96 +179,6 @@ namespace Application.Services
 
             return userSummaries;
         }
-
-
-        //public async Task<UserLeadReportResponseDto> GetUserLeadReportAsync(List<Guid> userIds, DateTime startDate, DateTime endDate, DateTime? date = null)
-        //{
-        //    // Get assigned leads for the user
-        //    IQueryable<Lead> assignedLeadsQuery = _context.Leads
-        //        .Include(l => l.District)
-        //        .Include(l => l.State)
-        //        .Include(l => l.LeadSource)
-        //        .Include(l => l.Category)
-        //        .Include(l => l.Product)
-        //        .Include(l => l.AssignedToUser)
-        //        .Include(l => l.AssignedByUser)
-        //        .Include(l => l.LeadsReview)
-        //            .ThenInclude(r => r.ReviewByUser)
-        //          .Where(l => userIds.Contains((Guid)l.AssignedTo));
-
-        //    // Apply single date or date range filter
-        //    if (date.HasValue)
-        //    {
-        //        assignedLeadsQuery = assignedLeadsQuery.Where(l => l.AssignedDate.Value.Date == date.Value.Date);
-        //    }
-        //    else
-        //    {
-        //        assignedLeadsQuery = assignedLeadsQuery.Where(l => l.AssignedDate.Value.Date >= startDate && l.AssignedDate.Value.Date <= endDate);
-        //    }
-
-        //    var assignedLeads = await assignedLeadsQuery.ToListAsync();
-
-        //    // Fetch delegated leads (initially assigned but later reassigned)
-        //    IQueryable<LeadTracking> delegatedLeadsQuery = _context.LeadsTracking
-        //          .Where(lt => userIds.Contains(lt.AssignedTo));
-
-        //    if (date.HasValue)
-        //    {
-        //        delegatedLeadsQuery = delegatedLeadsQuery.Where(lt => lt.AssignedDate.Date == date.Value.Date);
-        //    }
-        //    else
-        //    {
-        //        delegatedLeadsQuery = delegatedLeadsQuery.Where(lt => lt.AssignedDate.Date >= startDate && lt.AssignedDate.Date <= endDate);
-        //    }
-
-        //    var delegatedLeadIds = await delegatedLeadsQuery
-        //        .Select(lt => lt.LeadId)
-        //        .Except(assignedLeadsQuery.Select(l => l.LeadId)) // Remove currently assigned leads
-        //        .ToListAsync();
-
-        //    var delegatedLeadsDetails = await _context.Leads
-        //        .Include(l => l.District)
-        //        .Include(l => l.State)
-        //        .Include(l => l.LeadSource)
-        //        .Include(l => l.Category)
-        //        .Include(l => l.Product)
-        //        .Include(l => l.AssignedToUser)
-        //        .Include(l => l.AssignedByUser)
-        //        .Include(l => l.LeadsReview)
-        //            .ThenInclude(r => r.ReviewByUser)
-        //        .Where(l => delegatedLeadIds.Contains(l.LeadId))
-        //        .ToListAsync();
-
-        //    // Get closed leads count only if they were closed in the selected date or date range
-        //    int closedCount = 0;
-        //    foreach (var userId in userIds)
-        //    {
-        //        var closedLeadResponse = await _leadAssignService.GetClosedLeadsByDateRangeAsync(
-        //            userId,
-        //            date.HasValue ? date.Value : startDate,
-        //            date.HasValue ? date.Value : endDate
-        //        );
-        //        closedCount += closedLeadResponse.TotalClosedLeads;
-        //    }
-
-        //    var response = new UserLeadReportResponseDto
-        //    {
-        //        TotalAssignedLeadsCount = assignedLeads.Count + delegatedLeadIds.Count,  
-        //        AssignedLeadsCount = assignedLeads.Count,          // Currently assigned leads
-        //        DelegatedLeadsCount = delegatedLeadIds.Count,      // Leads reassigned to others
-        //        NotCalledCount = assignedLeads.Count(l => l.Status == "Not Called"),
-        //        NotConnectedCount = assignedLeads.Count(l => l.Status == "Not Connected"),
-        //        ConnectedCount = assignedLeads.Count(l => l.Status == "Connected"),
-        //        PendingCount = assignedLeads.Count(l => l.Status == "Pending"),
-        //        PositiveCount = assignedLeads.Count(l => l.Status == "Positive"),
-        //        NegativeCount = assignedLeads.Count(l => l.Status == "Negative"),
-        //        ClosedCount = closedCount,                         // Only leads closed in this time frame
-        //        AssignedLeads = _mapper.Map<List<LeadResponseDto>>(assignedLeads),
-        //        DelegatedLeads = _mapper.Map<List<LeadResponseDto>>(delegatedLeadsDetails)
-        //    };
-
-        //    return response;
-        //}
 
         public async Task<DelegatedLeadsResponseDto> GetDelegatedLeadsAsync(DateTime? date, DateTime? startDate, DateTime? endDate)
         {

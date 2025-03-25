@@ -1,22 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using Application.Dtos;
+﻿using Application.Dtos;
 using Application.Interfaces;
 using Application.ResponseDto;
-using Application.Services;
 using AutoMapper;
 using Domain.Models;
 using Infrastructure.Data;
 using Infrastructure.Utilities;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace Application.Services
 {
@@ -43,7 +34,7 @@ namespace Application.Services
 
             if (lead == null)
             {
-                throw new Exception("No active lead found for the provided mobile number.");
+                return null;
             }
 
             // Get UserId from Token
@@ -82,6 +73,7 @@ namespace Application.Services
             callRecord.CreateDate = DateTimeHelper.GetIndianTime();
             callRecord.CreatedBy = userId;
 
+
             // Save to database
             _context.CallRecords.Add(callRecord);
             await _context.SaveChangesAsync();
@@ -119,6 +111,31 @@ namespace Application.Services
             }
 
             return responseList;
+        }
+
+        public async Task<List<CallRecordResponseDto>> GetAllUserRecordingsAsync(Guid userId)
+        {
+            var recordings = await _context.CallRecords
+                .Where(cr => cr.UserId == userId)
+                .ToListAsync();
+
+            return _mapper.Map<List<CallRecordResponseDto>>(recordings);
+        }
+
+        public async Task<CallRecordResponseDto?> GetCallRecordByIdAsync(Guid id)
+        {
+            var callRecord = await _context.CallRecords.FindAsync(id);
+            return callRecord == null ? null : _mapper.Map<CallRecordResponseDto>(callRecord);
+        }
+
+        public async Task<bool> DeleteCallRecordAsync(Guid id)
+        {
+            var callRecord = await _context.CallRecords.FindAsync(id);
+            if (callRecord == null) return false;
+
+            _context.CallRecords.Remove(callRecord);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
     }
@@ -164,121 +181,5 @@ namespace Application.Services
 //    await _context.SaveChangesAsync();
 //    return _mapper.Map<CallRecordResponseDto>(existingCallRecord);
 //}
-//public async Task<bool> DeleteCallRecordAsync(Guid id)
-//{
-//    var callRecord = await _context.CallRecords.FindAsync(id);
-//    if (callRecord == null) return false;
-
-//    _context.CallRecords.Remove(callRecord);
-//    await _context.SaveChangesAsync();
-//    return true;
-//}
-//public async Task<IEnumerable<CallRecordResponseDto>> GetAllCallRecordsAsync()
-//{
-//    var callRecords = await _context.CallRecords.ToListAsync();
-//    return _mapper.Map<IEnumerable<CallRecordResponseDto>>(callRecords);
-//}
-//public async Task<CallRecordResponseDto?> GetCallRecordByIdAsync(Guid id)
-//{
-//    var callRecord = await _context.CallRecords.FindAsync(id);
-//    return callRecord == null ? null : _mapper.Map<CallRecordResponseDto>(callRecord);
-//}
 
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//public async Task<List<CallRecordResponseDto>> SyncCallRecords([FromForm] string callRecords, [FromForm] List<IFormFile> files)
-//{
-//    var userId = _jwtTokenService.GetUserIdFromToken();
-//    var companyId = _jwtTokenService.GetCompanyIdFromToken();
-
-//    if (userId == null || companyId == null)
-//        throw new UnauthorizedAccessException("Invalid user session");
-
-//    // 🔥 Deserialize the callRecords JSON string into a list of CallRecordDto
-//    var callRecordsList = JsonSerializer.Deserialize<List<CallRecordDto>>(callRecords);
-
-//    if (callRecordsList == null || !callRecordsList.Any())
-//        throw new ArgumentException("At least one call record must be provided.");
-
-//    if (files == null || files.Count != callRecordsList.Count)
-//        throw new ArgumentException("Number of audio files must match the number of call records.");
-
-//    var mobileNumbers = callRecordsList.Select(cr => cr.MobileNo).Distinct().ToList();
-
-//    // Fetch assigned leads
-//    var assignedLeads = await _context.Leads
-//        .Where(l => l.CompanyId == companyId && l.AssignedTo == userId && l.IsActive && mobileNumbers.Contains(l.MobileNo))
-//        .ToListAsync();
-
-//    var responseList = new List<CallRecordResponseDto>();
-
-//    for (int i = 0; i < callRecordsList.Count; i++)
-//    {
-//        var record = callRecordsList[i];
-//        var lead = assignedLeads.FirstOrDefault(l => l.MobileNo == record.MobileNo);
-//        if (lead == null)
-//            continue;
-
-//        var file = files[i]; // 🔥 Match recording file with the call record
-
-//        var fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
-//        var filePath = Path.Combine("wwwroot", "recordings", userId.ToString(), lead.LeadId.ToString(), fileName);
-
-//        Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-
-//        using (var stream = new FileStream(filePath, FileMode.Create))
-//        {
-//            await file.CopyToAsync(stream);
-//        }
-
-//        // 🔥 Save call record
-//        var callRecord = new CallRecord
-//        {
-//            RecordId = Guid.NewGuid(),
-//            CompanyId = companyId,
-//            UserId = userId,
-//            LeadId = lead.LeadId,
-//            Name = record.Name,
-//            MobileNo = record.MobileNo,
-//            CallType = record.CallType,
-//            Date = DateTimeHelper.GetIndianTime(),
-//            Duration = record.Duration,
-//            Status = record.Status,
-//            Recordings = filePath
-//        };
-
-//        _context.CallRecords.Add(callRecord);
-//        await _context.SaveChangesAsync();
-
-//        var responseDto = _mapper.Map<CallRecordResponseDto>(callRecord);
-//        responseDto.UserName = _context.Users.Where(u => u.UserId == userId).Select(u => u.FirstName).FirstOrDefault();
-
-//        responseList.Add(responseDto);
-//    }
-
-//    return responseList;
-//}
-//public async Task<List<CallRecordResponseDto>> GetAllCallRecords()
-//{
-//    var userId = _jwtTokenService.GetUserIdFromToken();
-//    var companyId = _jwtTokenService.GetCompanyIdFromToken();
-
-//    if (userId == null || companyId == null)
-//        throw new UnauthorizedAccessException("Invalid user session");
-
-//    var callRecords = await _context.CallRecords
-//        .Where(cr => cr.CompanyId == companyId)
-//        .Include(cr => cr.Lead) // Include lead data
-//        .OrderByDescending(cr => cr.Date)
-//        .ToListAsync();
-
-//    var response = _mapper.Map<List<CallRecordResponseDto>>(callRecords);
-
-//    // Fetch user names separately
-//    foreach (var record in response)
-//    {
-//        record.UserName = _context.Users.Where(u => u.UserId == record.UserId).Select(u => u.FirstName).FirstOrDefault();
-//    }
-
-//    return response;
-//}

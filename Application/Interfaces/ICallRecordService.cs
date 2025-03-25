@@ -1,7 +1,6 @@
 ﻿using Application.Dtos;
 using Application.ResponseDto;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Application.Interfaces
 {
@@ -9,10 +8,9 @@ namespace Application.Interfaces
     {
         Task<CallRecordResponseDto> ProcessCallRecordAsync(CallRecordDto callRecordDto, IFormFile recording);
         Task<List<CallRecordResponseDto>> GetAllCallRecordsAsync();
-
-        //Task<IEnumerable<CallRecordResponseDto>> GetAllCallRecordsAsync();
-        //Task<CallRecordResponseDto?> GetCallRecordByIdAsync(Guid id);
+        Task<List<CallRecordResponseDto>> GetAllUserRecordingsAsync(Guid userId);
+        Task<bool> DeleteCallRecordAsync(Guid id);
+        Task<CallRecordResponseDto?> GetCallRecordByIdAsync(Guid id);
         //Task<CallRecordResponseDto> UpdateCallRecordAsync(Guid id, CallRecordDto callRecordDto);
-        //Task<bool> DeleteCallRecordAsync(Guid id);
     }
 }

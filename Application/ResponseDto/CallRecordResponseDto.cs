@@ -11,6 +11,7 @@ namespace Application.ResponseDto
     {
         public Guid RecordId { get; set; }
         public Guid? CompanyId { get; set; }
+        public Guid? LeadId { get; set; }
         public Guid? UserId { get; set; }
         public string? UserName { get; set; }
         public string? Name { get; set; }
