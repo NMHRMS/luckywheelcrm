@@ -1,4 +1,5 @@
-﻿using Application.Dtos;
+﻿using System.Linq;
+using Application.Dtos;
 using Application.Interfaces;
 using Application.ResponseDto;
 using AutoMapper;
@@ -113,14 +114,25 @@ namespace Application.Services
             return responseList;
         }
 
-        public async Task<List<CallRecordResponseDto>> GetAllUserRecordingsAsync(Guid userId)
+        public async Task<List<CallRecordResponseDto>> GetAllUserRecordingsAsync(List<Guid> userIds, DateTime startDate, DateTime endDate, DateTime? date)
         {
-            var recordings = await _context.CallRecords
-                .Where(cr => cr.UserId == userId)
-                .ToListAsync();
+            var callRecordsQuery = _context.CallRecords
+                .Where(cr => userIds.Contains((Guid)cr.UserId));
 
-            return _mapper.Map<List<CallRecordResponseDto>>(recordings);
+            // Apply date filters (either specific date or date range)
+            if (date.HasValue)
+            {
+                callRecordsQuery = callRecordsQuery.Where(cr => cr.Date.Value.Date == date.Value.Date);
+            }
+            else
+            {
+                callRecordsQuery = callRecordsQuery.Where(cr => cr.Date.Value.Date >= startDate && cr.Date.Value.Date <= endDate);
+            }
+
+            var callRecords = await callRecordsQuery.ToListAsync();
+            return _mapper.Map<List<CallRecordResponseDto>>(callRecords);
         }
+
 
         public async Task<CallRecordResponseDto?> GetCallRecordByIdAsync(Guid id)
         {

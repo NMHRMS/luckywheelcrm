@@ -8,8 +8,8 @@ namespace Application.Interfaces
     {
         Task<CallRecordResponseDto> ProcessCallRecordAsync(CallRecordDto callRecordDto, IFormFile recording);
         Task<List<CallRecordResponseDto>> GetAllCallRecordsAsync();
-        Task<List<CallRecordResponseDto>> GetAllUserRecordingsAsync(Guid userId);
-        Task<bool> DeleteCallRecordAsync(Guid id);
+        Task<List<CallRecordResponseDto>> GetAllUserRecordingsAsync(List<Guid> userIds, DateTime startDate, DateTime endDate, DateTime? date);      
+            Task<bool> DeleteCallRecordAsync(Guid id);
         Task<CallRecordResponseDto?> GetCallRecordByIdAsync(Guid id);
         //Task<CallRecordResponseDto> UpdateCallRecordAsync(Guid id, CallRecordDto callRecordDto);
     }

@@ -3,6 +3,7 @@ using Application.Dtos;
 using Application.Interfaces;
 using Application.ResponseDto;
 using Application.Services;
+using Infrastructure.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -81,10 +82,25 @@ namespace CRMPROJECTAPI.Controllers
         // Function to extract mobile number from file name
         private string? ExtractMobileNumber(string fileName)
         {
-            var match = Regex.Match(fileName, @"\d{10}"); // Looks for a 10-digit number
-            return match.Success ? match.Value : null;
+            // Match numbers with or without country code (+91)
+            var match = Regex.Match(fileName, @"(\+91)?\d{10}");
+
+            if (match.Success)
+            {
+                string number = match.Value;
+
+                // Remove country code if present (+91)
+                if (number.StartsWith("+91"))
+                {
+                    number = number.Substring(3); // Extract last 10 digits
+                }
+
+                return number;
+            }
+
+            return null;
         }
-        
+
 
         [HttpGet("GetAllCallRecords")]
         public async Task<IActionResult> GetAllCallRecords()
@@ -93,12 +109,27 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(records);
         }
 
-        [HttpGet("user/{userId}/recordings")]
-        public async Task<IActionResult> GetAllUserRecordings(Guid userId)
+        [HttpGet("user/recordings")]
+        public async Task<IActionResult> GetAllUserRecordings([FromQuery] List<Guid> userIds, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] DateTime? date)
         {
-            var recordings = await _callRecordService.GetAllUserRecordingsAsync(userId);
-            return Ok(recordings);
+            if (userIds == null || userIds.Count == 0)
+                return BadRequest("At least one userId must be provided.");
+
+            // Get Indian Standard Time (IST)
+            DateTime indianTime = DateTimeHelper.GetIndianTime();
+
+            // If no startDate is provided, default to the beginning of the week
+            startDate ??= indianTime.Date.AddDays(-7);
+            endDate ??= indianTime.Date;
+
+            var callRecords = await _callRecordService.GetAllUserRecordingsAsync(userIds, startDate.Value, endDate.Value, date);
+
+            if (callRecords == null || callRecords.Count == 0)
+                return NotFound("No call recordings found for the given criteria.");
+
+            return Ok(callRecords);
         }
+
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCallRecord(Guid id)
