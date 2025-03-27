@@ -130,6 +130,49 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(callRecords);
         }
 
+        [HttpGet("GetUserCallPerformanceReport")]
+        public async Task<IActionResult> GetUserCallPerformanceReport([FromQuery] List<Guid> userIds, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] DateTime? date)
+        {
+            if (userIds == null || userIds.Count == 0)
+                return BadRequest("At least one userId must be provided.");
+
+            DateTime indianTime = DateTimeHelper.GetIndianTime();
+
+            startDate ??= indianTime.Date.AddDays(-7);
+            endDate ??= indianTime.Date;
+
+
+            var report = await _callRecordService.GetUserCallPerformanceReportAsync(userIds, startDate.Value, endDate.Value, date);
+
+            return Ok(report);
+        }
+
+
+        [HttpGet("GetHourlyCallStatistics")]
+        public async Task<IActionResult> GetHourlyCallStatistics([FromQuery] List<Guid> userIds, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] DateTime? date, [FromQuery] List<string>? customSlots)
+        {
+            var currentTime = DateTimeHelper.GetIndianTime();
+
+            if (!startDate.HasValue)
+                startDate = currentTime.Date;
+            if (!endDate.HasValue)
+                endDate = currentTime.Date;
+
+            List<(TimeSpan Start, TimeSpan End)> customTimeSlots = null;
+            if (customSlots != null && customSlots.Any())
+            {
+                customTimeSlots = customSlots
+                    .Select(slot =>
+                    {
+                        var parts = slot.Split('-');
+                        return (TimeSpan.Parse(parts[0].Trim()), TimeSpan.Parse(parts[1].Trim()));
+                    }).ToList();
+            }
+
+            var result = await _callRecordService.GetHourlyCallStatisticsAsync(userIds, startDate.Value, endDate.Value, date, customTimeSlots);
+            return Ok(result);
+        }
+
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCallRecord(Guid id)

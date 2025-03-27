@@ -53,7 +53,7 @@ namespace Application.Services
                 }
 
                 var fileExtension = Path.GetExtension(recording.FileName);
-                recordingFileName = $"{Guid.NewGuid()}{fileExtension}";
+                recordingFileName = $"{Guid.NewGuid()}{lead.MobileNo}{fileExtension}";
                 var recordingFilePath = Path.Combine(recordingsFolder, recordingFileName);
 
                 using (var stream = new FileStream(recordingFilePath, FileMode.Create))
@@ -133,6 +133,170 @@ namespace Application.Services
             return _mapper.Map<List<CallRecordResponseDto>>(callRecords);
         }
 
+        public async Task<UserCallPerformanceReportDto> GetUserCallPerformanceReportAsync(List<Guid> userIds, DateTime startDate, DateTime endDate, DateTime? date)
+        {
+            var callRecordsQuery = _context.CallRecords
+                .Where(cr => userIds.Contains((Guid)cr.UserId));
+
+            // Apply date filters
+            if (date.HasValue)
+            {
+                callRecordsQuery = callRecordsQuery.Where(cr => cr.Date.Value.Date == date.Value.Date);
+            }
+            else
+            {
+                callRecordsQuery = callRecordsQuery.Where(cr => cr.Date.Value.Date >= startDate && cr.Date.Value.Date <= endDate);
+            }
+
+            var callRecords = await callRecordsQuery.ToListAsync();
+
+            if (!callRecords.Any())
+            {
+                return new UserCallPerformanceReportDto
+                {
+                    TotalCalls = 0,
+                    TotalDuration = "00:00:00",
+                    CallDetails = new List<CallTypeReportDto>()
+                };
+            }
+
+            // Group by CallType
+            var groupedCalls = callRecords.GroupBy(cr => cr.CallType)
+                .Select(group => new CallTypeReportDto
+                {
+                    CallType = group.Key,
+                    CallCount = group.Count(),
+                    CallDuration = FormatTotalDuration(group.Sum(cr => ConvertToTimeSpan(cr.Duration).Ticks)),
+                    CallRecords = _mapper.Map<List<CallRecordResponseDto>>(group.ToList())
+                })
+                .ToList();
+
+            // Calculate Total Calls & Total Duration
+            var totalCalls = callRecords.Count;
+            var totalDuration = FormatTotalDuration(callRecords.Sum(cr => ConvertToTimeSpan(cr.Duration).Ticks));
+
+            return new UserCallPerformanceReportDto
+            {
+                TotalCalls = totalCalls,
+                TotalDuration = totalDuration,
+                CallDetails = groupedCalls
+            };
+        }
+
+        public async Task<List<HourlyCallStatsResponseDto>> GetHourlyCallStatisticsAsync(List<Guid> userIds, DateTime startDate, DateTime endDate, DateTime? date, List<(TimeSpan Start, TimeSpan End)> customTimeSlots)
+        {
+            var callRecordsQuery = _context.CallRecords
+                .Where(cr => userIds.Contains((Guid)cr.UserId));
+
+            // Apply date filters (either specific date or date range)
+            if (date.HasValue)
+            {
+                callRecordsQuery = callRecordsQuery.Where(cr => cr.Date.Value.Date == date.Value.Date);
+            }
+            else
+            {
+                callRecordsQuery = callRecordsQuery.Where(cr => cr.Date.Value.Date >= startDate && cr.Date.Value.Date <= endDate);
+            }
+
+            var callRecords = await callRecordsQuery.ToListAsync();
+
+            // Default hourly slots if none are provided
+            if (customTimeSlots == null || !customTimeSlots.Any())
+            {
+                customTimeSlots = new List<(TimeSpan, TimeSpan)>
+                {
+                    (TimeSpan.FromHours(10), TimeSpan.FromHours(11)),
+                    (TimeSpan.FromHours(11), TimeSpan.FromHours(12)),
+                    (TimeSpan.FromHours(12), TimeSpan.FromHours(13)),
+                    (TimeSpan.FromHours(13), TimeSpan.FromHours(14)),
+                    (TimeSpan.FromHours(14), TimeSpan.FromHours(15)),
+                    (TimeSpan.FromHours(15), TimeSpan.FromHours(16)),
+                    (TimeSpan.FromHours(16), TimeSpan.FromHours(17)),
+                    (TimeSpan.FromHours(17), TimeSpan.FromHours(18)),
+                    (TimeSpan.FromHours(18), TimeSpan.FromHours(19)),
+                };
+            }
+
+            // Find earliest & latest slot for "Before" and "After" calculations
+            var firstSlotStart = customTimeSlots.First().Start;
+            var lastSlotEnd = customTimeSlots.Last().End;
+
+            var totalCalls = callRecords.Count;
+            var totalConnectedCalls = callRecords.Count(cr => cr.Duration != null);
+            var totalDurationTicks = callRecords.Sum(cr => cr.Duration.HasValue ? cr.Duration.Value.ToTimeSpan().Ticks : 0);
+            var totalDuration = FormatTotalDuration(totalDurationTicks);
+
+            var hourlyStats = new List<HourlyCallStatsResponseDto>();
+
+            // Before first slot
+            var beforeCalls = callRecords.Where(cr => cr.Date.HasValue && cr.Date.Value.TimeOfDay < firstSlotStart).ToList();
+            hourlyStats.Add(CreateHourlyStats("Before " + firstSlotStart.ToString(@"hh\:mm"), beforeCalls, totalCalls, totalConnectedCalls, totalDurationTicks));
+
+            // Main slots
+            foreach (var slot in customTimeSlots)
+            {
+                var slotCalls = callRecords.Where(cr => cr.Date.HasValue && cr.Date.Value.TimeOfDay >= slot.Start && cr.Date.Value.TimeOfDay < slot.End).ToList();
+                hourlyStats.Add(CreateHourlyStats($"{slot.Start:hh\\:mm} - {slot.End:hh\\:mm}", slotCalls, totalCalls, totalConnectedCalls, totalDurationTicks));
+            }
+
+            // After last slot
+            var afterCalls = callRecords.Where(cr => cr.Date.HasValue && cr.Date.Value.TimeOfDay >= lastSlotEnd).ToList();
+            hourlyStats.Add(CreateHourlyStats("After " + lastSlotEnd.ToString(@"hh\:mm"), afterCalls, totalCalls, totalConnectedCalls, totalDurationTicks));
+
+            // Add total row
+            hourlyStats.Add(new HourlyCallStatsResponseDto
+            {
+                TimeSlot = "Total",
+                TotalCalls = totalCalls,
+                TotalConnectedCalls = totalConnectedCalls,
+                TotalDuration = totalDuration
+            });
+
+            // Calculate daily average
+            var totalDays = (date.HasValue ? 1 : (endDate - startDate).Days + 1);
+            if (totalDays > 0)
+            {
+                hourlyStats.Add(new HourlyCallStatsResponseDto
+                {
+                    TimeSlot = "Daily Average",
+                    TotalCalls = totalCalls / totalDays,
+                    TotalConnectedCalls = totalConnectedCalls / totalDays,
+                    TotalDuration = FormatTotalDuration(totalDurationTicks / totalDays)
+                });
+            }
+
+            return hourlyStats;
+        }
+
+        // Helper method to create an HourlyCallStatsResponseDto
+        private HourlyCallStatsResponseDto CreateHourlyStats(string timeSlot, List<CallRecord> calls, int totalCalls, int totalConnectedCalls, long totalDurationTicks)
+        {
+            var slotConnectedCalls = calls.Count(cr => cr.Duration != null);
+            var slotDurationTicks = calls.Sum(cr => cr.Duration.HasValue ? cr.Duration.Value.ToTimeSpan().Ticks : 0);
+            var slotDuration = FormatTotalDuration(slotDurationTicks);
+
+            return new HourlyCallStatsResponseDto
+            {
+                TimeSlot = timeSlot,
+                TotalCalls = calls.Count,
+                TotalConnectedCalls = slotConnectedCalls,
+                TotalDuration = slotDuration,
+                TotalCallsPercentage = totalCalls > 0 ? Math.Round((calls.Count * 100.0) / totalCalls, 2) : 0,
+                ConnectedCallsPercentage = totalConnectedCalls > 0 ? Math.Round((slotConnectedCalls * 100.0) / totalConnectedCalls, 2) : 0,
+                TotalDurationPercentage = totalDurationTicks > 0 ? Math.Round((slotDurationTicks * 100.0) / totalDurationTicks, 2) : 0
+            };
+        }
+
+        private TimeSpan ConvertToTimeSpan(TimeOnly? time)
+        {
+            return time.HasValue ? new TimeSpan(time.Value.Hour, time.Value.Minute, time.Value.Second) : TimeSpan.Zero;
+        }
+
+        private string FormatTotalDuration(long totalTicks)
+        {
+            TimeSpan duration = TimeSpan.FromTicks(totalTicks);
+            return $"{duration.Hours:D2}:{duration.Minutes:D2}:{duration.Seconds:D2}";
+        }
 
         public async Task<CallRecordResponseDto?> GetCallRecordByIdAsync(Guid id)
         {
@@ -152,36 +316,36 @@ namespace Application.Services
 
     }
 }
-        //public async Task<CallRecordResponseDto> AddCallRecordAsync(CallRecordDto callRecordDto, IFormFile? recordings)
-        //{
-        //    var userId = _jwtTokenService.GetUserIdFromToken();
-        //    var callRecord = _mapper.Map<CallRecord>(callRecordDto);
-        //    callRecord.RecordId = Guid.NewGuid();
-        //    callRecord.CreatedBy = userId;
+//public async Task<CallRecordResponseDto> AddCallRecordAsync(CallRecordDto callRecordDto, IFormFile? recordings)
+//{
+//    var userId = _jwtTokenService.GetUserIdFromToken();
+//    var callRecord = _mapper.Map<CallRecord>(callRecordDto);
+//    callRecord.RecordId = Guid.NewGuid();
+//    callRecord.CreatedBy = userId;
 
-        //    // Handle File Upload
-        //    if (recordings != null)
-        //    {
-        //        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "recordings");
-        //        Directory.CreateDirectory(uploadsFolder); // Ensure directory exists
+//    // Handle File Upload
+//    if (recordings != null)
+//    {
+//        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "recordings");
+//        Directory.CreateDirectory(uploadsFolder); // Ensure directory exists
 
-        //        var fileName = $"{Guid.NewGuid()}_{recordings.FileName}";
-        //        var filePath = Path.Combine(uploadsFolder, fileName);
+//        var fileName = $"{Guid.NewGuid()}_{recordings.FileName}";
+//        var filePath = Path.Combine(uploadsFolder, fileName);
 
-        //        using (var stream = new FileStream(filePath, FileMode.Create))
-        //        {
-        //            await recordings.CopyToAsync(stream);
-        //        }
+//        using (var stream = new FileStream(filePath, FileMode.Create))
+//        {
+//            await recordings.CopyToAsync(stream);
+//        }
 
-        //        // Save relative path to DB (for easy API access)
-        //        callRecord.Recordings = $"/recordings/{fileName}";
-        //    }
+//        // Save relative path to DB (for easy API access)
+//        callRecord.Recordings = $"/recordings/{fileName}";
+//    }
 
-        //    _context.CallRecords.Add(callRecord);
-        //    await _context.SaveChangesAsync();
+//    _context.CallRecords.Add(callRecord);
+//    await _context.SaveChangesAsync();
 
-        //    return _mapper.Map<CallRecordResponseDto>(callRecord);
-        //}
+//    return _mapper.Map<CallRecordResponseDto>(callRecord);
+//}
 
 //public async Task<CallRecordResponseDto?> UpdateCallRecordAsync(Guid id, CallRecordDto callRecordDto)
 //{
