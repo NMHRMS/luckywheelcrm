@@ -27,6 +27,7 @@ namespace Application.Services
             _jwtTokenService = jwtTokenService;
         }
 
+        //old
         public async Task<CallRecordResponseDto> ProcessCallRecordAsync(CallRecordDto callRecordDto, IFormFile? recording)
         {
             // Find the active lead associated with the mobile number
@@ -54,6 +55,69 @@ namespace Application.Services
 
                 var fileExtension = Path.GetExtension(recording.FileName);
                 recordingFileName = $"{Guid.NewGuid()}{lead.MobileNo}{fileExtension}";
+                var recordingFilePath = Path.Combine(recordingsFolder, recordingFileName);
+
+                using (var stream = new FileStream(recordingFilePath, FileMode.Create))
+                {
+                    await recording.CopyToAsync(stream);
+                }
+            }
+
+            // Map CallRecordDto to CallRecord entity
+            var callRecord = _mapper.Map<CallRecord>(callRecordDto);
+            callRecord.RecordId = Guid.NewGuid();
+            callRecord.CompanyId = lead.CompanyId;
+            callRecord.LeadId = lead.LeadId;
+            callRecord.UserId = userId;
+            callRecord.Name = lead.OwnerName;
+            callRecord.Recordings = recordingFileName;
+            callRecord.Status = lead.Status;
+            callRecord.CreateDate = DateTimeHelper.GetIndianTime();
+            callRecord.CreatedBy = userId;
+
+
+            // Save to database
+            _context.CallRecords.Add(callRecord);
+            await _context.SaveChangesAsync();
+
+            // Map to CallRecordResponseDto
+            var responseDto = _mapper.Map<CallRecordResponseDto>(callRecord);
+            responseDto.Recordings = recordingFileName != null ? $"recordings/{recordingFileName}" : null;
+
+            var user = await _context.Users.FindAsync(userId);
+            responseDto.UserName = user?.FirstName;
+
+            return responseDto;
+        }
+
+        //new
+        public async Task<CallRecordResponseDto> SyncCallRecordAsync(CallRecordDto callRecordDto, IFormFile? recording)
+        {
+            // Find the active lead associated with the mobile number
+            var lead = await _context.Leads
+                .FirstOrDefaultAsync(l => l.MobileNo == callRecordDto.MobileNo && l.IsActive);
+
+            if (lead == null)
+            {
+                return null;
+            }
+
+            // Get UserId from Token
+            var userId = _jwtTokenService.GetUserIdFromToken();
+
+            string? recordingFileName = callRecordDto.RecordingKey;
+
+            // Save the recording file if provided
+            if (recording != null && recording.Length > 0)
+            {
+                var recordingsFolder = Path.Combine(_environment.WebRootPath, "recordings");
+                if (!Directory.Exists(recordingsFolder))
+                {
+                    Directory.CreateDirectory(recordingsFolder);
+                }
+
+                var fileExtension = Path.GetExtension(recording.FileName);
+                recordingFileName = $"{Guid.NewGuid()}_{lead.MobileNo}{fileExtension}";
                 var recordingFilePath = Path.Combine(recordingsFolder, recordingFileName);
 
                 using (var stream = new FileStream(recordingFilePath, FileMode.Create))

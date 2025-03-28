@@ -22,7 +22,7 @@ namespace CRMPROJECTAPI.Controllers
             _callRecordService = callRecordService;
         }
 
-        [HttpPost("sync")]
+        [HttpPost("sync")] //old
         public async Task<IActionResult> SyncCallRecords([FromForm] string callRecordsJson,[FromForm] List<IFormFile> recordings)
         {
             try
@@ -35,11 +35,11 @@ namespace CRMPROJECTAPI.Controllers
 
                 var responseDtos = new List<CallRecordResponseDto>();
 
-                foreach (var callRecord in callRecords)
+                foreach (var callRecord in callRecords) 
                 {
                     IFormFile? matchedRecording = null;
 
-                    // Try to find a recording that matches the mobile number
+                  //  Try to find a recording that matches the mobile number
                     if (recordings != null)
                     {
                         foreach (var recording in recordings)
@@ -55,6 +55,12 @@ namespace CRMPROJECTAPI.Controllers
                                 break; // Stop checking once a match is found
                             }
                         }
+                    }
+
+                    // Try to find a recording that matches the RecordingKey exactly
+                    if (!string.IsNullOrEmpty(callRecord.RecordingKey) && recordings != null)
+                    {
+                        matchedRecording = recordings.FirstOrDefault(r => r.FileName.Equals(callRecord.RecordingKey, StringComparison.OrdinalIgnoreCase));
                     }
 
                     try
@@ -79,7 +85,54 @@ namespace CRMPROJECTAPI.Controllers
             }
         }
 
-        // Function to extract mobile number from file name
+
+        [HttpPost("syncRecords")] //new 
+        public async Task<IActionResult> SyncAllCallRecords([FromForm] string callRecordsJson, [FromForm] List<IFormFile> recordings)
+        {
+            try
+            {
+                var callRecords = JsonConvert.DeserializeObject<List<CallRecordDto>>(callRecordsJson);
+                if (callRecords == null || !callRecords.Any())
+                {
+                    return BadRequest("Call records are missing or improperly formatted.");
+                }
+
+                var responseDtos = new List<CallRecordResponseDto>();
+
+                foreach (var callRecord in callRecords)
+                {
+                    IFormFile? matchedRecording = null;
+
+                    // Try to find a recording that matches the RecordingKey exactly
+                    if (!string.IsNullOrEmpty(callRecord.RecordingKey) && recordings != null)
+                    {
+                        matchedRecording = recordings.FirstOrDefault(r => r.FileName.Equals(callRecord.RecordingKey, StringComparison.OrdinalIgnoreCase));
+                    }
+
+                    try
+                    {
+                        var responseDto = await _callRecordService.SyncCallRecordAsync(callRecord, matchedRecording);
+                        if (responseDto != null)
+                        {
+                            responseDtos.Add(responseDto);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Skipping record for {callRecord.MobileNo}: {ex.Message}");
+                    }
+                }
+
+                return Ok(responseDtos);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error syncing call records: {ex.Message}");
+            }
+        }
+
+
+        //Function to extract mobile number from file name (not in new)
         private string? ExtractMobileNumber(string fileName)
         {
             // Match numbers with or without country code (+91)
@@ -129,6 +182,7 @@ namespace CRMPROJECTAPI.Controllers
 
             return Ok(callRecords);
         }
+
 
         [HttpGet("GetUserCallPerformanceReport")]
         public async Task<IActionResult> GetUserCallPerformanceReport([FromQuery] List<Guid> userIds, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] DateTime? date)
@@ -180,6 +234,7 @@ namespace CRMPROJECTAPI.Controllers
             await _callRecordService.DeleteCallRecordAsync(id);
             return NoContent();
         }
+
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCallRecordById(Guid id)

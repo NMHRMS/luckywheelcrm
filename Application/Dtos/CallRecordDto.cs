@@ -13,5 +13,6 @@ namespace Application.Dtos
         public string? CallType { get; set; } // incoming outgoing missedcall
         public DateTime? Date { get; set; }
         public TimeOnly? Duration { get; set; }
+        public string? RecordingKey { get; set; }
     }
 }
