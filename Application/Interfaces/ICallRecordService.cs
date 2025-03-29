@@ -9,6 +9,7 @@ namespace Application.Interfaces
         Task<CallRecordResponseDto> ProcessCallRecordAsync(CallRecordDto callRecordDto, IFormFile recording);
         Task<CallRecordResponseDto> SyncCallRecordAsync(CallRecordDto callRecordDto, IFormFile? recording);
         Task<List<CallRecordResponseDto>> GetAllCallRecordsAsync();
+        Task<DateTime?> GetLatestCallRecordDateAsync();
         Task<List<CallRecordResponseDto>> GetAllUserRecordingsAsync(List<Guid> userIds, DateTime startDate, DateTime endDate, DateTime? date);
         Task<UserCallPerformanceReportDto> GetUserCallPerformanceReportAsync(List<Guid> userIds, DateTime startDate, DateTime endDate, DateTime? date);
         Task<List<HourlyCallStatsResponseDto>> GetHourlyCallStatisticsAsync(List<Guid> userIds, DateTime startDate, DateTime endDate, DateTime? date, List<(TimeSpan Start, TimeSpan End)> customTimeSlots);

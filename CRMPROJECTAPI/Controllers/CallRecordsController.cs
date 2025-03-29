@@ -6,6 +6,7 @@ using Application.Services;
 using Infrastructure.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 
 namespace CRMPROJECTAPI.Controllers
@@ -152,6 +153,20 @@ namespace CRMPROJECTAPI.Controllers
             }
 
             return null;
+        }
+
+
+        [HttpGet("latest-date")]
+        public async Task<IActionResult> GetLatestCallRecordDate()
+        {
+            var latestDate = await _callRecordService.GetLatestCallRecordDateAsync();
+
+            if (latestDate == null)
+            {
+                return BadRequest(new { message = "User should have at least one record before syncing." });
+            }
+
+            return Ok(new { latestDate });
         }
 
 

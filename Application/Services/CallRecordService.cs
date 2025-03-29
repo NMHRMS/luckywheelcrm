@@ -138,6 +138,7 @@ namespace Application.Services
             callRecord.CreateDate = DateTimeHelper.GetIndianTime();
             callRecord.CreatedBy = userId;
 
+            callRecord.Date = DateTimeHelper.ConvertToIndianTime(callRecord.Date.Value);
 
             // Save to database
             _context.CallRecords.Add(callRecord);
@@ -153,11 +154,27 @@ namespace Application.Services
             return responseDto;
         }
 
+        public async Task<DateTime?> GetLatestCallRecordDateAsync()
+        {
+            // Get UserId from Token
+            var userId = _jwtTokenService.GetUserIdFromToken();
+
+            // Find the latest call record for this user
+            var latestDate = await _context.CallRecords
+                .Where(cr => cr.UserId == userId)
+                .OrderByDescending(cr => cr.Date)
+                .Select(cr => cr.Date)
+                .FirstOrDefaultAsync();
+
+            return latestDate;
+        }
+
         public async Task<List<CallRecordResponseDto>> GetAllCallRecordsAsync()
         {
             var callRecords = await _context.CallRecords
                 .Include(c => c.Lead)   
-                .Include(c => c.User)   
+                .Include(c => c.User)
+                .OrderByDescending(c => c.CreateDate)
                 .ToListAsync();
 
             var responseList = new List<CallRecordResponseDto>();
@@ -167,8 +184,7 @@ namespace Application.Services
                 var responseDto = _mapper.Map<CallRecordResponseDto>(record);
 
                 // Build the full URL/path for the recording file
-                responseDto.Recordings = $"recordings/{record.Recordings}";
-
+                responseDto.Recordings = string.IsNullOrEmpty(record.Recordings)? null : $"recordings/{record.Recordings}";
                 // Map UserName
                 responseDto.UserName = record.User?.FirstName;
 
@@ -182,6 +198,7 @@ namespace Application.Services
         {
             var callRecordsQuery = _context.CallRecords
                 .Where(cr => userIds.Contains((Guid)cr.UserId));
+
 
             // Apply date filters (either specific date or date range)
             if (date.HasValue)
@@ -197,9 +214,61 @@ namespace Application.Services
             return _mapper.Map<List<CallRecordResponseDto>>(callRecords);
         }
 
+        //public async Task<UserCallPerformanceReportDto> GetUserCallPerformanceReportAsync(List<Guid> userIds, DateTime startDate, DateTime endDate, DateTime? date)
+        //{
+        //    var callRecordsQuery = _context.CallRecords
+        //        .Where(cr => userIds.Contains((Guid)cr.UserId));
+
+
+        //    // Apply date filters
+        //    if (date.HasValue)
+        //    {
+        //        callRecordsQuery = callRecordsQuery.Where(cr => cr.Date.Value.Date == date.Value.Date);
+        //    }
+        //    else
+        //    {
+        //        callRecordsQuery = callRecordsQuery.Where(cr => cr.Date.Value.Date >= startDate && cr.Date.Value.Date <= endDate);
+        //    }
+
+        //    var callRecords = await callRecordsQuery.ToListAsync();
+
+        //    if (!callRecords.Any())
+        //    {
+        //        return new UserCallPerformanceReportDto
+        //        {
+        //            TotalCalls = 0,
+        //            TotalDuration = "00:00:00",
+        //            CallDetails = new List<CallTypeReportDto>()
+        //        };
+        //    }
+
+        //    // Group by CallType
+        //    var groupedCalls = callRecords.GroupBy(cr => cr.CallType)
+        //        .Select(group => new CallTypeReportDto
+        //        {
+        //            CallType = group.Key,
+        //            CallCount = group.Count(),
+        //            CallDuration = FormatTotalDuration(group.Sum(cr => ConvertToTimeSpan(cr.Duration).Ticks)),
+        //            CallRecords = _mapper.Map<List<CallRecordResponseDto>>(group.ToList())
+        //        })
+        //        .ToList();
+
+        //    // Calculate Total Calls & Total Duration
+        //    var totalCalls = callRecords.Count;
+        //    var totalDuration = FormatTotalDuration(callRecords.Sum(cr => ConvertToTimeSpan(cr.Duration).Ticks));
+
+        //    return new UserCallPerformanceReportDto
+        //    {
+        //        TotalCalls = totalCalls,
+        //        TotalDuration = totalDuration,
+        //        CallDetails = groupedCalls
+        //    };
+        //}
+
         public async Task<UserCallPerformanceReportDto> GetUserCallPerformanceReportAsync(List<Guid> userIds, DateTime startDate, DateTime endDate, DateTime? date)
         {
             var callRecordsQuery = _context.CallRecords
+                .Include(cr => cr.User)
                 .Where(cr => userIds.Contains((Guid)cr.UserId));
 
             // Apply date filters
@@ -231,7 +300,7 @@ namespace Application.Services
                     CallType = group.Key,
                     CallCount = group.Count(),
                     CallDuration = FormatTotalDuration(group.Sum(cr => ConvertToTimeSpan(cr.Duration).Ticks)),
-                    CallRecords = _mapper.Map<List<CallRecordResponseDto>>(group.ToList())
+                    CallRecords = _mapper.Map<List<CallRecordResponseDto>>(group.ToList()) // UserName should now be populated
                 })
                 .ToList();
 
@@ -250,6 +319,7 @@ namespace Application.Services
         public async Task<List<HourlyCallStatsResponseDto>> GetHourlyCallStatisticsAsync(List<Guid> userIds, DateTime startDate, DateTime endDate, DateTime? date, List<(TimeSpan Start, TimeSpan End)> customTimeSlots)
         {
             var callRecordsQuery = _context.CallRecords
+                .Include(cr => cr.User)
                 .Where(cr => userIds.Contains((Guid)cr.UserId));
 
             // Apply date filters (either specific date or date range)
@@ -377,6 +447,7 @@ namespace Application.Services
             await _context.SaveChangesAsync();
             return true;
         }
+
 
     }
 }

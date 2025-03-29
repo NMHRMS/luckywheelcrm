@@ -1,159 +1,136 @@
-import { useEffect, useState } from "react";
-import { Table, Select, DatePicker, Spin, Modal, Button, Radio } from "antd";
-import { getRequest } from "../utils/Api";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
-import * as XLSX from "xlsx";
+"use client"
 
-const { RangePicker } = DatePicker;
+import { useEffect, useState } from "react"
+import { Table, Select, DatePicker, Spin, Modal, Button, Radio, Checkbox } from "antd"
+import { getRequest } from "../utils/Api"
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts"
+import * as XLSX from "xlsx"
+
+const { RangePicker } = DatePicker
+const { Option } = Select
+
 function DailyReport() {
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [activeTab, setActiveTab] = useState("overview");
-  const [users, Setusers] = useState([]);
-  const [editingKey, setEditingKey] = useState("");
-  const [selectedUsers, setSelectedUsers] = useState([]);
-  const [daterange, setDaterange] = useState([]);
-  const [reportDataList, setReportDataList] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [exportModalVisible, setExportModalVisible] = useState(false);
-  const [exportType, setExportType] = useState("excel");
-  const allAssignedLeads = reportDataList.flatMap(
-    (userSummary) => userSummary.assignedLeads || []
-  );
+  const [selectedDate, setSelectedDate] = useState(null)
+  const [activeTab, setActiveTab] = useState("overview")
+  const [users, setUsers] = useState([])
+  const [editingKey, setEditingKey] = useState("")
+  const [selectedUsers, setSelectedUsers] = useState([])
+  const [selectAll, setSelectAll] = useState(false)
+  const [daterange, setDaterange] = useState([])
+  const [reportDataList, setReportDataList] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [exportModalVisible, setExportModalVisible] = useState(false)
+  const [exportType, setExportType] = useState("excel")
+  const [detailsTab, setDetailsTab] = useState("assigned")
+   const [selectDropdownOpen, setSelectDropdownOpen] = useState(false);
 
-  const allDelegatedLeads = reportDataList?.flatMap(
-    (userSummary) => userSummary.delegatedLeads || []
-  );
+  // Calculate aggregated data from all users in reportDataList
+  const totalAssignedLeadsCount = reportDataList.reduce((sum, user) => sum + (user.totalAssignedLeadsCount || 0), 0)
+
+  const totalAssignedCount = reportDataList.reduce((sum, user) => sum + (user.assignedLeadsCount || 0), 0)
+
+  const totalDelegatedCount = reportDataList.reduce((sum, user) => sum + (user.delegatedLeadsCount || 0), 0)
+
+  const totalConnectedCount = reportDataList.reduce((sum, user) => sum + (user.connectedCount || 0), 0)
+
+  const totalPendingCount = reportDataList.reduce((sum, user) => sum + (user.pendingCount || 0), 0)
+
+  const totalNotCalledCount = reportDataList.reduce((sum, user) => sum + (user.notCalledCount || 0), 0)
+
+  const totalNotConnectedCount = reportDataList.reduce((sum, user) => sum + (user.notConnectedCount || 0), 0)
+
+  const totalPositiveCount = reportDataList.reduce((sum, user) => sum + (user.positiveCount || 0), 0)
+
+  const totalNegativeCount = reportDataList.reduce((sum, user) => sum + (user.negativeCount || 0), 0)
+
+  const totalClosedCount = reportDataList.reduce((sum, user) => sum + (user.closedCount || 0), 0)
+
+  // Get all assigned and delegated leads from all users
+  const allAssignedLeads = reportDataList.flatMap((userSummary) => userSummary.assignedLeads || [])
+
+  const allDelegatedLeads = reportDataList.flatMap((userSummary) => userSummary.delegatedLeads || [])
 
   const cancel = () => {
-    setEditingKey("");
-  };
+    setEditingKey("")
+  }
 
   const fetchAssignments = async () => {
     try {
-      const response = await getRequest("/api/UserAssignmentMapping/assignees");
-      console.log("Assignments Response:", response.data);
+      const response = await getRequest("/api/UserAssignmentMapping/assignees")
+      console.log("Assignments Response:", response.data)
 
-      Setusers(
+      setUsers(
         response.data.map((item) => ({
           ...item,
           key: item.assigneeId,
-        }))
-      );
+        })),
+      )
     } catch (error) {
-      console.error("Error fetching assignments:", error);
+      console.error("Error fetching assignments:", error)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchAssignments();
-  }, []);
+    fetchAssignments()
+  }, [])
 
-  // 1. Add a function to check if user and date range are selected
-  // const isFormValid = () => {
-  //   return (
-  //     selectedUsers.length > 0 &&
-  //     (selectedDate || (daterange.length === 2 && daterange[0] && daterange[1]))
-  //   );
-  // };
+  // Handle select all checkbox
+  useEffect(() => {
+    if (selectAll) {
+      const allUserIds = users.map((user) => user.assigneeId)
+      setSelectedUsers(allUserIds)
+    }
+  }, [selectAll, users])
+
   const isFormValid = () => {
     return (
-      (selectedUsers.length > 0 &&
-        !selectedDate &&
-        !(daterange.length === 2 && daterange[0] && daterange[1])) ||
+      (selectedUsers.length > 0 && !selectedDate && !(daterange.length === 2 && daterange[0] && daterange[1])) ||
       selectedDate ||
       (daterange.length === 2 && daterange[0] && daterange[1])
-    );
-  };
-  // 2. Update the submitdata function to validate inputs
+    )
+  }
+
   const submitdata = async () => {
     if (!isFormValid()) {
-      alert("Please select at least one user and a valid date range or date.");
-      return;
+      alert("Please select at least one user and a valid date range or date.")
+      return
     }
 
-    setLoading(true);
-    setError("");
+    setLoading(true)
+    setError("")
 
     try {
       // Correctly construct userIds query parameters
-      const userIdParams = selectedUsers.map((id) => `userIds=${id}`).join("&");
-      const startDateParam =
-        daterange.length === 2 ? `&startDate=${daterange[0]}` : "";
-      const endDateParam =
-        daterange.length === 2 ? `&endDate=${daterange[1]}` : "";
-      const dateParam = selectedDate ? `&date=${selectedDate}` : "";
+      const userIdParams = selectedUsers.map((id) => `userIds=${id}`).join("&")
+      const startDateParam = daterange.length === 2 ? `&startDate=${daterange[0]}` : ""
+      const endDateParam = daterange.length === 2 ? `&endDate=${daterange[1]}` : ""
+      const dateParam = selectedDate ? `&date=${selectedDate}` : ""
 
       // Build final API URL correctly
-      let apiUrl = `/api/Leads/user-report?${userIdParams}${startDateParam}${endDateParam}${dateParam}`;
+      const apiUrl = `/api/Leads/user-report?${userIdParams}${startDateParam}${endDateParam}${dateParam}`
 
-      console.log("API URL:", apiUrl); // Debugging
+      console.log("API URL:", apiUrl) // Debugging
 
-      const response = await getRequest(apiUrl);
-      console.log("API Response:", response.data);
-      setReportDataList(response.data);
+      const response = await getRequest(apiUrl)
+      console.log("API Response:", response.data)
+      setReportDataList(response.data)
     } catch (error) {
-      console.error("Data fetch error:", error);
-      setError("Failed to load data. Please try again.");
+      console.error("Data fetch error:", error)
+      setError("Failed to load data. Please try again.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  // Function to render reviews for a lead
-  // const renderReviews = (lead) => {
-  //   if (!lead.leadsReview || lead.leadsReview.length === 0) {
-  //     return <span className="text-muted">No reviews</span>;
-  //   }
-
-  //   // Filter reviews where reviewBy matches selectedUser
-  //   const filteredReviews = lead.leadsReview.filter(
-  //     (review) => review.reviewBy === selectedUsers
-  //   );
-
-  //   if (filteredReviews.length === 0) {
-  //     return <span className="text-muted">No reviews by you</span>;
-  //   }
-
-  //   return (
-  //     <div style={{ maxHeight: "150px", overflowY: "auto" }}>
-  //       {filteredReviews.map((review, index) => (
-  //         <div
-  //           key={review.leadReviewId}
-  //           style={{
-  //             padding: "8px",
-  //             marginBottom: "5px",
-  //             backgroundColor: "#f9f9f9",
-  //             borderRadius: "4px",
-  //             borderLeft: "3px solid #007bff",
-  //           }}
-  //         >
-  //           <div>
-  //             <strong>Review:</strong> {review.review}
-  //           </div>
-  //           <div className="text-muted small">
-  //             <span>Date: {new Date(review.reviewDate).toLocaleString()}</span>
-  //           </div>
-  //         </div>
-  //       ))}
-  //     </div>
-  //   );
-  // };
   const renderReviews = (lead) => {
     if (!lead.leadsReview || lead.leadsReview.length === 0) {
-      return <span className="text-muted">No reviews</span>;
+      return <span className="text-muted">No reviews</span>
     }
 
     return (
       <div style={{ maxHeight: "150px", overflowY: "auto" }}>
-        {lead.leadsReview.map((review, index) => (
+        {lead.leadsReview.map((review) => (
           <div
             key={review.leadReviewId}
             style={{
@@ -165,7 +142,7 @@ function DailyReport() {
             }}
           >
             <div>
-              <strong>Review:</strong> {review.review}
+              <strong>Review:</strong> {review.review || "No comment"}
             </div>
             <div>
               <strong>Reviewed By:</strong> {review.reviewByName || "Unknown"}
@@ -176,42 +153,106 @@ function DailyReport() {
           </div>
         ))}
       </div>
-    );
-  };
-  // const handleUserChange = (selectedUsers) => {
-  //   if (selectedUsers.includes("All")) {
-  //     // Select all user IDs
-  //     const allUserIds = users.map((user) => user.id); // `users` is your full user list
-  //     setSelectedUsers(allUserIds);
-  //   } else {
-  //     setSelectedUsers(selectedUsers);
-  //   }
-  // };
+    )
+  }
+
+  // Add a new function to render call recordings
+  const renderCallRecordings = (lead) => {
+    if (!lead.callRecordings || lead.callRecordings.length === 0) {
+      return <span className="text-muted">No recordings</span>
+    }
+
+    return (
+      <div style={{ maxHeight: "150px", overflowY: "auto" }}>
+        {lead.callRecordings.map((recording) => (
+          <div
+            key={recording.recordId}
+            style={{
+              padding: "8px",
+              marginBottom: "5px",
+              backgroundColor: "#f9f9f9",
+              borderRadius: "4px",
+              borderLeft: "3px solid #28a745",
+            }}
+          >
+            <div>
+              <strong>Call Type:</strong> {recording.callType || "Unknown"}
+            </div>
+            <div>
+              <strong>Duration:</strong> {recording.duration || "N/A"}
+            </div>
+            <div>
+              <strong>Status:</strong>{" "}
+              <span
+                style={{
+                  color:
+                    recording.status === "Pending"
+                      ? "#ffc107"
+                      : recording.status === "Positive"
+                        ? "#0d6efd"
+                        : recording.status === "Connected"
+                          ? "#28a745"
+                          : recording.status === "Closed"
+                            ? "#6610f2"
+                            : recording.status === "Blocked user"
+                              ? "#fd7e14"
+                              : recording.status === "Not Connected"
+                                ? "#17a2b8"
+                                : recording.status === "Negative"
+                                  ? "#dc3545"
+                                  : recording.status === "Not Called"
+                                    ? "#6c757d"
+                                    : "#000",
+                }}
+              >
+                {recording.status || "Unknown"}
+              </span>
+            </div>
+            <div className="text-muted small">
+              <span>Date: {recording.date ? new Date(recording.date).toLocaleString() : "N/A"}</span>
+            </div>
+            {recording.recordings && (
+              <div className="mt-1">
+                <audio
+                  controls
+                  style={{ maxWidth: "100%", height: "30px" }}
+                  src={`https://localhost:7258/recordings/${recording.recordings}`}
+                >
+                  Your browser does not support the audio element.
+                </audio>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   // Handle Excel export
   const handleExport = () => {
-    if (!reportDataList) return;
+    if (!reportDataList || reportDataList.length === 0) return
 
     // Create a new workbook
-    const workbook = XLSX.utils.book_new();
+    const workbook = XLSX.utils.book_new()
 
     // Define styles for different sections
     const summaryHeaderStyle = {
       font: { bold: true, color: { rgb: "FFFFFF" } },
       fill: { fgColor: { rgb: "4472C4" } },
       alignment: { horizontal: "center" },
-    };
+    }
 
     const assignedHeaderStyle = {
       font: { bold: true, color: { rgb: "FFFFFF" } },
       fill: { fgColor: { rgb: "70AD47" } },
       alignment: { horizontal: "center" },
-    };
+    }
 
     const delegatedHeaderStyle = {
       font: { bold: true, color: { rgb: "FFFFFF" } },
       fill: { fgColor: { rgb: "ED7D31" } },
       alignment: { horizontal: "center" },
-    };
+    }
 
     const dataStyle = {
       border: {
@@ -220,72 +261,71 @@ function DailyReport() {
         left: { style: "thin" },
         right: { style: "thin" },
       },
-    };
+    }
 
     // Create styled worksheet function
     const createStyledWorksheet = (data, headerStyle) => {
-      const ws = XLSX.utils.json_to_sheet(data);
+      const ws = XLSX.utils.json_to_sheet(data)
 
       // Apply styles to headers (first row)
-      const headerRange = XLSX.utils.decode_range(ws["!ref"]);
+      const headerRange = XLSX.utils.decode_range(ws["!ref"])
       for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
-        const cellAddress = XLSX.utils.encode_cell({ r: 0, c: C });
-        if (!ws[cellAddress]) continue;
+        const cellAddress = XLSX.utils.encode_cell({ r: 0, c: C })
+        if (!ws[cellAddress]) continue
 
-        ws[cellAddress].s = headerStyle;
+        ws[cellAddress].s = headerStyle
       }
 
       // Apply styles to data cells
       for (let R = 1; R <= headerRange.e.r; ++R) {
         for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
-          const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
-          if (!ws[cellAddress]) continue;
+          const cellAddress = XLSX.utils.encode_cell({ r: R, c: C })
+          if (!ws[cellAddress]) continue
 
-          ws[cellAddress].s = dataStyle;
+          ws[cellAddress].s = dataStyle
         }
       }
 
-      return ws;
-    };
+      return ws
+    }
 
     // 1. Create Summary Data
     const summaryData = [
       {
         Metric: "Total Leads",
-        Count: reportDataList.totalAssignedLeadsCount,
+        Count: totalAssignedLeadsCount,
       },
       {
         Metric: "Connected",
-        Count: reportDataList.connectedCount,
+        Count: totalConnectedCount,
       },
       {
         Metric: "Pending",
-        Count: reportDataList.pendingCount,
+        Count: totalPendingCount,
       },
       {
         Metric: "Not Called",
-        Count: reportDataList.notCalledCount,
+        Count: totalNotCalledCount,
       },
       {
         Metric: "Not Connected",
-        Count: reportDataList.notConnectedCount,
+        Count: totalNotConnectedCount,
       },
       {
         Metric: "Positive",
-        Count: reportDataList.positiveCount,
+        Count: totalPositiveCount,
       },
       {
         Metric: "Negative",
-        Count: reportDataList.negativeCount,
+        Count: totalNegativeCount,
       },
       {
         Metric: "Closed",
-        Count: reportDataList.closedCount,
+        Count: totalClosedCount,
       },
-    ];
+    ]
 
     // 2. Create Assigned Leads Data
-
     const assignedLeadsData = allAssignedLeads.map((lead) => ({
       "Owner Name": lead.ownerName,
       "Mobile No": lead.mobileNo,
@@ -294,17 +334,12 @@ function DailyReport() {
       Model: lead.modelName,
       "Lead Type": lead.leadType,
       Status: lead.status,
-      "Follow Up Date": lead.followUpDate
-        ? new Date(lead.followUpDate).toLocaleString()
-        : "N/A",
+      "Follow Up Date": lead.followUpDate ? new Date(lead.followUpDate).toLocaleString() : "N/A",
       Review:
         lead.leadsReview && lead.leadsReview.length > 0
-          ? lead.leadsReview
-              .filter((r) => r.reviewBy === selectedUsers)
-              .map((r) => r.review)
-              .join(", ")
+          ? lead.leadsReview.map((r) => `${r.reviewByName}: ${r.review}`).join(", ")
           : "No reviews",
-    }));
+    }))
 
     // 3. Create Delegated Leads Data
     const delegatedLeadsData = allDelegatedLeads.map((lead) => ({
@@ -315,52 +350,37 @@ function DailyReport() {
       Model: lead.modelName,
       "Lead Type": lead.leadType,
       Status: lead.status,
-      "Follow Up Date": lead.followUpDate
-        ? new Date(lead.followUpDate).toLocaleString()
-        : "N/A",
+      "Follow Up Date": lead.followUpDate ? new Date(lead.followUpDate).toLocaleString() : "N/A",
+      "Assigned To": lead.assignedToName,
       Review:
         lead.leadsReview && lead.leadsReview.length > 0
-          ? lead.leadsReview
-              .filter((r) => r.reviewBy === selectedUsers)
-              .map((r) => r.review)
-              .join(", ")
+          ? lead.leadsReview.map((r) => `${r.reviewByName}: ${r.review}`).join(", ")
           : "No reviews",
-    }));
+    }))
 
     // Create worksheets with styles
-    const summarySheet = createStyledWorksheet(summaryData, summaryHeaderStyle);
-    const assignedSheet = createStyledWorksheet(
-      assignedLeadsData,
-      assignedHeaderStyle
-    );
-    const delegatedSheet = createStyledWorksheet(
-      delegatedLeadsData,
-      delegatedHeaderStyle
-    );
+    const summarySheet = createStyledWorksheet(summaryData, summaryHeaderStyle)
+    const assignedSheet = createStyledWorksheet(assignedLeadsData, assignedHeaderStyle)
+    const delegatedSheet = createStyledWorksheet(delegatedLeadsData, delegatedHeaderStyle)
 
     // Add worksheets to the workbook
-    XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
-    XLSX.utils.book_append_sheet(workbook, assignedSheet, "Active Leads");
-    XLSX.utils.book_append_sheet(workbook, delegatedSheet, "Delegated Leads");
+    XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary")
+    XLSX.utils.book_append_sheet(workbook, assignedSheet, "Active Leads")
+    XLSX.utils.book_append_sheet(workbook, delegatedSheet, "Delegated Leads")
 
     // Write to file and download
     XLSX.writeFile(
       workbook,
-      `lead-report-${selectedUsers.join("-")}-${daterange[0] || "default"}-to-${
-        daterange[1] || "default"
-      }.xlsx`
-    );
+      `lead-report-${selectedUsers.join("-")}-${daterange[0] || "default"}-to-${daterange[1] || "default"}.xlsx`,
+    )
 
-    setExportModalVisible(false);
-  };
+    setExportModalVisible(false)
+  }
 
   // Prepare data for table
   const data = reportDataList.map((report, index) => ({
     id: index + 1,
-    date:
-      daterange.length === 2
-        ? `${daterange[0]} to ${daterange[1]}`
-        : selectedDate,
+    date: daterange.length === 2 ? `${daterange[0]} to ${daterange[1]}` : selectedDate,
     "Total Lead": report.totalAssignedLeadsCount || 0,
     Connected: report.connectedCount || 0,
     Pending: report.pendingCount || 0,
@@ -373,61 +393,46 @@ function DailyReport() {
     userid: report.userId,
     username: report.userName || "Unknown",
     location: "", // Add if applicable
-  }));
+  }))
 
   // Prepare data for pie chart
   const pieData = [
     {
       name: "Connected",
-      value: reportDataList?.connectedCount || 0,
+      value: totalConnectedCount,
       color: "#28a745",
     },
     {
       name: "Pending",
-      value: reportDataList?.pendingCount || 0,
+      value: totalPendingCount,
       color: "#ffc107",
     },
     {
       name: "Not called",
-      value: reportDataList?.notCalledCount || 0,
+      value: totalNotCalledCount,
       color: "#6c757d",
     },
     {
       name: "Positive",
-      value: reportDataList?.positiveCount || 0,
+      value: totalPositiveCount,
       color: "#0d6efd",
     },
     {
       name: "Negative",
-      value: reportDataList?.negativeCount || 0,
+      value: totalNegativeCount,
       color: "#dc3545",
     },
     {
       name: "Closed",
-      value: reportDataList?.closedCount || 0,
+      value: totalClosedCount,
       color: "#6610f2",
     },
     {
       name: "Not Connected",
-      value: reportDataList?.notConnectedCount || 0,
+      value: totalNotConnectedCount,
       color: "#17a2b8",
     },
-  ];
-
-  // Calculate total metrics
-  const totalLeads = reportDataList
-    ? reportDataList.totalAssignedLeadsCount
-    : 0;
-  const totalConnected = reportDataList ? reportDataList.connectedCount : 0;
-  const totalPending = reportDataList ? reportDataList.pendingCount : 0;
-  const totalNotcalled = reportDataList ? reportDataList.notCalledCount : 0;
-  const totalNegative = reportDataList ? reportDataList.negativeCount : 0;
-  const totalClosed = reportDataList ? reportDataList.closedCount : 0;
-  const totalPositive = reportDataList ? reportDataList.positiveCount : 0;
-  const totalNotConnected = reportDataList
-    ? reportDataList.notConnectedCount
-    : 0;
-  const totalBlockedUser = 0;
+  ]
 
   // Table columns for Ant Design table
   const columns = [
@@ -440,10 +445,7 @@ function DailyReport() {
       title: "User",
       dataIndex: "username",
       key: "username",
-      render: (_, record) =>
-        selectedUsers
-          .map((id) => users.find((u) => u.assigneeId === id)?.assigneeName)
-          .join(", "),
+      render: (_, record) => record.username,
     },
     {
       title: "Location",
@@ -490,7 +492,8 @@ function DailyReport() {
       dataIndex: "Blocked user",
       key: "blocked",
     },
-  ];
+  ]
+
   const useperformanceColumns = [
     {
       title: "Status Type",
@@ -513,6 +516,16 @@ function DailyReport() {
       key: "count",
       render: (text, record) => (
         <div style={{ display: "flex", alignItems: "center" }}>
+          <div style={{ flex: 1, backgroundColor: "#f0f0f0", borderRadius: "10px", padding: "5px 10px" }}>
+            <div
+              style={{
+                width: `${(text / totalAssignedLeadsCount) * 100}%`,
+                backgroundColor: getStatusColor(record.statusType),
+                height: "20px",
+                borderRadius: "5px",
+              }}
+            ></div>
+          </div>
           <span
             style={{
               marginLeft: "10px",
@@ -525,101 +538,55 @@ function DailyReport() {
         </div>
       ),
     },
-  ];
-  const totalAssignedCount = reportDataList?.reduce(
-    (sum, user) => sum + (user.assignedLeadsCount || 0),
-    0
-  );
+  ]
 
-  const totalDelegatedCount = reportDataList?.reduce(
-    (sum, user) => sum + (user.delegatedLeadsCount || 0),
-    0
-  );
-
-  const totalConnectedCount = reportDataList?.reduce(
-    (sum, user) => sum + (user.connectedCount || 0),
-    0
-  );
-
-  const totalPendingCount = reportDataList?.reduce(
-    (sum, user) => sum + (user.pendingCount || 0),
-    0
-  );
-
-  const totalNotCalledCount = reportDataList?.reduce(
-    (sum, user) => sum + (user.notCalledCount || 0),
-    0
-  );
-
-  const totalNotConnectedCount = reportDataList?.reduce(
-    (sum, user) => sum + (user.notConnectedCount || 0),
-    0
-  );
-
-  const totalPositiveCount = reportDataList?.reduce(
-    (sum, user) => sum + (user.positiveCount || 0),
-    0
-  );
-
-  const totalNegativeCount = reportDataList?.reduce(
-    (sum, user) => sum + (user.negativeCount || 0),
-    0
-  );
-
-  const totalClosedCount = reportDataList?.reduce(
-    (sum, user) => sum + (user.closedCount || 0),
-    0
-  );
-
-  const useperformanceData = reportDataList
-    ? [
-        {
-          statusType: "Active Leads",
-          count: totalAssignedCount,
-          key: "assigned",
-        },
-        {
-          statusType: "Total Delegated",
-          count: totalDelegatedCount,
-          key: "delegated",
-        },
-        {
-          statusType: "Connected",
-          count: totalConnectedCount,
-          key: "connected",
-        },
-        {
-          statusType: "Pending",
-          count: totalPendingCount,
-          key: "pending",
-        },
-        {
-          statusType: "Not called",
-          count: totalNotCalledCount,
-          key: "notcalled",
-        },
-        {
-          statusType: "Not Connected",
-          count: totalNotConnectedCount,
-          key: "notconnected",
-        },
-        {
-          statusType: "Positive",
-          count: totalPositiveCount,
-          key: "positive",
-        },
-        {
-          statusType: "Negative",
-          count: totalNegativeCount,
-          key: "negative",
-        },
-        {
-          statusType: "Closed",
-          count: totalClosedCount,
-          key: "closed",
-        },
-      ]
-    : [];
+  const useperformanceData = [
+    {
+      statusType: "Active Leads",
+      count: totalAssignedCount,
+      key: "assigned",
+    },
+    {
+      statusType: "Total Delegated",
+      count: totalDelegatedCount,
+      key: "delegated",
+    },
+    {
+      statusType: "Connected",
+      count: totalConnectedCount,
+      key: "connected",
+    },
+    {
+      statusType: "Pending",
+      count: totalPendingCount,
+      key: "pending",
+    },
+    {
+      statusType: "Not called",
+      count: totalNotCalledCount,
+      key: "notcalled",
+    },
+    {
+      statusType: "Not Connected",
+      count: totalNotConnectedCount,
+      key: "notconnected",
+    },
+    {
+      statusType: "Positive",
+      count: totalPositiveCount,
+      key: "positive",
+    },
+    {
+      statusType: "Negative",
+      count: totalNegativeCount,
+      key: "negative",
+    },
+    {
+      statusType: "Closed",
+      count: totalClosedCount,
+      key: "closed",
+    },
+  ]
 
   const getStatusColor = (statusType) => {
     const colors = {
@@ -633,9 +600,9 @@ function DailyReport() {
       "Not Connected": "#17a2b8",
       "Active Leads": "#007bff",
       "Total Delegated": "#28a745",
-    };
-    return colors[statusType] || "#000000";
-  };
+    }
+    return colors[statusType] || "#000000"
+  }
 
   // Custom tooltip for charts
   const CustomTooltip = ({ active, payload, label }) => {
@@ -649,194 +616,90 @@ function DailyReport() {
             </p>
           ))}
         </div>
-      );
+      )
     }
-    return null;
-  };
+    return null
+  }
 
   // Custom label for pie chart
-  const renderCustomizedLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    percent,
-    index,
-    name,
-  }) => {
-    const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * radius * Math.sin(-midAngle * RADIAN);
+  const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name }) => {
+    const RADIAN = Math.PI / 180
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5
+    const x = cx + radius * Math.cos(-midAngle * RADIAN)
+    const y = cy + radius * Math.sin(-midAngle * RADIAN)
 
     return (
-      <text
-        x={x}
-        y={y}
-        fill="white"
-        textAnchor={x > cx ? "start" : "end"}
-        dominantBaseline="central"
-      >
+      <text x={x} y={y} fill="white" textAnchor={x > cx ? "start" : "end"} dominantBaseline="central">
         {`${(percent * 100).toFixed(0)}%`}
       </text>
-    );
-  };
+    )
+  }
 
   const onRangeChange = (dates, dateStrings) => {
     if (!dates || dates.length === 0) {
-      setDaterange([]); // Pass null if nothing selected
+      setDaterange([]) // Pass null if nothing selected
     } else {
-      setDaterange(dateStrings);
+      setDaterange(dateStrings)
     }
-  };
+  }
 
   const onDateChange = (selectedDate, dateString) => {
-    setSelectedDate(dateString || null); // Pass null if not selected
-  };
-  const [detailsTab, setDetailsTab] = useState("assigned");
-  const assignedLeadOwnerNames = [
-    ...new Set(allAssignedLeads.map((lead) => lead.ownerName).filter(Boolean)),
-  ];
-  const assignedLeadFatherName = [
-    ...new Set(allAssignedLeads.map((lead) => lead.fatherName).filter(Boolean)),
-  ];
-  const assignedLeadMobileNo = [
-    ...new Set(allAssignedLeads.map((lead) => lead.mobileNo).filter(Boolean)),
-  ];
-  const assignedLeadDistrictName = [
-    ...new Set(
-      allAssignedLeads.map((lead) => lead.districtName).filter(Boolean)
-    ),
-  ];
-  const assignedLeadCurrentAddress = [
-    ...new Set(
-      allAssignedLeads.map((lead) => lead.currentAddress).filter(Boolean)
-    ),
-  ];
-  const assignedLeadRegistrationNo = [
-    ...new Set(
-      allAssignedLeads.map((lead) => lead.registrationNo).filter(Boolean)
-    ),
-  ];
+    setSelectedDate(dateString || null) // Pass null if not selected
+  }
+
+  // Handle user selection with "Select All" option
+  const handleUserChange = (value) => {
+    if (value.includes("all")) {
+      setSelectAll(true)
+      const allUserIds = users.map((user) => user.assigneeId)
+      setSelectedUsers(allUserIds)
+    } else {
+      setSelectAll(false)
+      setSelectedUsers(value)
+    }
+  }
+
+  // Extract unique values for filters
+  const assignedLeadOwnerNames = [...new Set(allAssignedLeads.map((lead) => lead.ownerName).filter(Boolean))]
+  const assignedLeadFatherName = [...new Set(allAssignedLeads.map((lead) => lead.fatherName).filter(Boolean))]
+  const assignedLeadMobileNo = [...new Set(allAssignedLeads.map((lead) => lead.mobileNo).filter(Boolean))]
+  const assignedLeadDistrictName = [...new Set(allAssignedLeads.map((lead) => lead.districtName).filter(Boolean))]
+  const assignedLeadCurrentAddress = [...new Set(allAssignedLeads.map((lead) => lead.currentAddress).filter(Boolean))]
+  const assignedLeadRegistrationNo = [...new Set(allAssignedLeads.map((lead) => lead.registrationNo).filter(Boolean))]
   const assignedLeadRegistrationDate = [
-    ...new Set(
-      allAssignedLeads.map((lead) => lead.registrationDate).filter(Boolean)
-    ),
-  ];
-  const assignedLeadchasisNo = [
-    ...new Set(allAssignedLeads.map((lead) => lead.chasisNo).filter(Boolean)),
-  ];
-  const assignedLeadCurrentVehicle = [
-    ...new Set(
-      allAssignedLeads.map((lead) => lead.currentVehicle).filter(Boolean)
-    ),
-  ];
-  const assignedLeadCategoryName = [
-    ...new Set(
-      allAssignedLeads.map((lead) => lead.categoryName).filter(Boolean)
-    ),
-  ];
-  const assignedLeadProductNames = [
-    ...new Set(
-      allAssignedLeads.map((lead) => lead.productName).filter(Boolean)
-    ),
-  ];
+    ...new Set(allAssignedLeads.map((lead) => lead.registrationDate).filter(Boolean)),
+  ]
+  const assignedLeadchasisNo = [...new Set(allAssignedLeads.map((lead) => lead.chasisNo).filter(Boolean))]
+  const assignedLeadCurrentVehicle = [...new Set(allAssignedLeads.map((lead) => lead.currentVehicle).filter(Boolean))]
+  const assignedLeadCategoryName = [...new Set(allAssignedLeads.map((lead) => lead.categoryName).filter(Boolean))]
+  const assignedLeadProductNames = [...new Set(allAssignedLeads.map((lead) => lead.productName).filter(Boolean))]
+  const assignedLeadStateNames = [...new Set(allAssignedLeads.map((lead) => lead.stateName).filter(Boolean))]
+  const assignedLeadLeadType = [...new Set(allAssignedLeads.map((lead) => lead.leadType).filter(Boolean))]
+  const assignedLeadFollowUpDate = [...new Set(allAssignedLeads.map((lead) => lead.followUpDate).filter(Boolean))]
+  const assignedLeadStatusNames = [...new Set(allAssignedLeads.map((lead) => lead.status).filter(Boolean))]
+  const assignedLeadAssignedDate = [...new Set(allAssignedLeads.map((lead) => lead.assignedDate).filter(Boolean))]
 
-  const assignedLeadStateNames = [
-    ...new Set(allAssignedLeads.map((lead) => lead.stateName).filter(Boolean)),
-  ];
-
-  const assignedLeadLeadType = [
-    ...new Set(allAssignedLeads.map((lead) => lead.leadType).filter(Boolean)),
-  ];
-  const assignedLeadFollowUpDate = [
-    ...new Set(
-      allAssignedLeads.map((lead) => lead.followUpDate).filter(Boolean)
-    ),
-  ];
-
-  const assignedLeadStatusNames = [
-    ...new Set(allAssignedLeads.map((lead) => lead.status).filter(Boolean)),
-  ];
-  //////////////////////////////////////////////////////////////////////////////////
-  const delegatedLeadOwnerNames = [
-    ...new Set(allAssignedLeads.map((lead) => lead.ownerName).filter(Boolean)),
-  ];
-  const delegatedLeadFatherName = [
-    ...new Set(allAssignedLeads.map((lead) => lead.fatherName).filter(Boolean)),
-  ];
-  const delegatedLeadMobileNo = [
-    ...new Set(allAssignedLeads.map((lead) => lead.mobileNo).filter(Boolean)),
-  ];
-  const delegatedLeadDistrictName = [
-    ...new Set(
-      allAssignedLeads.map((lead) => lead.districtName).filter(Boolean)
-    ),
-  ];
-  const delegatedLeadCurrentAddress = [
-    ...new Set(
-      allAssignedLeads.map((lead) => lead.currentAddress).filter(Boolean)
-    ),
-  ];
-  const delegatedLeadRegistrationNo = [
-    ...new Set(
-      allAssignedLeads.map((lead) => lead.registrationNo).filter(Boolean)
-    ),
-  ];
+  // Delegated leads filters
+  const delegatedLeadOwnerNames = [...new Set(allDelegatedLeads.map((lead) => lead.ownerName).filter(Boolean))]
+  const delegatedLeadFatherName = [...new Set(allDelegatedLeads.map((lead) => lead.fatherName).filter(Boolean))]
+  const delegatedLeadMobileNo = [...new Set(allDelegatedLeads.map((lead) => lead.mobileNo).filter(Boolean))]
+  const delegatedLeadDistrictName = [...new Set(allDelegatedLeads.map((lead) => lead.districtName).filter(Boolean))]
+  const delegatedLeadCurrentAddress = [...new Set(allDelegatedLeads.map((lead) => lead.currentAddress).filter(Boolean))]
+  const delegatedLeadRegistrationNo = [...new Set(allDelegatedLeads.map((lead) => lead.registrationNo).filter(Boolean))]
   const delegatedLeadRegistrationDate = [
-    ...new Set(
-      allAssignedLeads.map((lead) => lead.registrationDate).filter(Boolean)
-    ),
-  ];
-  const delegatedLeadchasisNo = [
-    ...new Set(allAssignedLeads.map((lead) => lead.chasisNo).filter(Boolean)),
-  ];
-  const delegatedLeadCurrentVehicle = [
-    ...new Set(
-      allAssignedLeads.map((lead) => lead.currentVehicle).filter(Boolean)
-    ),
-  ];
-  const delegatedLeadCategoryName = [
-    ...new Set(
-      allAssignedLeads.map((lead) => lead.categoryName).filter(Boolean)
-    ),
-  ];
-  const delegatedLeadProductNames = [
-    ...new Set(
-      allAssignedLeads.map((lead) => lead.productName).filter(Boolean)
-    ),
-  ];
+    ...new Set(allDelegatedLeads.map((lead) => lead.registrationDate).filter(Boolean)),
+  ]
+  const delegatedLeadchasisNo = [...new Set(allDelegatedLeads.map((lead) => lead.chasisNo).filter(Boolean))]
+  const delegatedLeadCurrentVehicle = [...new Set(allDelegatedLeads.map((lead) => lead.currentVehicle).filter(Boolean))]
+  const delegatedLeadCategoryName = [...new Set(allDelegatedLeads.map((lead) => lead.categoryName).filter(Boolean))]
+  const delegatedLeadProductNames = [...new Set(allDelegatedLeads.map((lead) => lead.productName).filter(Boolean))]
+  const delegatedLeadStateNames = [...new Set(allDelegatedLeads.map((lead) => lead.stateName).filter(Boolean))]
+  const delegatedLeadLeadType = [...new Set(allDelegatedLeads.map((lead) => lead.leadType).filter(Boolean))]
+  const delegatedLeadModelNames = [...new Set(allDelegatedLeads.map((lead) => lead.modelName).filter(Boolean))]
+  const delegatedLeadStatusNames = [...new Set(allDelegatedLeads.map((lead) => lead.status).filter(Boolean))]
+  const delegatedLeadAssignedToName = [...new Set(allDelegatedLeads.map((lead) => lead.assignedToName).filter(Boolean))]
 
-  const delegatedLeadStateNames = [
-    ...new Set(allAssignedLeads.map((lead) => lead.stateName).filter(Boolean)),
-  ];
-
-  const delegatedLeadLeadType = [
-    ...new Set(allAssignedLeads.map((lead) => lead.leadType).filter(Boolean)),
-  ];
-
-  const delegatedLeadModelNames = [
-    ...new Set(allAssignedLeads.map((lead) => lead.modelName).filter(Boolean)),
-  ];
-
-  const delegatedLeadStatusNames = [
-    ...new Set(allAssignedLeads.map((lead) => lead.status).filter(Boolean)),
-  ];
-
-  const delegatedLeadAssignedToName = [
-    ...new Set(
-      allAssignedLeads.map((lead) => lead.assignedToName).filter(Boolean)
-    ),
-  ];
-
-  const assignedLeadAssignedDate = [
-    ...new Set(
-      allAssignedLeads.map((lead) => lead.assignedDate).filter(Boolean)
-    ),
-  ];
-
-  // 3. Replace the assignedLeadsColumns definition with this safer version
+  // Table columns for assigned leads
   const assignedLeadsColumns = [
     {
       title: "Owner Name",
@@ -847,8 +710,7 @@ function DailyReport() {
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.ownerName && record.ownerName.indexOf(value) === 0,
+      onFilter: (value, record) => record.ownerName && record.ownerName.indexOf(value) === 0,
       filterSearch: true,
       width: 140,
     },
@@ -861,8 +723,7 @@ function DailyReport() {
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.fatherName && record.fatherName.indexOf(value) === 0,
+      onFilter: (value, record) => record.fatherName && record.fatherName.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
@@ -875,8 +736,7 @@ function DailyReport() {
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.mobileNo && record.mobileNo.indexOf(value) === 0,
+      onFilter: (value, record) => record.mobileNo && record.mobileNo.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
@@ -884,14 +744,12 @@ function DailyReport() {
       title: "District",
       dataIndex: "districtName",
       key: "districtName",
-      sorter: (a, b) =>
-        (a.districtName || "").localeCompare(b.districtName || ""),
+      sorter: (a, b) => (a.districtName || "").localeCompare(b.districtName || ""),
       filters: assignedLeadDistrictName.map((name) => ({
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.districtName && record.districtName.indexOf(value) === 0,
+      onFilter: (value, record) => record.districtName && record.districtName.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
@@ -899,14 +757,12 @@ function DailyReport() {
       title: "Current Address",
       dataIndex: "currentAddress",
       key: "currentAddress",
-      sorter: (a, b) =>
-        (a.currentAddress || "").localeCompare(b.currentAddress || ""),
+      sorter: (a, b) => (a.currentAddress || "").localeCompare(b.currentAddress || ""),
       filters: assignedLeadCurrentAddress.map((name) => ({
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.currentAddress && record.currentAddress.indexOf(value) === 0,
+      onFilter: (value, record) => record.currentAddress && record.currentAddress.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
@@ -914,14 +770,12 @@ function DailyReport() {
       title: "Registration No",
       dataIndex: "registrationNo",
       key: "registrationNo",
-      sorter: (a, b) =>
-        (a.registrationNo || "").localeCompare(b.registrationNo || ""),
+      sorter: (a, b) => (a.registrationNo || "").localeCompare(b.registrationNo || ""),
       filters: assignedLeadRegistrationNo.map((name) => ({
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.registrationNo && record.registrationNo.indexOf(value) === 0,
+      onFilter: (value, record) => record.registrationNo && record.registrationNo.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
@@ -929,14 +783,12 @@ function DailyReport() {
       title: "Registration Date",
       dataIndex: "registrationDate",
       key: "registrationDate",
-      sorter: (a, b) =>
-        (a.registrationDate || "").localeCompare(b.registrationDate || ""),
+      sorter: (a, b) => (a.registrationDate || "").localeCompare(b.registrationDate || ""),
       filters: assignedLeadRegistrationDate.map((name) => ({
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.registrationDate && record.registrationDate.indexOf(value) === 0,
+      onFilter: (value, record) => record.registrationDate && record.registrationDate.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
@@ -949,8 +801,7 @@ function DailyReport() {
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.chasisNo && record.chasisNo.indexOf(value) === 0,
+      onFilter: (value, record) => record.chasisNo && record.chasisNo.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
@@ -958,14 +809,12 @@ function DailyReport() {
       title: "Current Vehicle",
       dataIndex: "currentVehicle",
       key: "currentVehicle",
-      sorter: (a, b) =>
-        (a.currentVehicle || "").localeCompare(b.currentVehicle || ""),
+      sorter: (a, b) => (a.currentVehicle || "").localeCompare(b.currentVehicle || ""),
       filters: assignedLeadCurrentVehicle.map((name) => ({
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.currentVehicle && record.currentVehicle.indexOf(value) === 0,
+      onFilter: (value, record) => record.currentVehicle && record.currentVehicle.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
@@ -973,14 +822,12 @@ function DailyReport() {
       title: "Category",
       dataIndex: "categoryName",
       key: "categoryName",
-      sorter: (a, b) =>
-        (a.categoryName || "").localeCompare(b.categoryName || ""),
+      sorter: (a, b) => (a.categoryName || "").localeCompare(b.categoryName || ""),
       filters: assignedLeadCategoryName.map((name) => ({
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.categoryName && record.categoryName.indexOf(value) === 0,
+      onFilter: (value, record) => record.categoryName && record.categoryName.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
@@ -988,14 +835,12 @@ function DailyReport() {
       title: "Product",
       dataIndex: "productName",
       key: "productName",
-      sorter: (a, b) =>
-        (a.productName || "").localeCompare(b.productName || ""),
+      sorter: (a, b) => (a.productName || "").localeCompare(b.productName || ""),
       filters: assignedLeadProductNames.map((name) => ({
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.productName && record.productName.indexOf(value) === 0,
+      onFilter: (value, record) => record.productName && record.productName.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
@@ -1008,15 +853,16 @@ function DailyReport() {
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.stateName && record.stateName.indexOf(value) === 0,
+      onFilter: (value, record) => record.stateName && record.stateName.indexOf(value) === 0,
       filterSearch: true,
+      width: 140,
     },
     {
       title: "Model",
       dataIndex: "modelName",
       key: "modelName",
       sorter: (a, b) => (a.modelName || "").localeCompare(b.modelName || ""),
+      width: 140,
     },
     {
       title: "Lead Type",
@@ -1027,8 +873,7 @@ function DailyReport() {
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.leadType && record.leadType.indexOf(value) === 0,
+      onFilter: (value, record) => record.leadType && record.leadType.indexOf(value) === 0,
       filterSearch: true,
       width: 140,
     },
@@ -1041,8 +886,7 @@ function DailyReport() {
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.status && record.status.indexOf(value) === 0,
+      onFilter: (value, record) => record.status && record.status.indexOf(value) === 0,
       render: (text) => (
         <span
           style={{
@@ -1050,18 +894,18 @@ function DailyReport() {
               text === "Pending"
                 ? "#ffc107"
                 : text === "Positive"
-                ? "#0d6efd"
-                : text === "Connected"
-                ? "#28a745"
-                : text === "Closed"
-                ? "#6610f2"
-                : text === "Blocked user"
-                ? "#fd7e14"
-                : text === "Not Connected"
-                ? "#17a2b8"
-                : text === "Negative"
-                ? "#dc3545"
-                : "#000",
+                  ? "#0d6efd"
+                  : text === "Connected"
+                    ? "#28a745"
+                    : text === "Closed"
+                      ? "#6610f2"
+                      : text === "Blocked user"
+                        ? "#fd7e14"
+                        : text === "Not Connected"
+                          ? "#17a2b8"
+                          : text === "Negative"
+                            ? "#dc3545"
+                            : "#000",
           }}
         >
           {text}
@@ -1073,37 +917,41 @@ function DailyReport() {
       dataIndex: "followUpDate",
       key: "followUpDate",
       sorter: (a, b) => {
-        if (!a.followUpDate) return -1;
-        if (!b.followUpDate) return 1;
-        return new Date(a.followUpDate) - new Date(b.followUpDate);
+        if (!a.followUpDate) return -1
+        if (!b.followUpDate) return 1
+        return new Date(a.followUpDate) - new Date(b.followUpDate)
       },
       render: (text) => (text ? new Date(text).toLocaleString() : "N/A"),
+      width: 160,
     },
-
     {
       title: "Your Reviews",
       key: "reviews",
       render: (_, record) => renderReviews(record),
-      width: 390,
+      width: 300,
+    },
+    {
+      title: "Call Recordings",
+      key: "callRecordings",
+      render: (_, record) => renderCallRecordings(record),
+      width: 300,
     },
     {
       title: "Assigned Date",
       dataIndex: "assignedDate",
       key: "assignedDate",
-      sorter: (a, b) =>
-        (a.assignedDate || "").localeCompare(b.assignedDate || ""),
-      filters: assignedLeadFollowUpDate.map((name) => ({
+      sorter: (a, b) => (a.assignedDate || "").localeCompare(b.assignedDate || ""),
+      filters: assignedLeadAssignedDate.map((name) => ({
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.assignedDate && record.assignedDate.indexOf(value) === 0,
+      onFilter: (value, record) => record.assignedDate && record.assignedDate.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
-  ];
+  ]
 
-  // 4. Create a function to get delegated leads columns with proper filters
+  // Table columns for delegated leads
   const getDelegatedLeadsColumns = [
     {
       title: "Owner Name",
@@ -1114,8 +962,7 @@ function DailyReport() {
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.ownerName && record.ownerName.indexOf(value) === 0,
+      onFilter: (value, record) => record.ownerName && record.ownerName.indexOf(value) === 0,
       filterSearch: true,
       width: 140,
     },
@@ -1128,8 +975,7 @@ function DailyReport() {
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.fatherName && record.fatherName.indexOf(value) === 0,
+      onFilter: (value, record) => record.fatherName && record.fatherName.indexOf(value) === 0,
       filterSearch: true,
       width: 140,
     },
@@ -1142,8 +988,7 @@ function DailyReport() {
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.mobileNo && record.mobileNo.indexOf(value) === 0,
+      onFilter: (value, record) => record.mobileNo && record.mobileNo.indexOf(value) === 0,
       filterSearch: true,
       width: 140,
     },
@@ -1151,14 +996,12 @@ function DailyReport() {
       title: "District",
       dataIndex: "districtName",
       key: "districtName",
-      sorter: (a, b) =>
-        (a.districtName || "").localeCompare(b.districtName || ""),
+      sorter: (a, b) => (a.districtName || "").localeCompare(b.districtName || ""),
       filters: delegatedLeadDistrictName.map((name) => ({
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.districtName && record.districtName.indexOf(value) === 0,
+      onFilter: (value, record) => record.districtName && record.districtName.indexOf(value) === 0,
       filterSearch: true,
       width: 140,
     },
@@ -1166,14 +1009,12 @@ function DailyReport() {
       title: "Current Address",
       dataIndex: "currentAddress",
       key: "currentAddress",
-      sorter: (a, b) =>
-        (a.currentAddress || "").localeCompare(b.currentAddress || ""),
+      sorter: (a, b) => (a.currentAddress || "").localeCompare(b.currentAddress || ""),
       filters: delegatedLeadCurrentAddress.map((name) => ({
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.currentAddress && record.currentAddress.indexOf(value) === 0,
+      onFilter: (value, record) => record.currentAddress && record.currentAddress.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
@@ -1181,14 +1022,12 @@ function DailyReport() {
       title: "Registration No",
       dataIndex: "registrationNo",
       key: "registrationNo",
-      sorter: (a, b) =>
-        (a.registrationNo || "").localeCompare(b.registrationNo || ""),
+      sorter: (a, b) => (a.registrationNo || "").localeCompare(b.registrationNo || ""),
       filters: delegatedLeadRegistrationNo.map((name) => ({
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.registrationNo && record.registrationNo.indexOf(value) === 0,
+      onFilter: (value, record) => record.registrationNo && record.registrationNo.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
@@ -1196,14 +1035,12 @@ function DailyReport() {
       title: "Registration Date",
       dataIndex: "registrationDate",
       key: "registrationDate",
-      sorter: (a, b) =>
-        (a.registrationDate || "").localeCompare(b.registrationDate || ""),
+      sorter: (a, b) => (a.registrationDate || "").localeCompare(b.registrationDate || ""),
       filters: delegatedLeadRegistrationDate.map((name) => ({
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.registrationDate && record.registrationDate.indexOf(value) === 0,
+      onFilter: (value, record) => record.registrationDate && record.registrationDate.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
@@ -1216,8 +1053,7 @@ function DailyReport() {
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.chasisNo && record.chasisNo.indexOf(value) === 0,
+      onFilter: (value, record) => record.chasisNo && record.chasisNo.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
@@ -1225,14 +1061,12 @@ function DailyReport() {
       title: "Current Vehicle",
       dataIndex: "currentVehicle",
       key: "currentVehicle",
-      sorter: (a, b) =>
-        (a.currentVehicle || "").localeCompare(b.currentVehicle || ""),
+      sorter: (a, b) => (a.currentVehicle || "").localeCompare(b.currentVehicle || ""),
       filters: delegatedLeadCurrentVehicle.map((name) => ({
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.currentVehicle && record.currentVehicle.indexOf(value) === 0,
+      onFilter: (value, record) => record.currentVehicle && record.currentVehicle.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
@@ -1240,14 +1074,12 @@ function DailyReport() {
       title: "Category",
       dataIndex: "categoryName",
       key: "categoryName",
-      sorter: (a, b) =>
-        (a.categoryName || "").localeCompare(b.categoryName || ""),
+      sorter: (a, b) => (a.categoryName || "").localeCompare(b.categoryName || ""),
       filters: delegatedLeadCategoryName.map((name) => ({
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.categoryName && record.categoryName.indexOf(value) === 0,
+      onFilter: (value, record) => record.categoryName && record.categoryName.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
@@ -1255,14 +1087,12 @@ function DailyReport() {
       title: "Product",
       dataIndex: "productName",
       key: "productName",
-      sorter: (a, b) =>
-        (a.productName || "").localeCompare(b.productName || ""),
+      sorter: (a, b) => (a.productName || "").localeCompare(b.productName || ""),
       filters: delegatedLeadProductNames.map((name) => ({
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.productName && record.productName.indexOf(value) === 0,
+      onFilter: (value, record) => record.productName && record.productName.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
@@ -1275,8 +1105,7 @@ function DailyReport() {
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.stateName && record.stateName.indexOf(value) === 0,
+      onFilter: (value, record) => record.stateName && record.stateName.indexOf(value) === 0,
       filterSearch: true,
       width: 140,
     },
@@ -1289,8 +1118,7 @@ function DailyReport() {
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.modelName && record.modelName.indexOf(value) === 0,
+      onFilter: (value, record) => record.modelName && record.modelName.indexOf(value) === 0,
       filterSearch: true,
       width: 140,
     },
@@ -1303,8 +1131,7 @@ function DailyReport() {
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.leadType && record.leadType.indexOf(value) === 0,
+      onFilter: (value, record) => record.leadType && record.leadType.indexOf(value) === 0,
       filterSearch: true,
       width: 140,
     },
@@ -1317,8 +1144,7 @@ function DailyReport() {
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.status && record.status.indexOf(value) === 0,
+      onFilter: (value, record) => record.status && record.status.indexOf(value) === 0,
       render: (text) => (
         <span
           style={{
@@ -1326,18 +1152,18 @@ function DailyReport() {
               text === "Pending"
                 ? "#ffc107"
                 : text === "Positive"
-                ? "#0d6efd"
-                : text === "Connected"
-                ? "#28a745"
-                : text === "Closed"
-                ? "#6610f2"
-                : text === "Blocked user"
-                ? "#fd7e14"
-                : text === "Not Connected"
-                ? "#17a2b8"
-                : text === "Negative"
-                ? "#dc3545"
-                : "#000",
+                  ? "#0d6efd"
+                  : text === "Connected"
+                    ? "#28a745"
+                    : text === "Closed"
+                      ? "#6610f2"
+                      : text === "Blocked user"
+                        ? "#fd7e14"
+                        : text === "Not Connected"
+                          ? "#17a2b8"
+                          : text === "Negative"
+                            ? "#dc3545"
+                            : "#000",
           }}
         >
           {text}
@@ -1349,9 +1175,9 @@ function DailyReport() {
       dataIndex: "followUpDate",
       key: "followUpDate",
       sorter: (a, b) => {
-        if (!a.followUpDate) return -1;
-        if (!b.followUpDate) return 1;
-        return new Date(a.followUpDate) - new Date(b.followUpDate);
+        if (!a.followUpDate) return -1
+        if (!b.followUpDate) return 1
+        return new Date(a.followUpDate) - new Date(b.followUpDate)
       },
       render: (text) => (text ? new Date(text).toLocaleString() : "N/A"),
     },
@@ -1362,17 +1188,21 @@ function DailyReport() {
       width: 390,
     },
     {
+      title: "Call Recordings",
+      key: "callRecordings",
+      render: (_, record) => renderCallRecordings(record),
+      width: 350,
+    },
+    {
       title: "Assigned To",
       dataIndex: "assignedToName",
       key: "assignedToName",
-      sorter: (a, b) =>
-        (a.assignedToName || "").localeCompare(b.assignedToName || ""),
+      sorter: (a, b) => (a.assignedToName || "").localeCompare(b.assignedToName || ""),
       filters: delegatedLeadAssignedToName.map((name) => ({
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.assignedToName && record.assignedToName.indexOf(value) === 0,
+      onFilter: (value, record) => record.assignedToName && record.assignedToName.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
@@ -1380,20 +1210,18 @@ function DailyReport() {
       title: "Assigned Date",
       dataIndex: "assignedDate",
       key: "assignedDate",
-      sorter: (a, b) =>
-        (a.assignedDate || "").localeCompare(b.assignedDate || ""),
+      sorter: (a, b) => (a.assignedDate || "").localeCompare(b.assignedDate || ""),
       filters: assignedLeadAssignedDate.map((name) => ({
         text: name,
         value: name,
       })),
-      onFilter: (value, record) =>
-        record.assignedDate && record.assignedDate.indexOf(value) === 0,
+      onFilter: (value, record) => record.assignedDate && record.assignedDate.indexOf(value) === 0,
       filterSearch: true,
       width: 160,
     },
-  ];
+  ]
 
-  // 5. Update the renderDetailsTab function to use the new columns
+  // Render details tab content
   const renderDetailsTab = () => {
     if (loading) {
       return (
@@ -1403,17 +1231,17 @@ function DailyReport() {
             <p className="mt-3">Loading lead details...</p>
           </div>
         </div>
-      );
+      )
     }
 
-    if (!reportDataList) {
+    if (!reportDataList || reportDataList.length === 0) {
       return (
         <div className="card">
           <div className="card-body text-center">
             <p>Please select a user and date range to view this report</p>
           </div>
         </div>
-      );
+      )
     }
 
     return (
@@ -1423,29 +1251,23 @@ function DailyReport() {
           <ul className="nav nav-tabs card-header-tabs mt-2">
             <li className="nav-item">
               <button
-                className={`nav-link ${
-                  detailsTab === "assigned" ? "active" : ""
-                }`}
+                className={`nav-link ${detailsTab === "assigned" ? "active" : ""}`}
                 onClick={() => setDetailsTab("assigned")}
               >
-                Active Leads ({reportDataList.assignedLeadsCount})
+                Active Leads ({totalAssignedCount})
               </button>
             </li>
             <li className="nav-item">
               <button
-                className={`nav-link ${
-                  detailsTab === "delegated" ? "active" : ""
-                }`}
+                className={`nav-link ${detailsTab === "delegated" ? "active" : ""}`}
                 onClick={() => setDetailsTab("delegated")}
               >
-                Delegated Leads ({reportDataList.delegatedLeadsCount})
+                Delegated Leads ({totalDelegatedCount})
               </button>
             </li>
             <li className="nav-item">
               <button
-                className={`nav-link ${
-                  detailsTab === "summary" ? "active" : ""
-                }`}
+                className={`nav-link ${detailsTab === "summary" ? "active" : ""}`}
                 onClick={() => setDetailsTab("summary")}
               >
                 Summary
@@ -1460,9 +1282,7 @@ function DailyReport() {
               dataSource={allAssignedLeads.map((lead) => ({
                 ...lead,
                 key: lead.leadId,
-                assignedToName:
-                  users.find((u) => u.assigneeId === lead.assignedTo)
-                    ?.assigneeName || "Unknown",
+                assignedToName: users.find((u) => u.assigneeId === lead.assignedTo)?.assigneeName || "Unknown",
               }))}
               pagination={{
                 onChange: cancel,
@@ -1472,7 +1292,6 @@ function DailyReport() {
               }}
               style={{ overflowX: "auto", whiteSpace: "nowrap" }}
               scroll={{ x: "max-content", y: 500 }}
-              // scroll={{ x: true }}
               bordered
               loading={loading}
             />
@@ -1483,9 +1302,7 @@ function DailyReport() {
               dataSource={allDelegatedLeads.map((lead) => ({
                 ...lead,
                 key: lead.leadId,
-                assignedToName:
-                  users.find((u) => u.assigneeId === lead.assignedTo)
-                    ?.assigneeName || "Unknown",
+                assignedToName: users.find((u) => u.assigneeId === lead.assignedTo)?.assigneeName || "Unknown",
               }))}
               pagination={{
                 onChange: cancel,
@@ -1494,8 +1311,7 @@ function DailyReport() {
                 pageSizeOptions: [20, 30, 50, 100, 150, 200, 250, 300],
               }}
               style={{ overflowX: "auto", whiteSpace: "nowrap" }}
-              // scroll={{ x: "max-content", y: 500 }}
-              scroll={{ x: true }}
+              scroll={{ x: "max-content", y: 500 }}
               bordered
               loading={loading}
             />
@@ -1512,17 +1328,16 @@ function DailyReport() {
                 pageSizeOptions: [20, 30, 50, 100, 150, 200, 250, 300],
               }}
               style={{ overflowX: "auto", whiteSpace: "nowrap" }}
-              // scroll={{ x: "true", y: 500 }}
               bordered
               loading={loading}
             />
           )}
         </div>
       </div>
-    );
-  };
+    )
+  }
 
-  // 6. Update the Overview tab to show a message when no data is available
+  // Render overview tab content
   const renderOverviewTab = () => {
     if (loading) {
       return (
@@ -1532,17 +1347,17 @@ function DailyReport() {
             <p className="mt-3">Loading overview data...</p>
           </div>
         </div>
-      );
+      )
     }
 
-    if (!reportDataList) {
+    if (!reportDataList || reportDataList.length === 0) {
       return (
         <div className="card">
           <div className="card-body text-center">
             <p>Please select a user and date range to view this report</p>
           </div>
         </div>
-      );
+      )
     }
 
     return (
@@ -1555,38 +1370,31 @@ function DailyReport() {
             <div className="card-body">
               <div style={{ height: "300px" }}>
                 <ResponsiveContainer width="100%" height={300}>
-                  {reportDataList && (
-                    <PieChart>
-                      <Pie
-                        data={pieData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={renderCustomizedLabel}
-                        outerRadius={110}
-                        innerRadius={60}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {pieData.map((entry, index) => (
-                          <Cell
-                            key={`cell-${index}`}
-                            fill={entry.color}
-                            stroke="white"
-                            strokeWidth={2}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          borderRadius: "10px",
-                          backgroundColor: "#fff",
-                          color: "#333",
-                        }}
-                      />
-                      <Legend />
-                    </PieChart>
-                  )}
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={renderCustomizedLabel}
+                      outerRadius={110}
+                      innerRadius={60}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} stroke="white" strokeWidth={2} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: "10px",
+                        backgroundColor: "#fff",
+                        color: "#333",
+                      }}
+                    />
+                    <Legend />
+                  </PieChart>
                 </ResponsiveContainer>
               </div>
             </div>
@@ -1603,13 +1411,10 @@ function DailyReport() {
               <div style={{ marginBottom: "15px" }}>
                 <h6>
                   Total Assigned Leads:{" "}
-                  <span style={{ fontWeight: "bold", fontSize: "1.2em" }}>
-                    {totalLeads}
-                  </span>
+                  <span style={{ fontWeight: "bold", fontSize: "1.2em" }}>{totalAssignedLeadsCount}</span>
                 </h6>
               </div>
 
-              {/* ✅ Add the Table Back Here */}
               <Table
                 columns={useperformanceColumns}
                 dataSource={useperformanceData}
@@ -1623,11 +1428,9 @@ function DailyReport() {
           </div>
         </div>
       </div>
-    );
-  };
+    )
+  }
 
-  // 7. Update the submit button to be disabled when form is invalid
-  // Replace the return statement with this updated version
   return (
     <div className="container-fluid p-4 bg-light position-relative">
       {loading && (
@@ -1654,26 +1457,94 @@ function DailyReport() {
           <h6 className="">Daily Report Dashboard</h6>
         </div>
         <div className="col-md-9 d-flex justify-content-md-end align-items-center gap-2">
-          <Select
+          {/* <Select
             mode="multiple"
             showSearch
             style={{ width: 300 }}
             placeholder="Select Users"
             optionFilterProp="label"
-            value={selectedUsers} // This will now hold multiple users
-            onChange={(value) => setSelectedUsers(value)}
+            value={selectedUsers}
+            onChange={handleUserChange}
+            dropdownRender={(menu) => (
+              <div>
+                <div style={{ padding: "8px", borderBottom: "1px solid #e8e8e8" }}>
+                  <Checkbox
+                    checked={selectAll}
+                    onChange={(e) => {
+                      setSelectAll(e.target.checked)
+                      if (e.target.checked) {
+                        const allUserIds = users.map((user) => user.assigneeId)
+                        setSelectedUsers(allUserIds)
+                      } else {
+                        setSelectedUsers([])
+                      }
+                    }}
+                  >
+                    Select All
+                  </Checkbox>
+                </div>
+                {menu}
+              </div>
+            )}
           >
             {users.length > 0 &&
               users.map((user) => (
-                <Select.Option
-                  key={user.assigneeId}
-                  value={user.assigneeId}
-                  label={user.assigneeName}
-                >
+                <Option key={user.assigneeId} value={user.assigneeId} label={user.assigneeName}>
                   {user.assigneeName}
-                </Select.Option>
+                </Option>
               ))}
-          </Select>
+          </Select> */}
+
+         <Select
+  mode="multiple"
+  maxTagCount="responsive"
+  showSearch
+  style={{ width: 300 }}
+  placeholder="Select Users"
+  optionFilterProp="label"
+  value={selectedUsers}
+  open={selectDropdownOpen}  // Control dropdown visibility
+  onDropdownVisibleChange={(open) => setSelectDropdownOpen(open)} // Toggle open state
+  onChange={handleUserChange}
+  dropdownRender={(menu) => (
+    <div>
+      <div style={{ padding: "8px", borderBottom: "1px solid #e8e8e8" }}>
+        <Checkbox
+          checked={selectAll}
+          onChange={(e) => {
+            setSelectAll(e.target.checked);
+            if (e.target.checked) {
+              const allUserIds = users.map((user) => user.assigneeId);
+              setSelectedUsers(allUserIds);
+            } else {
+              setSelectedUsers([]);
+            }
+          }}
+        >
+          Select All
+        </Checkbox>
+      </div>
+      {menu}
+    </div>
+  )}
+>
+  {users.length > 0 &&
+    users.map((user) => (
+      <Option key={user.assigneeId} value={user.assigneeId} label={user.assigneeName}>
+        <Checkbox
+          checked={selectedUsers.includes(user.assigneeId)}
+          onChange={(e) => {
+            const updatedUsers = e.target.checked
+              ? [...selectedUsers, user.assigneeId]
+              : selectedUsers.filter((id) => id !== user.assigneeId);
+            setSelectedUsers(updatedUsers);
+          }}
+        >
+          {user.assigneeName}
+        </Checkbox>
+      </Option>
+    ))}
+</Select>
 
           <div>
             <RangePicker onChange={onRangeChange} />
@@ -1692,13 +1563,13 @@ function DailyReport() {
               </>
             ) : (
               <>
-                <i className="bi bi-arrow me-1"></i> Submit
+                <i className="bi bi-arrow-right me-1"></i> Submit
               </>
             )}
           </button>
           <button
             className="btn btn-primary d-flex align-items-center"
-            disabled={!reportDataList || loading}
+            disabled={!reportDataList || reportDataList.length === 0 || loading}
             onClick={() => setExportModalVisible(true)}
           >
             <i className="bi bi-download me-1"></i> Export
@@ -1729,22 +1600,10 @@ function DailyReport() {
       {/* Tab Content */}
       <div className="tab-content">
         {/* Overview Tab */}
-        <div
-          className={`tab-pane fade ${
-            activeTab === "overview" ? "show active" : ""
-          }`}
-        >
-          {renderOverviewTab()}
-        </div>
+        <div className={`tab-pane fade ${activeTab === "overview" ? "show active" : ""}`}>{renderOverviewTab()}</div>
 
         {/* Details Tab */}
-        <div
-          className={`tab-pane fade ${
-            activeTab === "details" ? "show active" : ""
-          }`}
-        >
-          {renderDetailsTab()}
-        </div>
+        <div className={`tab-pane fade ${activeTab === "details" ? "show active" : ""}`}>{renderDetailsTab()}</div>
       </div>
 
       {error && (
@@ -1768,15 +1627,13 @@ function DailyReport() {
         ]}
       >
         <p>Select the format to export your data:</p>
-        <Radio.Group
-          value={exportType}
-          onChange={(e) => setExportType(e.target.value)}
-        >
+        <Radio.Group value={exportType} onChange={(e) => setExportType(e.target.value)}>
           <Radio value="excel">Excel (.xlsx)</Radio>
         </Radio.Group>
       </Modal>
     </div>
-  );
+  )
 }
 
-export default DailyReport;
+export default DailyReport
+

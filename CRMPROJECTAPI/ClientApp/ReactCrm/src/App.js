@@ -43,6 +43,7 @@ import DailyReport from "./components/CRM/DailyReport";
 import Products from "./components/Admin/Products";
 import FollowUpDetails from "./components/CRM/follow-up-details";
 import AddReview from "./components/Admin/AddReview";
+import CallRecordings from "./components/CRM/Callrecordings";
 
 function App() {
   return (
@@ -78,6 +79,7 @@ function App() {
           <Route path="performance" element={<PerformanceUser />} />
           <Route path="reports" element={<Reports />} />
           <Route path="dailyreport" element={<DailyReport />} />
+          <Route path="recordings" element={<CallRecordings />} />
         </Route>
         <Route path="/dsm" element={<Layout />}>
           <Route path="dashboard" element={<DSMDashboard />} />

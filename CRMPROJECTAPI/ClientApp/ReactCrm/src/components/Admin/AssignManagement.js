@@ -228,7 +228,8 @@ export default function AssignManagement() {
 
         <div className="col-md-6">
           <label className="form-label">Assignees</label>
-          <Dropdown overlay={assigneeMenu} trigger={["click"]}>
+          <Dropdown overlay={assigneeMenu} trigger={["click"]}
+          maxTagCount="responsive">
             <Button
               style={{
                 width: "100%",
