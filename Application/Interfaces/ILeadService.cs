@@ -6,6 +6,8 @@ namespace Application.Interfaces
 {
     public interface ILeadService
     {
+
+        Task<(bool Success, string Message, int DeletedLeadsCount)> DeleteLeadsByExcelNameAsync(string excelName);
         Task<LeadReportResponseDto> GetLeadReportAsync(DateTime startDate, DateTime endDate);
         Task<List<UserLeadReportResponseDto>> GetUserLeadReportAsync(List<Guid> userIds, DateTime startDate, DateTime endDate, DateTime? date = null);
         Task<LeadsSegregatedResponseDto> GetLatestUploadedLeadsAsync();

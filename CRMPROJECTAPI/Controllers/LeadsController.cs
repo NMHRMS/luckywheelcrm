@@ -19,6 +19,25 @@ namespace CRMPROJECTAPI.Controllers
         {
             _leadService = leadService;
         }
+
+
+        [HttpDelete("DeleteLeadsByExcelName/{excelName}")]
+        public async Task<IActionResult> DeleteLeadsByExcelName(string excelName)
+        {
+            var result = await _leadService.DeleteLeadsByExcelNameAsync(excelName);
+
+            if (!result.Success)
+            {
+                return NotFound(new { Message = result.Message });
+            }
+
+            return Ok(new
+            {
+                Message = result.Message,
+                TotalDeletedLeads = result.DeletedLeadsCount
+            });
+        }
+
         [HttpGet("report")]
         public async Task<IActionResult> GetLeadReport([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
         {

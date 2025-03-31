@@ -29,6 +29,62 @@ namespace Application.Services
             _jwtTokenService = jwtTokenService;  
         }
 
+
+        public async Task<(bool Success, string Message, int DeletedLeadsCount)> DeleteLeadsByExcelNameAsync(string excelName)
+        {
+            // Step 1: Retrieve LeadIds under the given ExcelName
+            var leadIds = await _context.Leads
+                .Where(x => x.ExcelName == excelName)
+                .Select(x => x.LeadId)
+                .ToListAsync();
+
+            if (!leadIds.Any())
+            {
+                return (false, "No leads found for the given ExcelName.", 0);
+            }
+
+            // Step 2: Check assigned leads
+            var assignedLeads = await _context.Leads
+                .Where(x => leadIds.Contains(x.LeadId) && x.AssignedTo != null)
+                .Select(x => x.LeadId)
+                .ToListAsync();
+
+            var unassignedLeads = leadIds.Except(assignedLeads).ToList();
+
+            // Step 3: Delete unassigned leads directly
+            if (unassignedLeads.Any())
+            {
+                _context.Leads.RemoveRange(_context.Leads.Where(x => unassignedLeads.Contains(x.LeadId)));
+            }
+
+            // Step 4: Handle dependencies for assigned leads before deletion
+            if (assignedLeads.Any())
+            {
+                // Delete reviews
+                var reviews = _context.LeadsReview.Where(x => assignedLeads.Contains(x.LeadId));
+                _context.LeadsReview.RemoveRange(reviews);
+
+                // Delete lead assignments
+                var leadAssignments = _context.LeadsTracking.Where(x => assignedLeads.Contains(x.LeadId));
+                _context.LeadsTracking.RemoveRange(leadAssignments);
+
+                // Delete CallRecords
+                var callRecords = _context.CallRecords.Where(x => assignedLeads.Contains((Guid)x.LeadId));
+                _context.CallRecords.RemoveRange(callRecords);
+
+                // Delete assigned leads
+                _context.Leads.RemoveRange(_context.Leads.Where(x => assignedLeads.Contains(x.LeadId)));
+            }
+
+            // Store only the count of deleted Leads
+            int deletedLeadsCount = leadIds.Count;
+
+            // Save changes
+            await _context.SaveChangesAsync();
+
+            return (true, "Leads deleted successfully.", deletedLeadsCount);
+        }
+
         public async Task<LeadReportResponseDto> GetLeadReportAsync(DateTime startDate, DateTime endDate)
         {
             var totalLeads = await _context.Leads
@@ -62,6 +118,7 @@ namespace Application.Services
 
             return response;
         }
+
         public async Task<List<UserLeadReportResponseDto>> GetUserLeadReportAsync(List<Guid> userIds, DateTime startDate, DateTime endDate, DateTime? date)
         {
             var userSummaries = new List<UserLeadReportResponseDto>();
@@ -1073,7 +1130,5 @@ namespace Application.Services
 
             return _mapper.Map<IEnumerable<LeadResponseDto>>(leads);
         }
-
-       
     }
 }

@@ -198,7 +198,6 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(callRecords);
         }
 
-
         [HttpGet("GetUserCallPerformanceReport")]
         public async Task<IActionResult> GetUserCallPerformanceReport([FromQuery] List<Guid> userIds, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] DateTime? date)
         {
@@ -242,6 +241,19 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(result);
         }
 
+
+        [HttpGet("by-lead/{leadId}")]
+        public async Task<IActionResult> GetCallRecordsByLeadId(Guid leadId)
+        {
+            var callRecords = await _callRecordService.GetCallRecordsByLeadIdAsync(leadId);
+
+            if (callRecords == null || !callRecords.Any())
+            {
+                return NotFound(new { Message = "No call records found for this LeadId." });
+            }
+
+            return Ok(callRecords);
+        }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCallRecord(Guid id)

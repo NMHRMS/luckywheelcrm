@@ -438,6 +438,16 @@ namespace Application.Services
             return callRecord == null ? null : _mapper.Map<CallRecordResponseDto>(callRecord);
         }
 
+        public async Task<List<CallRecordResponseDto>> GetCallRecordsByLeadIdAsync(Guid leadId)
+        {
+            var callRecords = await _context.CallRecords
+                .Where(cr => cr.LeadId == leadId)
+                .Include(cr => cr.User) 
+                .ToListAsync();
+
+            return _mapper.Map<List<CallRecordResponseDto>>(callRecords);
+        }
+
         public async Task<bool> DeleteCallRecordAsync(Guid id)
         {
             var callRecord = await _context.CallRecords.FindAsync(id);
