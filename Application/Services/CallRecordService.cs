@@ -341,13 +341,13 @@ namespace Application.Services
                 {
                     (TimeSpan.FromHours(10), TimeSpan.FromHours(11)),
                     (TimeSpan.FromHours(11), TimeSpan.FromHours(12)),
-                    (TimeSpan.FromHours(12), TimeSpan.FromHours(13)),
-                    (TimeSpan.FromHours(13), TimeSpan.FromHours(14)),
-                    (TimeSpan.FromHours(14), TimeSpan.FromHours(15)),
-                    (TimeSpan.FromHours(15), TimeSpan.FromHours(16)),
-                    (TimeSpan.FromHours(16), TimeSpan.FromHours(17)),
-                    (TimeSpan.FromHours(17), TimeSpan.FromHours(18)),
-                    (TimeSpan.FromHours(18), TimeSpan.FromHours(19)),
+                    (TimeSpan.FromHours(12), TimeSpan.FromHours(01)),
+                    (TimeSpan.FromHours(01), TimeSpan.FromHours(02)),
+                    (TimeSpan.FromHours(02), TimeSpan.FromHours(03)),
+                    (TimeSpan.FromHours(03), TimeSpan.FromHours(04)),
+                    (TimeSpan.FromHours(04), TimeSpan.FromHours(05)),
+                    (TimeSpan.FromHours(05), TimeSpan.FromHours(06)),
+                    (TimeSpan.FromHours(06), TimeSpan.FromHours(07)),
                 };
             }
 
