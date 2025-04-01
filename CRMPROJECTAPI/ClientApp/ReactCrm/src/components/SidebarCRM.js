@@ -140,6 +140,23 @@ export default function SidebarCRM() {
                 </Link>
               </Tooltip>
             </li>
+            <li>
+              <Tooltip
+                title="Call Records"
+                placement="right"
+                color="#1e2775"
+              >
+                <Link
+                  to="/crm/recordings"
+                  className={
+                    location.pathname === "/crm/recordings" ? "active" : ""
+                  }
+                >
+                  <i className="bi bi-telephone-fill"></i>
+                  <span>Call Records</span>
+                </Link>
+              </Tooltip>
+            </li>
           </ul>
         </li>
 
@@ -156,7 +173,7 @@ export default function SidebarCRM() {
             </Link>
           </Tooltip>
         </li>
-        <li className="nav-item">
+        {/* <li className="nav-item">
           <Tooltip title="Vehicle Check-In" placement="right" color="#1e2775">
             <Link
               to="/crm/recordings"
@@ -168,7 +185,7 @@ export default function SidebarCRM() {
               <span>Call Recordings</span>
             </Link>
           </Tooltip>
-        </li>
+        </li> */}
         <li className="nav-item logout-item">
           <Tooltip title="Logout" placement="right" color="#1e2775">
             <Link to="/" className="nav-link">

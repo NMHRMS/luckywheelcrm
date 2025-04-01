@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import { Table, Button, message, DatePicker } from "antd";
-import { getRequest } from "../utils/Api";
+import { Table, Button, message, DatePicker,Space,Modal } from "antd";
+import { getRequest,deleteRequest } from "../utils/Api";
 import { useNavigate } from "react-router-dom";
 import Loader from "../utils/Loader";
 import dayjs from "dayjs";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 
 const { RangePicker } = DatePicker;
 
@@ -28,7 +31,22 @@ const ListLeads = () => {
     return `${day}/${month}/${year}`;
   };
 
-  useEffect(() => {
+  // useEffect(() => {
+  //   getRequest("/api/Leads/get_leads_dataList")
+  //     .then((response) => {
+  //       setFiles(response.data);
+  //       setFilteredFiles(response.data);
+  //       setLoading(false);
+  //     })
+  //     .catch((error) => {
+  //       console.error("Error fetching files:", error);
+  //       message.error("Failed to load files. Please try again later.");
+  //       setLoading(false);
+  //     });
+  // }, []);
+
+  const loadData = () => {
+    setLoading(true);
     getRequest("/api/Leads/get_leads_dataList")
       .then((response) => {
         setFiles(response.data);
@@ -40,6 +58,10 @@ const ListLeads = () => {
         message.error("Failed to load files. Please try again later.");
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   const handleFileClick = (fileName) => {
@@ -70,6 +92,26 @@ const ListLeads = () => {
 
     setFilteredFiles(filtered);
   }, [searchText, selectedDates, files]);
+
+  const handleDelete = async (fileName) => {
+    Modal.confirm({
+      title: "Are you sure?",
+      content:
+        "Do you really want to delete this file? This action also deletes reviews and call records.",
+      okText: "Yes, Delete",
+      okType: "danger",
+      cancelText: "Cancel",
+      onOk: async () => {
+        try {
+          await deleteRequest(`/api/Leads/DeleteLeadsByExcelName/${fileName}`);
+          toast.success("File deleted successfully!");
+          loadData(); // Refresh the list after deletion
+        } catch (error) {
+          toast.error("Failed to delete file!");
+        }
+      },
+    });
+  };
 
   const columns = [
     {
@@ -118,6 +160,15 @@ const ListLeads = () => {
       render: formatDateTime,
       sorter: (a, b) => new Date(a.createdDate) - new Date(b.createdDate),
     },
+      {
+          title: "Actions",
+          key: "actions",
+          render: (_, record) => (
+            <Space>
+              <Button type="text" icon={<DeleteOutlined />} danger onClick={() => handleDelete(record.excelName)} />
+            </Space>
+          ),
+        },
   ];
 
   return (

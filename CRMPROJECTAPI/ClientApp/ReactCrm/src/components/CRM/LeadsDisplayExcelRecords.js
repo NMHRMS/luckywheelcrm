@@ -36,6 +36,19 @@ const LeadsDisplayExcelRecords = () => {
     branchId: "",
   });
   // Fetch leads data
+  
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "N/A";
+
+    const date = new Date(dateString);
+    if (isNaN(date)) return "Invalid Date";
+
+    const day = date.getDate();
+    const month = date.getMonth() + 1; // Months are 0-based
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  };
 
   const handleSearch = (e) => {
     setSearchText(e.target.value.toLowerCase());
@@ -390,21 +403,45 @@ const LeadsDisplayExcelRecords = () => {
       title: "FollowUp Date",
       dataIndex: "followUpDate",
       sorter: (a, b) => {
-        const nameA = a.followUpDate ? a.followUpDate.toLowerCase() : "";
-        const nameB = b.followUpDate ? b.followUpDate.toLowerCase() : "";
-        return nameA.localeCompare(nameB);
+        const dateA = a.followUpDate ? new Date(a.followUpDate).getTime() : 0;
+        const dateB = b.followUpDate ? new Date(b.followUpDate).getTime() : 0;
+        return dateA - dateB;
       },
-      filters: [...new Set(assignedLeads.map((lead) => lead.followUpDate))].map(
-        (followUpDate) => ({
-          text: followUpDate,
-          value: followUpDate,
-        })
-      ),
-      onFilter: (value, record) => record.followUpDate.indexOf(value) === 0,
+      filters: [...new Set(assignedLeads.map(lead => {
+        const date = lead.followUpDate ? formatDateTime(lead.followUpDate) : 'N/A';
+        return date;
+      }))].map(date => ({
+        text: date,
+        value: date,
+      })),
+      onFilter: (value, record) => {
+        const formattedDate = formatDateTime(record.followUpDate);
+        return formattedDate === value;
+      },
       filterSearch: true,
-      filterMode: "tree",
+      render: formatDateTime,
       width: 160,
     },
+    // {
+    //   title: "FollowUp Date",
+    //   dataIndex: "followUpDate",
+    //   sorter: (a, b) => {
+    //     const nameA = a.followUpDate ? a.followUpDate.toLowerCase() : "";
+    //     const nameB = b.followUpDate ? b.followUpDate.toLowerCase() : "";
+    //     return nameA.localeCompare(nameB);
+    //   },
+    //   filters: [...new Set(assignedLeads.map((lead) => lead.followUpDate))].map(
+    //     (followUpDate) => ({
+    //       text: followUpDate,
+    //       value: followUpDate,
+    //     })
+    //   ),
+    //   onFilter: (value, record) => record.followUpDate.indexOf(value) === 0,
+    //   filterSearch: true,
+    //   filterMode: "tree",
+    //   render: formatDateTime,
+    //   width: 160,
+    // },
     {
       title: "Chasis No",
       dataIndex: "chasisNo",
@@ -872,7 +909,7 @@ const LeadsDisplayExcelRecords = () => {
                 disabled={selectedLeads.length === 0}
                 onClick={() => setAssignModalVisible(true)}
               >
-                Assign Selected ({selectedLeads.length})
+                Assigned ({selectedLeads.length})
               </button>
               <button
                 style={{ marginBottom: 16 }}

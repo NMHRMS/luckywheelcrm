@@ -1,4 +1,3 @@
-"use client"
 
 import { useEffect, useState } from "react"
 import { Table, Select, DatePicker, Spin, Modal, Button, Radio, Checkbox } from "antd"
@@ -24,6 +23,19 @@ function DailyReport() {
   const [exportType, setExportType] = useState("excel")
   const [detailsTab, setDetailsTab] = useState("assigned")
    const [selectDropdownOpen, setSelectDropdownOpen] = useState(false);
+
+   const formatDateTime = (dateString) => {
+    if (!dateString) return "N/A";
+
+    const date = new Date(dateString);
+    if (isNaN(date)) return "Invalid Date";
+
+    const day = date.getDate();
+    const month = date.getMonth() + 1; // Months are 0-based
+    const year = date.getFullYear();
+
+    return `${day}/${month}/${year}`;
+  };
 
   // Calculate aggregated data from all users in reportDataList
   const totalAssignedLeadsCount = reportDataList.reduce((sum, user) => sum + (user.totalAssignedLeadsCount || 0), 0)
@@ -178,7 +190,7 @@ function DailyReport() {
             <div>
               <strong>Call Type:</strong> {recording.callType || "Unknown"}
             </div>
-            <div>
+            {/* <div>
               <strong>Duration:</strong> {recording.duration || "N/A"}
             </div>
             <div>
@@ -207,7 +219,7 @@ function DailyReport() {
               >
                 {recording.status || "Unknown"}
               </span>
-            </div>
+            </div> */}
             <div className="text-muted small">
               <span>Date: {recording.date ? new Date(recording.date).toLocaleString() : "N/A"}</span>
             </div>
@@ -216,7 +228,7 @@ function DailyReport() {
                 <audio
                   controls
                   style={{ maxWidth: "100%", height: "30px" }}
-                  src={`https://localhost:7258/recordings/${recording.recordings}`}
+                  src={`https://crmdemotest-001-site1.anytempurl.com/recordings/${recording.recordings}`}
                 >
                   Your browser does not support the audio element.
                 </audio>
@@ -516,7 +528,7 @@ function DailyReport() {
       key: "count",
       render: (text, record) => (
         <div style={{ display: "flex", alignItems: "center" }}>
-          <div style={{ flex: 1, backgroundColor: "#f0f0f0", borderRadius: "10px", padding: "5px 10px" }}>
+          {/* <div style={{ flex: 1, backgroundColor: "#f0f0f0", borderRadius: "10px", padding: "5px 10px" }}>
             <div
               style={{
                 width: `${(text / totalAssignedLeadsCount) * 100}%`,
@@ -525,7 +537,7 @@ function DailyReport() {
                 borderRadius: "5px",
               }}
             ></div>
-          </div>
+          </div> */}
           <span
             style={{
               marginLeft: "10px",
@@ -939,16 +951,39 @@ function DailyReport() {
     {
       title: "Assigned Date",
       dataIndex: "assignedDate",
-      key: "assignedDate",
-      sorter: (a, b) => (a.assignedDate || "").localeCompare(b.assignedDate || ""),
-      filters: assignedLeadAssignedDate.map((name) => ({
-        text: name,
-        value: name,
+      sorter: (a, b) => {
+        const dateA = a.assignedDate ? new Date(a.assignedDate).getTime() : 0;
+        const dateB = b.assignedDate ? new Date(b.assignedDate).getTime() : 0;
+        return dateA - dateB;
+      },
+      filters: [...new Set(assignedLeadAssignedDate.map(lead => {
+        const date = lead.assignedDate ? formatDateTime(lead.assignedDate) : 'N/A';
+        return date;
+      }))].map(date => ({
+        text: date,
+        value: date,
       })),
-      onFilter: (value, record) => record.assignedDate && record.assignedDate.indexOf(value) === 0,
+      onFilter: (value, record) => {
+        const formattedDate = formatDateTime(record.assignedDate);
+        return formattedDate === value;
+      },
       filterSearch: true,
+      render: formatDateTime,
       width: 160,
     },
+    // {
+    //   title: "Assigned Date",
+    //   dataIndex: "assignedDate",
+    //   key: "assignedDate",
+    //   sorter: (a, b) => (a.assignedDate || "").localeCompare(b.assignedDate || ""),
+    //   filters: assignedLeadAssignedDate.map((name) => ({
+    //     text: name,
+    //     value: name,
+    //   })),
+    //   onFilter: (value, record) => record.assignedDate && record.assignedDate.indexOf(value) === 0,
+    //   filterSearch: true,
+    //   width: 160,
+    // },
   ]
 
   // Table columns for delegated leads
@@ -1549,9 +1584,9 @@ function DailyReport() {
           <div>
             <RangePicker onChange={onRangeChange} />
           </div>
-          <div>
+          {/* <div>
             <DatePicker onChange={onDateChange} placeholder="Select Date" />
-          </div>
+          </div> */}
           <button
             className="btn btn-outline-secondary d-flex align-items-center"
             onClick={submitdata}

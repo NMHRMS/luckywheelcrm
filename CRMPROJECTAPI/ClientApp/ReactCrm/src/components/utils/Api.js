@@ -3,8 +3,8 @@ import axios from "axios";
 const Api = axios.create({
   baseURL:
     process.env.EXPO_PUBLIC_API_URL ||
-    // "https://crmdemotest-001-site1.anytempurl.com/",
-    "https://dotnetcrm-001-site1.otempurl.com/",
+    "https://crmdemotest-001-site1.anytempurl.com/",
+    // "https://dotnetcrm-001-site1.otempurl.com/",
   // "https://localhost:7258/",
   headers: {
     "Content-Type": "application/json",

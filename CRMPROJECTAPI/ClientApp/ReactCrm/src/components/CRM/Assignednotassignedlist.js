@@ -593,9 +593,10 @@ function AssignedNotAssignedList() {
     console.log("leadhistory", lead.leadId);
 
     try {
-      const [historyRes, reviewsRes] = await Promise.all([
+      const [historyRes, reviewsRes,CallRecords] = await Promise.all([
         getRequest(`/api/LeadAssign/lead-history/${lead.leadId}`),
         getRequest("/api/LeadsReview"),
+        getRequest(`/api/CallRecords/by-lead/${lead.leadId}`),
       ]);
 
       // Filter reviews for this lead
