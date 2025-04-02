@@ -86,7 +86,6 @@ namespace CRMPROJECTAPI.Controllers
             }
         }
 
-
         [HttpPost("syncRecords")] //new 
         public async Task<IActionResult> SyncAllCallRecords([FromForm] string callRecordsJson, [FromForm] List<IFormFile> recordings)
         {
@@ -132,7 +131,6 @@ namespace CRMPROJECTAPI.Controllers
             }
         }
 
-
         //Function to extract mobile number from file name (not in new)
         private string? ExtractMobileNumber(string fileName)
         {
@@ -169,7 +167,6 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(new { latestDate });
         }
 
-
         [HttpGet("GetAllCallRecords")]
         public async Task<IActionResult> GetAllCallRecords()
         {
@@ -198,6 +195,14 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(callRecords);
         }
 
+        [HttpGet("without-recordings/{userId}")]
+        public async Task<IActionResult> GetCallRecordsWithoutRecordings(Guid userId)
+        {
+            var callRecords = await _callRecordService.GetCallRecordsWithoutRecordingsAsync(userId);
+            return Ok(callRecords);
+        }
+
+
         [HttpGet("GetUserCallPerformanceReport")]
         public async Task<IActionResult> GetUserCallPerformanceReport([FromQuery] List<Guid> userIds, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] DateTime? date)
         {
@@ -215,7 +220,6 @@ namespace CRMPROJECTAPI.Controllers
             return Ok(report);
         }
 
-
         [HttpGet("GetHourlyCallStatistics")]
         public async Task<IActionResult> GetHourlyCallStatistics([FromQuery] List<Guid> userIds, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] DateTime? date, [FromQuery] List<string>? customSlots)
         {
@@ -226,18 +230,22 @@ namespace CRMPROJECTAPI.Controllers
             if (!endDate.HasValue)
                 endDate = currentTime.Date;
 
-            List<(TimeSpan Start, TimeSpan End)> customTimeSlots = null;
+            // Validate and format custom time slots
+            List<string> validCustomSlots = new();
+
             if (customSlots != null && customSlots.Any())
             {
-                customTimeSlots = customSlots
-                    .Select(slot =>
+                foreach (var slot in customSlots)
+                {
+                    var parts = slot.Split('-').Select(p => p.Trim()).ToArray();
+                    if (parts.Length == 2 && TimeSpan.TryParse(parts[0], out _) && TimeSpan.TryParse(parts[1], out _))
                     {
-                        var parts = slot.Split('-');
-                        return (TimeSpan.Parse(parts[0].Trim()), TimeSpan.Parse(parts[1].Trim()));
-                    }).ToList();
+                        validCustomSlots.Add(slot); 
+                    }
+                }
             }
 
-            var result = await _callRecordService.GetHourlyCallStatisticsAsync(userIds, startDate.Value, endDate.Value, date, customTimeSlots);
+            var result = await _callRecordService.GetHourlyCallStatisticsAsync(userIds, startDate.Value, endDate.Value, date, validCustomSlots);
             return Ok(result);
         }
 
@@ -261,7 +269,6 @@ namespace CRMPROJECTAPI.Controllers
             await _callRecordService.DeleteCallRecordAsync(id);
             return NoContent();
         }
-
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCallRecordById(Guid id)

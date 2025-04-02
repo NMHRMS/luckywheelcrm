@@ -138,8 +138,6 @@ namespace Application.Services
             callRecord.CreateDate = DateTimeHelper.GetIndianTime();
             callRecord.CreatedBy = userId;
 
-            callRecord.Date = DateTimeHelper.ConvertToIndianTime(callRecord.Date.Value);
-
             // Save to database
             _context.CallRecords.Add(callRecord);
             await _context.SaveChangesAsync();
@@ -194,13 +192,21 @@ namespace Application.Services
             return responseList;
         }
 
+        public async Task<List<CallRecordResponseDto>> GetCallRecordsWithoutRecordingsAsync(Guid userId)
+        {
+            var callRecords = await _context.CallRecords
+                .OrderByDescending(cr => cr.CreateDate)
+                .Where(cr => cr.UserId == userId && cr.Recordings == null)
+                .ToListAsync();
+
+            return _mapper.Map<List<CallRecordResponseDto>>(callRecords);
+        }
+
         public async Task<List<CallRecordResponseDto>> GetAllUserRecordingsAsync(List<Guid> userIds, DateTime startDate, DateTime endDate, DateTime? date)
         {
             var callRecordsQuery = _context.CallRecords
                 .Where(cr => userIds.Contains((Guid)cr.UserId));
 
-
-            // Apply date filters (either specific date or date range)
             if (date.HasValue)
             {
                 callRecordsQuery = callRecordsQuery.Where(cr => cr.Date.Value.Date == date.Value.Date);
@@ -300,7 +306,7 @@ namespace Application.Services
                     CallType = group.Key,
                     CallCount = group.Count(),
                     CallDuration = FormatTotalDuration(group.Sum(cr => ConvertToTimeSpan(cr.Duration).Ticks)),
-                    CallRecords = _mapper.Map<List<CallRecordResponseDto>>(group.ToList()) // UserName should now be populated
+                    CallRecords = _mapper.Map<List<CallRecordResponseDto>>(group.ToList()) 
                 })
                 .ToList();
 
@@ -316,13 +322,12 @@ namespace Application.Services
             };
         }
 
-        public async Task<List<HourlyCallStatsResponseDto>> GetHourlyCallStatisticsAsync(List<Guid> userIds, DateTime startDate, DateTime endDate, DateTime? date, List<(TimeSpan Start, TimeSpan End)> customTimeSlots)
+        public async Task<List<HourlyCallStatsResponseDto>> GetHourlyCallStatisticsAsync(List<Guid> userIds, DateTime startDate, DateTime endDate, DateTime? date, List<string> customTimeSlots)
         {
             var callRecordsQuery = _context.CallRecords
                 .Include(cr => cr.User)
                 .Where(cr => userIds.Contains((Guid)cr.UserId));
 
-            // Apply date filters (either specific date or date range)
             if (date.HasValue)
             {
                 callRecordsQuery = callRecordsQuery.Where(cr => cr.Date.Value.Date == date.Value.Date);
@@ -334,26 +339,33 @@ namespace Application.Services
 
             var callRecords = await callRecordsQuery.ToListAsync();
 
-            // Default hourly slots if none are provided
-            if (customTimeSlots == null || !customTimeSlots.Any())
+            // Default time range (10:00 AM - 7:00 PM)
+            TimeSpan startTime = TimeSpan.FromHours(10);
+            TimeSpan endTime = TimeSpan.FromHours(19);
+
+            List<(TimeSpan Start, TimeSpan End)> parsedSlots = new();
+
+            if (customTimeSlots != null && customTimeSlots.Count == 1)
             {
-                customTimeSlots = new List<(TimeSpan, TimeSpan)>
+                var parts = customTimeSlots[0].Split('-').Select(t => t.Trim()).ToArray();
+                if (parts.Length == 2 && TimeSpan.TryParse(parts[0], out var start) && TimeSpan.TryParse(parts[1], out var end))
                 {
-                    (TimeSpan.FromHours(10), TimeSpan.FromHours(11)),
-                    (TimeSpan.FromHours(11), TimeSpan.FromHours(12)),
-                    (TimeSpan.FromHours(12), TimeSpan.FromHours(01)),
-                    (TimeSpan.FromHours(01), TimeSpan.FromHours(02)),
-                    (TimeSpan.FromHours(02), TimeSpan.FromHours(03)),
-                    (TimeSpan.FromHours(03), TimeSpan.FromHours(04)),
-                    (TimeSpan.FromHours(04), TimeSpan.FromHours(05)),
-                    (TimeSpan.FromHours(05), TimeSpan.FromHours(06)),
-                    (TimeSpan.FromHours(06), TimeSpan.FromHours(07)),
-                };
+                    if (start < end)
+                    {
+                        startTime = start;
+                        endTime = end;
+                    }
+                }
             }
 
-            // Find earliest & latest slot for "Before" and "After" calculations
-            var firstSlotStart = customTimeSlots.First().Start;
-            var lastSlotEnd = customTimeSlots.Last().End;
+            // Generate hourly slots between startTime and endTime
+            for (var t = startTime; t < endTime; t = t.Add(TimeSpan.FromHours(1)))
+            {
+                parsedSlots.Add((t, t.Add(TimeSpan.FromHours(1))));
+            }
+
+            var firstSlotStart = parsedSlots.First().Start;
+            var lastSlotEnd = parsedSlots.Last().End;
 
             var totalCalls = callRecords.Count;
             var totalConnectedCalls = callRecords.Count(cr => cr.Duration != null);
@@ -364,18 +376,21 @@ namespace Application.Services
 
             // Before first slot
             var beforeCalls = callRecords.Where(cr => cr.Date.HasValue && cr.Date.Value.TimeOfDay < firstSlotStart).ToList();
-            hourlyStats.Add(CreateHourlyStats("Before " + firstSlotStart.ToString(@"hh\:mm"), beforeCalls, totalCalls, totalConnectedCalls, totalDurationTicks));
+            hourlyStats.Add(CreateHourlyStats($"Before {ConvertTo12HourFormat(firstSlotStart)}", beforeCalls, totalCalls, totalConnectedCalls, totalDurationTicks));
 
             // Main slots
-            foreach (var slot in customTimeSlots)
+            foreach (var slot in parsedSlots)
             {
+                string startTimeStr = ConvertTo12HourFormat(slot.Start);
+                string endTimeStr = ConvertTo12HourFormat(slot.End);
+
                 var slotCalls = callRecords.Where(cr => cr.Date.HasValue && cr.Date.Value.TimeOfDay >= slot.Start && cr.Date.Value.TimeOfDay < slot.End).ToList();
-                hourlyStats.Add(CreateHourlyStats($"{slot.Start:hh\\:mm} - {slot.End:hh\\:mm}", slotCalls, totalCalls, totalConnectedCalls, totalDurationTicks));
+                hourlyStats.Add(CreateHourlyStats($"{startTimeStr} - {endTimeStr}", slotCalls, totalCalls, totalConnectedCalls, totalDurationTicks));
             }
 
             // After last slot
             var afterCalls = callRecords.Where(cr => cr.Date.HasValue && cr.Date.Value.TimeOfDay >= lastSlotEnd).ToList();
-            hourlyStats.Add(CreateHourlyStats("After " + lastSlotEnd.ToString(@"hh\:mm"), afterCalls, totalCalls, totalConnectedCalls, totalDurationTicks));
+            hourlyStats.Add(CreateHourlyStats($"After {ConvertTo12HourFormat(lastSlotEnd)}", afterCalls, totalCalls, totalConnectedCalls, totalDurationTicks));
 
             // Add total row
             hourlyStats.Add(new HourlyCallStatsResponseDto
@@ -402,7 +417,12 @@ namespace Application.Services
             return hourlyStats;
         }
 
-        // Helper method to create an HourlyCallStatsResponseDto
+        // Convert TimeSpan to 12-hour format (AM/PM)
+        private string ConvertTo12HourFormat(TimeSpan time)
+        {
+            return DateTime.Today.Add(time).ToString("hh:mm tt");
+        }
+
         private HourlyCallStatsResponseDto CreateHourlyStats(string timeSlot, List<CallRecord> calls, int totalCalls, int totalConnectedCalls, long totalDurationTicks)
         {
             var slotConnectedCalls = calls.Count(cr => cr.Duration != null);
@@ -457,8 +477,6 @@ namespace Application.Services
             await _context.SaveChangesAsync();
             return true;
         }
-
-
     }
 }
 //public async Task<CallRecordResponseDto> AddCallRecordAsync(CallRecordDto callRecordDto, IFormFile? recordings)
