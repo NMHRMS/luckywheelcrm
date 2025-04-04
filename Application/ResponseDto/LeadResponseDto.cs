@@ -37,6 +37,7 @@ namespace Application.ResponseDto
         public string LastRevertedByName { get; set; }
         public string? Remark { get; set; }
         public string? Status { get; set; }
+        public bool? IsActive { get; set; }
         public List<LeadReviewResponseDto> LeadsReview { get; set; }
         public List<CallRecordResponseDto> CallRecordings { get; set; }
     }

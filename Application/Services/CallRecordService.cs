@@ -32,7 +32,7 @@ namespace Application.Services
         {
             // Find the active lead associated with the mobile number
             var lead = await _context.Leads
-                .FirstOrDefaultAsync(l => l.MobileNo == callRecordDto.MobileNo && l.IsActive);
+                .FirstOrDefaultAsync(l => l.MobileNo == callRecordDto.MobileNo && l.IsActive == true);
 
             if (lead == null)
             {
@@ -95,7 +95,7 @@ namespace Application.Services
         {
             // Find the active lead associated with the mobile number
             var lead = await _context.Leads
-                .FirstOrDefaultAsync(l => l.MobileNo == callRecordDto.MobileNo && l.IsActive);
+                .FirstOrDefaultAsync(l => l.MobileNo == callRecordDto.MobileNo && l.IsActive == true);
 
             if (lead == null)
             {

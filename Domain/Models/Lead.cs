@@ -27,7 +27,7 @@ public partial class Lead
     public Guid? LastRevertedBy { get; set; }
     public string? Remark { get; set; }
     public string? Status { get; set; }
-    public bool IsActive { get; set; } = true;
+    public bool? IsActive { get; set; } = true;
     public DateTime CreateDate { get; set; }
     public Guid? CreatedBy { get; set; }
     public DateTime? UpdateDate { get; set; }
